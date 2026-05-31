@@ -1,0 +1,158 @@
+<div class="tech">
+  <h2 class="tech__h">Gestión de técnicos</h2>
+  <p class="tech__lead">Equipo del taller</p>
+
+  <div class="tech__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="tech__toolbar" *ngIf="!loading">
+    <input
+      type="search"
+      class="tech__search"
+      [(ngModel)]="search"
+      placeholder="Buscar por nombre, email, especialidad…"
+      aria-label="Buscar técnicos"
+    />
+    <select class="tech__select" [(ngModel)]="estado" aria-label="Filtrar por estado">
+      <option value="">Todos los estados</option>
+      <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+    </select>
+    <button type="button" class="tech__btn tech__btn--primary" (click)="openCreate()">Registrar técnico</button>
+  </div>
+
+  <p class="tech__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="tech__tablewrap" *ngIf="!loading">
+    <table class="tech__table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Teléfono</th>
+          <th>Especialidad</th>
+          <th>Disponibilidad</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of filtered">
+          <td>
+            <strong>{{ t.nombres }} {{ t.apellidos }}</strong><br />
+            <span class="tech__muted" style="font-size: 0.75rem">{{ t.email }}</span>
+          </td>
+          <td>{{ t.telefono }}</td>
+          <td>{{ t.especialidad_nombre || '—' }}</td>
+          <td>{{ t.disponibilidad || '—' }}</td>
+          <td><span class="tech__pill">{{ t.estado }}</span></td>
+          <td class="tech__actions">
+            <button type="button" class="tech__mini" (click)="openDetail(t)">Ver</button>
+            <button type="button" class="tech__mini" (click)="openEdit(t)">Editar</button>
+            <button
+              type="button"
+              class="tech__mini"
+              *ngIf="t.estado !== 'ACTIVO'"
+              [disabled]="busy"
+              (click)="setEstado(t, 'ACTIVO')"
+            >
+              Activar
+            </button>
+            <button
+              type="button"
+              class="tech__mini"
+              *ngIf="t.estado !== 'INACTIVO'"
+              [disabled]="busy"
+              (click)="setEstado(t, 'INACTIVO')"
+            >
+              Desactivar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="tech__empty" *ngIf="!filtered.length">Sin resultados.</p>
+  </div>
+
+  <div class="tech__backdrop" *ngIf="modalCreate || modalEdit || modalDetail" (click)="closeModals()"></div>
+
+  <div class="tech__modal" *ngIf="modalDetail && selected" role="dialog" aria-modal="true">
+    <h3>{{ selected.nombres }} {{ selected.apellidos }}</h3>
+    <dl class="tech__dl">
+      <dt>Email</dt>
+      <dd>{{ selected.email }}</dd>
+      <dt>Teléfono</dt>
+      <dd>{{ selected.telefono }}</dd>
+      <dt>Documento</dt>
+      <dd>{{ selected.documento || '—' }}</dd>
+      <dt>Especialidad</dt>
+      <dd>{{ selected.especialidad_nombre || '—' }}</dd>
+      <dt>Disponibilidad</dt>
+      <dd>{{ selected.disponibilidad || '—' }}</dd>
+      <dt>Estado</dt>
+      <dd>{{ selected.estado }}</dd>
+      <dt>Resumen</dt>
+      <dd>{{ selected.resumen_actividad || '—' }}</dd>
+    </dl>
+    <div class="tech__modal-actions">
+      <button type="button" class="tech__btn" (click)="closeModals()">Cerrar</button>
+      <button type="button" class="tech__btn tech__btn--primary" (click)="openEditFromDetail()">Editar</button>
+    </div>
+  </div>
+
+  <div class="tech__modal tech__modal--wide" *ngIf="modalCreate" role="dialog" aria-modal="true">
+    <h3>Registrar técnico</h3>
+    <div class="tech__grid2">
+      <label class="tech__lbl">Nombre completo<input class="tech__inp" [(ngModel)]="createForm.nombre_completo" /></label>
+      <label class="tech__lbl">Correo<input class="tech__inp" [(ngModel)]="createForm.email" type="email" /></label>
+      <label class="tech__lbl">Teléfono<input class="tech__inp" [(ngModel)]="createForm.telefono" /></label>
+      <label class="tech__lbl">Documento<input class="tech__inp" [(ngModel)]="createForm.documento" /></label>
+      <label class="tech__lbl"
+        >Contraseña inicial<input class="tech__inp" [(ngModel)]="createForm.password" type="password"
+      /></label>
+      <label class="tech__lbl"
+        >Especialidad
+        <select class="tech__inp" [(ngModel)]="createForm.especialidad_id">
+          <option [ngValue]="null">—</option>
+          <option *ngFor="let e of especialidades" [ngValue]="e.id">{{ e.nombre }}</option>
+        </select>
+      </label>
+      <label class="tech__lbl tech__full">Disponibilidad<input class="tech__inp" [(ngModel)]="createForm.disponibilidad" /></label>
+      <label class="tech__lbl"
+        >Estado
+        <select class="tech__inp" [(ngModel)]="createForm.estado">
+          <option *ngFor="let e of estados" [ngValue]="e">{{ e }}</option>
+        </select>
+      </label>
+    </div>
+    <div class="tech__modal-actions">
+      <button type="button" class="tech__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="tech__btn tech__btn--primary" [disabled]="busy" (click)="create()">Guardar</button>
+    </div>
+  </div>
+
+  <div class="tech__modal tech__modal--wide" *ngIf="modalEdit && selected" role="dialog" aria-modal="true">
+    <h3>Editar técnico</h3>
+    <div class="tech__grid2">
+      <label class="tech__lbl">Nombre completo<input class="tech__inp" [(ngModel)]="editNombre" /></label>
+      <label class="tech__lbl">Correo<input class="tech__inp" [(ngModel)]="editEmail" type="email" /></label>
+      <label class="tech__lbl">Teléfono<input class="tech__inp" [(ngModel)]="editTelefono" /></label>
+      <label class="tech__lbl">Documento<input class="tech__inp" [(ngModel)]="editDocumento" /></label>
+      <label class="tech__lbl"
+        >Especialidad
+        <select class="tech__inp" [(ngModel)]="editEsp">
+          <option [ngValue]="null">—</option>
+          <option *ngFor="let e of especialidades" [ngValue]="e.id">{{ e.nombre }}</option>
+        </select>
+      </label>
+      <label class="tech__lbl">Disponibilidad<input class="tech__inp" [(ngModel)]="editDisp" /></label>
+      <label class="tech__lbl"
+        >Estado
+        <select class="tech__inp" [(ngModel)]="editEstado">
+          <option *ngFor="let e of estados" [ngValue]="e">{{ e }}</option>
+        </select>
+      </label>
+    </div>
+    <div class="tech__modal-actions">
+      <button type="button" class="tech__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="tech__btn tech__btn--primary" [disabled]="busy" (click)="saveEdit()">Guardar</button>
+    </div>
+  </div>
+</div>

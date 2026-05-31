@@ -1,0 +1,42 @@
+<div class="shell">
+  <div class="shell__bg" aria-hidden="true"></div>
+
+  <aside class="shell__aside" aria-label="Navegación administrador">
+    <div class="shell__brand">
+      <span class="shell__logo" aria-hidden="true"></span>
+      <div>
+        <p class="shell__eyebrow">EMERGENCIASVIALES</p>
+        <p class="shell__section">Administrador web</p>
+      </div>
+    </div>
+
+    <nav class="shell__nav">
+      <a
+        *ngFor="let item of nav"
+        [routerLink]="item.path"
+        routerLinkActive="shell__navlink--active"
+        [routerLinkActiveOptions]="{ exact: item.exact }"
+        class="shell__navlink"
+      >
+        {{ item.label }}
+      </a>
+    </nav>
+
+    <a routerLink="/" class="shell__public">Volver al sitio público</a>
+  </aside>
+
+  <div class="shell__main">
+    <header class="shell__topbar">
+      <h1 class="shell__title">Panel administrador</h1>
+      <div class="shell__user" *ngIf="auth.getMe() as me">
+        <span class="shell__email">{{ me.email }}</span>
+        <span class="shell__badge" *ngIf="me.roles?.length">{{ me.roles.join(', ') }}</span>
+        <button type="button" class="shell__logout" (click)="auth.logout()">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <main class="shell__content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

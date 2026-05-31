@@ -1,0 +1,67 @@
+<div class="emg">
+  <h2 class="emg__h">Comisiones</h2>
+  <p class="emg__lead">Resumen financiero y detalle por servicio (CU31). Montos en la moneda indicada en cada pago.</p>
+
+  <div class="emg__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <p class="emg__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="emg__resumen" *ngIf="!loading && resumen">
+    <div class="emg__card">
+      <h3 class="emg__card-title">Totales del taller</h3>
+      <p class="emg__metric"><span class="emg__muted">Registros</span> {{ resumen.total_registros }}</p>
+      <p class="emg__metric">
+        <span class="emg__muted">Volumen servicios (suma)</span> Bs. {{ formatoMonedaResumen(resumen.total_servicios) }}
+      </p>
+      <p class="emg__metric">
+        <span class="emg__muted">Comisión plataforma</span> Bs. {{ formatoMonedaResumen(resumen.total_comision) }}
+      </p>
+      <p class="emg__metric emg__metric--neto">
+        <span class="emg__muted">Neto taller</span> Bs. {{ formatoMonedaResumen(resumen.total_neto) }}
+      </p>
+    </div>
+  </div>
+
+  <div class="emg__tablewrap" *ngIf="!loading">
+    <table class="emg__table">
+      <thead>
+        <tr>
+          <th>Solicitud</th>
+          <th>Estado</th>
+          <th>Servicio</th>
+          <th>Comisión</th>
+          <th>Neto taller</th>
+          <th>Pago</th>
+          <th>Calculado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of rows">
+          <td><strong>#{{ c.solicitud_id }}</strong></td>
+          <td>
+            <span class="emg__pill">{{ estadoUi(c.estado) }}</span>
+          </td>
+          <td class="emg__muted">{{ formatoMoneda(c.monto_servicio, c.pago_moneda) }}</td>
+          <td class="emg__muted">{{ formatoMoneda(c.monto_comision, c.pago_moneda) }}</td>
+          <td>{{ formatoMoneda(c.monto_taller_neto, c.pago_moneda) }}</td>
+          <td class="emg__muted">
+            <ng-container *ngIf="c.pago_estado; else sinPago">{{ c.pago_estado }}</ng-container>
+            <ng-template #sinPago>—</ng-template>
+          </td>
+          <td class="emg__muted" style="font-size: 0.8rem">{{ c.calculado_at | date : 'short' }}</td>
+          <td class="emg__actions">
+            <a
+              *ngIf="linkDetalle(c) as link; else sinLink"
+              class="emg__mini emg__mini--link"
+              [routerLink]="link"
+              >Ver solicitud</a
+            >
+            <ng-template #sinLink><span class="emg__muted">—</span></ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="emg__empty" *ngIf="!rows.length">No hay comisiones registradas.</p>
+  </div>
+</div>

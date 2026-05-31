@@ -1,0 +1,164 @@
+<div class="dash">
+  <h2 class="dash__h">Resumen</h2>
+  <p class="dash__lead">Vista general del sistema</p>
+
+  <div class="dash__alert" *ngIf="error" role="alert">{{ error }}</div>
+  <p class="dash__muted" *ngIf="loading">Cargando métricas…</p>
+
+  <div class="dash__grid" *ngIf="!loading">
+    <article class="dash__card">
+      <h3 class="dash__card-title">Usuarios</h3>
+      <p class="dash__metric">{{ totalUsuarios }}</p>
+      <a routerLink="/admin/panel/usuarios" class="dash__link">Gestionar →</a>
+    </article>
+    <article class="dash__card">
+      <h3 class="dash__card-title">Talleres</h3>
+      <p class="dash__metric">{{ totalTalleres }}</p>
+      <a routerLink="/admin/panel/talleres" class="dash__link">Gestionar →</a>
+    </article>
+    <article class="dash__card">
+      <h3 class="dash__card-title">Roles</h3>
+      <p class="dash__metric">{{ totalRoles }}</p>
+      <a routerLink="/admin/panel/roles" class="dash__link">Gestionar →</a>
+    </article>
+    <article class="dash__card">
+      <h3 class="dash__card-title">Actividad</h3>
+      <p class="dash__metric">{{ actividad.length }}</p>
+      <span class="dash__hint">Últimos registros en bitácora</span>
+    </article>
+  </div>
+
+  <section class="dash__section" *ngIf="!loading">
+    <div class="dash__headrow">
+      <h3 class="dash__section-title">Reporte financiero (comisión plataforma)</h3>
+      <div class="dash__filters">
+        <label class="dash__label">
+          Desde
+          <input class="dash__input" type="date" [(ngModel)]="desde" />
+        </label>
+        <label class="dash__label">
+          Hasta
+          <input class="dash__input" type="date" [(ngModel)]="hasta" />
+        </label>
+        <button class="dash__btn" type="button" (click)="recargarFinanzas()">Actualizar</button>
+      </div>
+    </div>
+
+    <p class="dash__muted" *ngIf="loadingFinanzas">Cargando métricas financieras…</p>
+    <div class="dash__alert" *ngIf="finanzasError" role="alert">{{ finanzasError }}</div>
+
+    <div class="dash__grid dash__grid--fin" *ngIf="!loadingFinanzas && finanzas">
+      <article class="dash__card">
+        <h3 class="dash__card-title">Ganancia plataforma</h3>
+        <p class="dash__metric dash__metric--money">{{ money(finanzas.total_comision_plataforma) }}</p>
+        <span class="dash__hint">Comisión aplicada: {{ pct(finanzas.porcentaje_plataforma) }}</span>
+      </article>
+      <article class="dash__card">
+        <h3 class="dash__card-title">Ticket promedio</h3>
+        <p class="dash__metric dash__metric--money">{{ money(finanzas.ticket_promedio_pagado) }}</p>
+        <span class="dash__hint">Por pago confirmado</span>
+      </article>
+      <article class="dash__card">
+        <h3 class="dash__card-title">Conversión a pago</h3>
+        <p class="dash__metric">{{ pct(finanzas.tasa_conversion_pago_pct) }}</p>
+        <span class="dash__hint">{{ finanzas.n_solicitudes_finalizadas }} solicitudes finalizadas</span>
+      </article>
+      <article class="dash__card">
+        <h3 class="dash__card-title">Talleres con comisión</h3>
+        <p class="dash__metric">{{ finanzas.n_talleres_con_comision }}</p>
+        <span class="dash__hint">Con ingresos en el rango</span>
+      </article>
+      <article class="dash__card">
+        <h3 class="dash__card-title">Servicios comisionados</h3>
+        <p class="dash__metric">{{ finanzas.n_comisiones }}</p>
+        <span class="dash__hint">Con comisión en el rango</span>
+      </article>
+    </div>
+  </section>
+
+  <section class="dash__section" *ngIf="!loading && !loadingFinanzas">
+    <h3 class="dash__section-title">Top talleres por comisión</h3>
+    <p class="dash__subtle">
+      Monto servicio: referencia de lo facturado al cliente por taller (la plataforma solo retiene comisión).
+    </p>
+    <div class="dash__tablewrap" *ngIf="topTalleres.length; else emptyTop">
+      <table class="dash__table">
+        <thead>
+          <tr>
+            <th>Taller</th>
+            <th>Servicios</th>
+            <th class="dash__th-muted">Monto servicio</th>
+            <th>Comisión plataforma</th>
+            <th>Neto taller</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of topTalleres">
+            <td>{{ row.nombre_comercial }}</td>
+            <td>{{ row.n_comisiones }}</td>
+            <td class="dash__td-muted">{{ money(row.total_monto_servicio) }}</td>
+            <td>{{ money(row.total_comision_plataforma) }}</td>
+            <td>{{ money(row.total_neto_taller) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #emptyTop>
+      <p class="dash__empty">Sin talleres con comisiones en el rango elegido.</p>
+    </ng-template>
+  </section>
+
+  <section class="dash__section" *ngIf="!loading && !loadingFinanzas">
+    <h3 class="dash__section-title">Serie diaria de comisión plataforma</h3>
+    <div class="dash__chart" *ngIf="serieComisiones.length; else emptySerie">
+      <div class="dash__barrow" *ngFor="let row of serieComisiones">
+        <div class="dash__barmeta">
+          <span>{{ row.fecha | date : 'dd/MM' }}</span>
+          <span>{{ money(row.total_comision_plataforma) }}</span>
+        </div>
+        <div class="dash__bartrack">
+          <div class="dash__bar" [style.width.%]="barWidthPercent(row.total_comision_plataforma)"></div>
+        </div>
+      </div>
+      <p class="dash__hint">Total rango: {{ money(totalComisionSerie()) }}</p>
+    </div>
+    <ng-template #emptySerie>
+      <p class="dash__empty">Sin datos diarios de comisiones para el rango actual.</p>
+    </ng-template>
+  </section>
+
+  <section class="dash__section" *ngIf="!loading">
+    <h3 class="dash__section-title">Accesos rápidos</h3>
+    <div class="dash__chips">
+      <a *ngFor="let q of quick" [routerLink]="q.path" class="dash__chip">{{ q.label }}</a>
+    </div>
+  </section>
+
+  <section class="dash__section" *ngIf="!loading">
+    <h3 class="dash__section-title">Actividad reciente</h3>
+    <div class="dash__tablewrap" *ngIf="actividad.length; else emptyAct">
+      <table class="dash__table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Módulo</th>
+            <th>Acción</th>
+            <th>Descripción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of actividad">
+            <td>{{ row.created_at | date : 'short' }}</td>
+            <td>{{ row.modulo }}</td>
+            <td><span class="dash__pill">{{ row.accion }}</span></td>
+            <td>{{ row.descripcion || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <ng-template #emptyAct>
+      <p class="dash__empty">Sin registros recientes.</p>
+    </ng-template>
+    <a routerLink="/admin/panel/bitacora" class="dash__link dash__link--block">Ver bitácora completa</a>
+  </section>
+</div>

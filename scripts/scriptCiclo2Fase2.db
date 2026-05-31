@@ -1,0 +1,124 @@
+-- Copia de referencia alineada con backend/migrations/0003_ciclo2_fase2_seguimiento.sql
+-- (Alembic 0004_ciclo2_fase2_seguimiento ejecuta ese archivo).
+
+-- =========================================================
+-- Ciclo 2 — Fase 2 (CU16–CU18): seguimiento, taller/técnico, ETA, historial.
+-- Idempotente. Requiere fase 1 aplicada (tabla solicitudes_emergencia).
+-- =========================================================
+
+-- Enum ampliado (reemplaza uso de estado_solicitud_emergencia en la columna estado).
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_type WHERE typname = 'estado_solicitud_seguimiento'
+    ) THEN
+        CREATE TYPE estado_solicitud_seguimiento AS ENUM (
+            'REGISTRADA',
+            'EN_REVISION',
+            'TALLER_ASIGNADO',
+            'TECNICO_ASIGNADO',
+            'EN_CAMINO',
+            'EN_ATENCION',
+            'FINALIZADA',
+            'CANCELADA'
+        );
+    END IF;
+END$$;
+
+-- Migrar columna estado al nuevo enum solo si aún usa el tipo de fase 1.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns c
+        JOIN pg_type t ON t.typname = c.udt_name
+        WHERE c.table_schema = 'public'
+          AND c.table_name = 'solicitudes_emergencia'
+          AND c.column_name = 'estado'
+          AND t.typname = 'estado_solicitud_emergencia'
+    ) THEN
+        ALTER TABLE solicitudes_emergencia ALTER COLUMN estado DROP DEFAULT;
+        ALTER TABLE solicitudes_emergencia
+            ALTER COLUMN estado TYPE estado_solicitud_seguimiento
+            USING estado::text::estado_solicitud_seguimiento;
+        ALTER TABLE solicitudes_emergencia
+            ALTER COLUMN estado SET DEFAULT 'REGISTRADA'::estado_solicitud_seguimiento;
+    END IF;
+END$$;
+
+ALTER TABLE solicitudes_emergencia
+    ADD COLUMN IF NOT EXISTS taller_id INTEGER,
+    ADD COLUMN IF NOT EXISTS tecnico_id INTEGER,
+    ADD COLUMN IF NOT EXISTS tiempo_estimado_min INTEGER,
+    ADD COLUMN IF NOT EXISTS finalizada_at TIMESTAMP;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.table_constraints
+        WHERE constraint_schema = 'public'
+          AND constraint_name = 'fk_solicitudes_taller'
+    ) THEN
+        ALTER TABLE solicitudes_emergencia
+            ADD CONSTRAINT fk_solicitudes_taller
+            FOREIGN KEY (taller_id) REFERENCES talleres(id)
+            ON UPDATE CASCADE ON DELETE SET NULL;
+    END IF;
+END$$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM information_schema.table_constraints
+        WHERE constraint_schema = 'public'
+          AND constraint_name = 'fk_solicitudes_tecnico'
+    ) THEN
+        ALTER TABLE solicitudes_emergencia
+            ADD CONSTRAINT fk_solicitudes_tecnico
+            FOREIGN KEY (tecnico_id) REFERENCES tecnicos(id)
+            ON UPDATE CASCADE ON DELETE SET NULL;
+    END IF;
+END$$;
+
+CREATE TABLE IF NOT EXISTS solicitud_historial_estado (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    solicitud_id        INTEGER NOT NULL,
+    estado_anterior     estado_solicitud_seguimiento,
+    estado_nuevo        estado_solicitud_seguimiento NOT NULL,
+    usuario_id          INTEGER,
+    observacion         TEXT,
+    created_at          TIMESTAMP NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT fk_historial_solicitud
+        FOREIGN KEY (solicitud_id) REFERENCES solicitudes_emergencia(id)
+        ON UPDATE CASCADE ON DELETE CASCADE,
+
+    CONSTRAINT fk_historial_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_solicitudes_taller_id
+    ON solicitudes_emergencia(taller_id);
+
+CREATE INDEX IF NOT EXISTS idx_solicitudes_tecnico_id
+    ON solicitudes_emergencia(tecnico_id);
+
+CREATE INDEX IF NOT EXISTS idx_historial_estado_solicitud_id
+    ON solicitud_historial_estado(solicitud_id);
+
+CREATE INDEX IF NOT EXISTS idx_historial_estado_created_at
+    ON solicitud_historial_estado(created_at);
+
+-- Semilla de historial: primera fila = estado actual al crear/migrar (CU16).
+INSERT INTO solicitud_historial_estado (solicitud_id, estado_anterior, estado_nuevo, created_at)
+SELECT se.id, NULL, se.estado, se.created_at
+FROM solicitudes_emergencia se
+WHERE NOT EXISTS (
+    SELECT 1 FROM solicitud_historial_estado h WHERE h.solicitud_id = se.id
+);
+
+-- Tipo antiguo ya no referenciado por la columna estado.
+DROP TYPE IF EXISTS estado_solicitud_emergencia;

@@ -1,0 +1,52 @@
+<div class="perm">
+  <h2 class="perm__h">Gestión de permisos</h2>
+  <p class="perm__lead">Catálogo de permisos por módulo (solo lectura en API)</p>
+
+  <div class="perm__info" role="note">
+    Los permisos se definen en la base inicial. Crear/editar vía API no está habilitado en este ciclo; el panel
+    muestra el catálogo y la relación conceptual con roles (asignación desde <strong>Roles → Permisos</strong>).
+  </div>
+
+  <div class="perm__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="perm__toolbar" *ngIf="!loading">
+    <select class="perm__select" [(ngModel)]="modulo" aria-label="Filtrar por módulo">
+      <option value="">Todos los módulos</option>
+      <option *ngFor="let m of modulos" [value]="m">{{ m }}</option>
+    </select>
+    <input
+      type="search"
+      class="perm__search"
+      [(ngModel)]="search"
+      placeholder="Buscar código o nombre…"
+      aria-label="Buscar permisos"
+    />
+    <button type="button" class="perm__btn perm__btn--disabled" disabled title="No disponible en la API actual">
+      Crear permiso
+    </button>
+  </div>
+
+  <p class="perm__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="perm__tablewrap" *ngIf="!loading">
+    <table class="perm__table">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Nombre</th>
+          <th>Módulo</th>
+          <th>Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of filtered">
+          <td><code>{{ p.codigo }}</code></td>
+          <td>{{ p.nombre }}</td>
+          <td><span class="perm__pill">{{ p.modulo }}</span></td>
+          <td>{{ p.descripcion || '—' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="perm__empty" *ngIf="!filtered.length">Sin resultados.</p>
+  </div>
+</div>

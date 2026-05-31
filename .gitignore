@@ -1,0 +1,85 @@
+# .gitignore — Plataforma Emergencias Vehiculares
+
+# ── Variables de entorno (NUNCA versionar) ────────────────
+#.env
+#.env.*
+!.env.example
+!**/.env.example
+mobile/.env
+# Variables de entorno: usar solo `.env` en la raíz del repo (ver `.env.example`).
+backend/.env
+frontend/.env
+
+# ── Python / FastAPI ──────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+#.venv/
+#venv/
+*.egg-info/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ── Angular ───────────────────────────────────────────────
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+
+# Plantillas / basura local de experimentos Angular
+_ng_temp/
+.ng_temp/
+
+# ── Flutter ───────────────────────────────────────────────
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/build/
+mobile/android/.gradle/
+mobile/ios/Pods/
+# En apps Flutter conviene SÍ versionar pubspec.lock; no ignores *.lock aquí.
+
+# ── Docker ────────────────────────────────────────────────
+# (no excluir docker-compose pero sí datos locales)
+
+# ── IDEs y herramientas locales (Cursor, skills, etc.) ────
+# .vscode/: preferencias locales; si el equipo comparte launch/tasks, usa !.vscode/launch.json
+.vscode/
+.idea/
+agents/
+skills-lock.json
+*.swp
+*.swo
+
+# ── Sistema operativo ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ── Logs ──────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Documentación / memoria IA (opcional) ──────────────────
+# OJO: Si ignoras docs/ completo, NADA de docs/ sube a GitHub.
+# Para entregar documentación o docs/ai al equipo, comenta o borra este bloque.
+
+
+# Evidencias (foto/audio) guardadas por el API en disco
+#backend/uploads/
+
+# Pesos IA (grandes; el entrenamiento en Colab genera .pt en backend/)
+# Para usar el modelo: descargarlo de Drive/Colab y colocarlo en backend/
+#backend/*.pt
+#*.pt
+
+# ── Credenciales de servicios externos (NUNCA versionar) ──
+google-credentials.json
+**/google-services.json
+firebase-credentials.json
+**/firebase-credentials.json
+stripe-credentials.json
+#si

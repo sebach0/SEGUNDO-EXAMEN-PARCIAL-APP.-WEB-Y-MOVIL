@@ -1,0 +1,49 @@
+<div class="emg">
+  <h2 class="emg__h">Disponibilidad del taller</h2>
+  <p class="emg__lead">Control de aceptación de nuevas solicitudes y capacidad declarada</p>
+
+  <div class="emg__alert" *ngIf="error" role="alert">{{ error }}</div>
+  <div class="emg__success" *ngIf="success" role="status">{{ success }}</div>
+
+  <p class="emg__muted" *ngIf="loading">Cargando…</p>
+
+  <form class="emg__form" *ngIf="!loading && data" (ngSubmit)="guardar()">
+    <section class="emg__card">
+      <label class="emg__switch">
+        <input type="checkbox" [(ngModel)]="acepta" name="acepta" />
+        <span>Aceptar nuevas solicitudes de emergencia</span>
+      </label>
+      <p class="emg__hint">Si está desactivado, el taller deja de recibir nuevas solicitudes en la bandeja según la lógica de negocio del backend.</p>
+    </section>
+
+    <section class="emg__card">
+      <h3 class="emg__card-title">Capacidad y servicios</h3>
+      <label class="emg__lbl" for="emg-cap">Capacidad máxima diaria (1–500)</label>
+      <input id="emg-cap" class="emg__inp" type="number" min="1" max="500" name="cap" [(ngModel)]="capacidad" />
+
+      <p class="emg__hint emg__hint--spaced">
+        <strong>Servicios activos (solo lectura):</strong> {{ data.servicios_activos }} — valor calculado en servidor; no
+        se envía en el PUT actual.
+      </p>
+    </section>
+
+    <section class="emg__card">
+      <h3 class="emg__card-title">Observación</h3>
+      <label class="emg__lbl" for="emg-obs">Notas internas (opcional)</label>
+      <textarea id="emg-obs" class="emg__textarea" name="obs" rows="4" [(ngModel)]="observacion" maxlength="2000"></textarea>
+      <p class="emg__hint">Máximo 2000 caracteres (validación API).</p>
+    </section>
+
+    <section class="emg__card emg__card--meta" *ngIf="data.updated_at">
+      <p class="emg__muted">
+        Última actualización: {{ data.updated_at | date : 'medium'
+        }}<span *ngIf="data.updated_by_usuario_id"> · usuario #{{ data.updated_by_usuario_id }}</span>
+      </p>
+    </section>
+
+    <div class="emg__form-actions">
+      <button type="button" class="emg__btn" (click)="reload()" [disabled]="saving">Descartar cambios</button>
+      <button type="submit" class="emg__btn emg__btn--primary" [disabled]="saving">Guardar cambios</button>
+    </div>
+  </form>
+</div>

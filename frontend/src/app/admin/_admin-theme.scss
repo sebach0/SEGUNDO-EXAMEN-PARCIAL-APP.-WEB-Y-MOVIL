@@ -1,0 +1,35 @@
+// EmergenciasViales — administrador web (alineado a admin-login / landing oscura)
+$ev-bg: #05070a;
+$ev-surface: #0d1117;
+$ev-surface-2: #161b22;
+$ev-border: rgba(240, 246, 252, 0.1);
+$ev-text: #f0f6fc;
+$ev-muted: #8b949e;
+$ev-cyan: #4cc9f0;
+$ev-link: #58a6ff;
+$ev-focus: #4361ee;
+$ev-purple: #7209b7;
+$ev-danger-bg: rgba(248, 81, 73, 0.12);
+$ev-danger-border: rgba(248, 81, 73, 0.35);
+$ev-danger-text: #fecaca;
+$ev-success-bg: rgba(46, 160, 67, 0.12);
+$ev-success-border: rgba(46, 160, 67, 0.35);
+$ev-info-bg: rgba(56, 139, 253, 0.08);
+$ev-info-border: rgba(56, 139, 253, 0.2);
+$ev-radius-sm: 8px;
+$ev-radius-md: 10px;
+$ev-radius-lg: 14px;
+$ev-space: 8px;
+$ev-font: 'Plus Jakarta Sans', system-ui, sans-serif;
+$ev-gradient-cta: linear-gradient(90deg, #4361ee 0%, #7209b7 100%);
+$ev-shadow-card: 0 24px 80px rgba(0, 0, 0, 0.45);
+$ev-shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.35);
+
+@mixin ev-grid-bg {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 42%, rgba(67, 97, 238, 0.14), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 48%, rgba(114, 9, 183, 0.1), transparent 50%),
+    linear-gradient(rgba(240, 246, 252, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(240, 246, 252, 0.03) 1px, transparent 1px);
+  background-size: auto, auto, 32px 32px, 32px 32px;
+}

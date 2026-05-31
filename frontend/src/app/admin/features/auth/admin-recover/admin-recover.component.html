@@ -1,0 +1,43 @@
+<div class="recover">
+  <div class="recover__bg" aria-hidden="true"></div>
+  <main class="recover__main">
+    <header class="recover__brand">
+      <p class="recover__eyebrow">EMERGENCIASVIALES</p>
+      <h1 class="recover__title">Restablecer contraseña</h1>
+      <p class="recover__subtitle">Administrador web</p>
+    </header>
+
+    <section class="recover__card" aria-labelledby="recover-heading">
+      <h2 id="recover-heading" class="recover__card-title">Enlace de recuperación</h2>
+      <p class="recover__card-desc">
+        Indica el correo de tu cuenta administrador. Cuando exista servicio de correo en la API, aquí se
+        enviará el enlace.
+      </p>
+
+      <div class="recover__alert recover__alert--error" *ngIf="errorMsg" role="alert">{{ errorMsg }}</div>
+      <div class="recover__alert recover__alert--ok" *ngIf="success" role="status">
+        Si el correo existe en el sistema, recibirás instrucciones. (Sin envío real de correo aún.)
+      </div>
+
+      <form class="recover__form" [formGroup]="form" (ngSubmit)="submit()" *ngIf="!success" novalidate>
+        <div class="recover__field">
+          <label class="recover__label" for="recover-email">Correo electrónico</label>
+          <input
+            id="recover-email"
+            class="recover__input"
+            type="email"
+            autocomplete="email"
+            formControlName="email"
+          />
+        </div>
+        <button class="recover__submit" type="submit" [disabled]="submitting">
+          {{ submitting ? 'Enviando…' : 'Enviar enlace' }}
+        </button>
+      </form>
+
+      <a routerLink="/admin" class="recover__back">← Volver al inicio de sesión</a>
+    </section>
+
+    <footer class="recover__footer">© 2026 EmergenciasViales — Administrador web</footer>
+  </main>
+</div>

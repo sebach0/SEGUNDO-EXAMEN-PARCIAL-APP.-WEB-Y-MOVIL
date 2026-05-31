@@ -1,0 +1,248 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.emg__h {
+  @include ui.ev-page-title;
+}
+
+.emg__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.emg__alert {
+  @include ui.ev-alert-error;
+}
+
+.emg__ok {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: #a7f3d0;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.emg__muted {
+  color: t.$ev-muted;
+  font-size: 0.8125rem;
+}
+
+.emg__crumb {
+  font-size: 0.8125rem;
+  margin-bottom: 0.5rem;
+}
+
+.emg__crumb-link {
+  color: t.$ev-cyan;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.emg__actionsbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.emg__spacer {
+  flex: 1;
+  min-width: 0.5rem;
+}
+
+.emg__pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(76, 201, 240, 0.12);
+  color: t.$ev-cyan;
+  border: 1px solid rgba(76, 201, 240, 0.25);
+
+  &--muted {
+    background: rgba(148, 163, 184, 0.12);
+    color: t.$ev-muted;
+    border-color: rgba(148, 163, 184, 0.25);
+  }
+}
+
+.emg__btn {
+  @include ui.ev-btn-ghost;
+  cursor: pointer;
+
+  &--primary {
+    @include ui.ev-btn-primary;
+  }
+
+  &--danger {
+    border-color: rgba(248, 81, 73, 0.35);
+    color: #fecaca;
+  }
+}
+
+.emg__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.emg__card {
+  @include ui.ev-card;
+
+  &--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.emg__card-title {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.emg__dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+
+  dt {
+    color: t.$ev-muted;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  &--inline {
+    grid-template-columns: repeat(2, minmax(100px, 1fr));
+    margin-top: 0.75rem;
+  }
+}
+
+.emg__text {
+  margin: 0 0 0.5rem;
+  line-height: 1.5;
+  font-size: 0.875rem;
+}
+
+.emg__link {
+  margin-left: 0.5rem;
+  color: t.$ev-cyan;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.emg__backdrop {
+  @include ui.ev-modal-backdrop;
+}
+
+.emg__modal {
+  @include ui.ev-modal;
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 480px;
+
+  h3 {
+    margin: 0 0 0.75rem;
+  }
+}
+
+.emg__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.emg__lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.emg__textarea {
+  @include ui.ev-input;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.35rem;
+}
+
+.emg__select {
+  @include ui.ev-input;
+  width: 100%;
+  max-width: 28rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.emg__asig-list {
+  margin: 0 0 1rem;
+  padding-left: 1.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.emg__row-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.emg__media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.emg__media-item {
+  margin: 0;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.emg__media-img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.emg__media-audio {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+}
+
+.emg__media-cap {
+  margin: 0.4rem 0 0;
+  font-size: 0.75rem;
+  color: t.$ev-muted;
+}

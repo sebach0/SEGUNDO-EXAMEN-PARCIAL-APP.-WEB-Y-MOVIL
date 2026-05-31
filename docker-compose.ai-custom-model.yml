@@ -1,0 +1,14 @@
+# Opcional: modelo de clasificación propio (Colab → best.pt renombrado).
+# Colocá el archivo en: backend/incidentes_emergencias_v1.pt si
+#
+# Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.ai-custom-model.yml --profile ai up -d
+#
+services:
+  ai-inference:
+    environment:
+      YOLO_TASK: classify
+      YOLO_MODEL: /models/incidentes_emergencias_v1.pt
+      YOLO_IMGSZ: "224"
+    volumes:
+      - ./backend/incidentes_emergencias_v1.pt:/models/incidentes_emergencias_v1.pt:ro

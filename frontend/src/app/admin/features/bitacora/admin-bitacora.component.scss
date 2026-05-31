@@ -1,0 +1,119 @@
+@use '../../admin-theme' as t;
+@use '../../admin-ui' as ui;
+
+.bit__h {
+  @include ui.ev-page-title;
+}
+
+.bit__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.bit__alert {
+  @include ui.ev-alert-error;
+}
+
+.bit__filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: calc(t.$ev-space * 1.5);
+  margin-bottom: calc(t.$ev-space * 2);
+  align-items: end;
+}
+
+.bit__lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.bit__inp {
+  @include ui.ev-input;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.bit__btn {
+  @include ui.ev-btn-ghost;
+  height: fit-content;
+
+  &--primary {
+    @include ui.ev-btn-primary;
+  }
+}
+
+.bit__muted {
+  color: t.$ev-muted;
+}
+
+.bit__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.bit__table {
+  @include ui.ev-table;
+}
+
+.bit__pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  background: rgba(76, 201, 240, 0.12);
+  color: t.$ev-cyan;
+  border: 1px solid rgba(76, 201, 240, 0.25);
+}
+
+.bit__mini {
+  @include ui.ev-btn-ghost;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.bit__empty {
+  padding: 1rem;
+  color: t.$ev-muted;
+}
+
+.bit__backdrop {
+  @include ui.ev-modal-backdrop;
+}
+
+.bit__modal {
+  @include ui.ev-modal;
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  h3 {
+    margin: 0 0 1rem;
+  }
+}
+
+.bit__dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+
+  dt {
+    color: t.$ev-muted;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+  }
+}

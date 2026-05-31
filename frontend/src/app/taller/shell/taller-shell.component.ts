@@ -1,0 +1,74 @@
+import { Component, inject, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { take } from 'rxjs';
+import { TallerAuthService } from '../../core/services/taller-auth.service';
+
+type NavItem = { path: string; label: string; exact: boolean; permiso?: string };
+
+@Component({
+  selector: 'app-taller-shell',
+  standalone: true,
+  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
+  templateUrl: './taller-shell.component.html',
+  styleUrl: './taller-shell.component.scss',
+})
+export class TallerShellComponent implements OnInit {
+  readonly auth = inject(TallerAuthService);
+
+  ngOnInit(): void {
+    this.auth
+      .refreshMeSiHaySesion()
+      .pipe(take(1))
+      .subscribe();
+  }
+
+  private readonly navAll: NavItem[] = [
+    { path: '/taller/panel', label: 'Resumen', exact: true },
+    {
+      path: '/taller/panel/emergencias/solicitudes',
+      label: 'Solicitudes',
+      exact: false,
+      permiso: 'solicitudes_taller:leer',
+    },
+    {
+      path: '/taller/panel/emergencias/mis-solicitudes',
+      label: 'Mis solicitudes',
+      exact: true,
+      permiso: 'historial_atenciones:leer',
+    },
+    {
+      path: '/taller/panel/emergencias/historial',
+      label: 'Historial de atenciones',
+      exact: true,
+      permiso: 'historial_atenciones:leer',
+    },
+    {
+      path: '/taller/panel/emergencias/servicios-asignados',
+      label: 'Servicios asignados',
+      exact: true,
+      permiso: 'historial_atenciones:leer',
+    },
+    {
+      path: '/taller/panel/emergencias/comisiones',
+      label: 'Comisiones',
+      exact: true,
+      permiso: 'comisiones:leer',
+    },
+    {
+      path: '/taller/panel/emergencias/disponibilidad',
+      label: 'Disponibilidad',
+      exact: true,
+      permiso: 'disponibilidad:gestionar',
+    },
+    { path: '/taller/panel/mi-taller', label: 'Mi taller', exact: false },
+    { path: '/taller/panel/tecnicos', label: 'Técnicos', exact: false },
+  ];
+
+  /** Oculta entradas de emergencias si el JWT no trae el permiso (backend FastAPI). */
+  get nav(): NavItem[] {
+    const permisos = this.auth.getMe()?.permisos;
+    if (!permisos?.length) return [...this.navAll];
+    return this.navAll.filter((item) => !item.permiso || permisos.includes(item.permiso));
+  }
+}

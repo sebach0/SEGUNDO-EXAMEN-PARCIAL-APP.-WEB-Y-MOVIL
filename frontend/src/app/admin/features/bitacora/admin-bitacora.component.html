@@ -1,0 +1,89 @@
+<div class="bit">
+  <h2 class="bit__h">Bitácora de auditoría</h2>
+  <p class="bit__lead">Consulta inmutable de acciones</p>
+
+  <div class="bit__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="bit__filters">
+    <label class="bit__lbl">
+      Usuario (ID)
+      <input class="bit__inp" type="text" [(ngModel)]="usuarioId" placeholder="ej. 1" />
+    </label>
+    <label class="bit__lbl">
+      Módulo
+      <input class="bit__inp" type="text" [(ngModel)]="modulo" placeholder="usuarios" />
+    </label>
+    <label class="bit__lbl">
+      Acción
+      <select class="bit__inp" [(ngModel)]="accion">
+        <option value="">Todas</option>
+        <option *ngFor="let a of acciones" [value]="a">{{ a }}</option>
+      </select>
+    </label>
+    <label class="bit__lbl">
+      Desde
+      <input class="bit__inp" type="datetime-local" [(ngModel)]="desde" />
+    </label>
+    <label class="bit__lbl">
+      Hasta
+      <input class="bit__inp" type="datetime-local" [(ngModel)]="hasta" />
+    </label>
+    <button type="button" class="bit__btn bit__btn--primary" (click)="fetch()">Aplicar filtros</button>
+  </div>
+
+  <p class="bit__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="bit__tablewrap" *ngIf="!loading">
+    <table class="bit__table">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Usuario</th>
+          <th>Módulo</th>
+          <th>Acción</th>
+          <th>Entidad</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of rows">
+          <td>{{ row.created_at | date : 'medium' }}</td>
+          <td>{{ row.usuario_id ?? '—' }}</td>
+          <td>{{ row.modulo }}</td>
+          <td><span class="bit__pill">{{ row.accion }}</span></td>
+          <td>
+            {{ row.entidad }}
+            <ng-container *ngIf="row.entidad_id != null"> #{{ row.entidad_id }}</ng-container>
+          </td>
+          <td><button type="button" class="bit__mini" (click)="openDetail(row)">Detalle</button></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="bit__empty" *ngIf="!rows.length">Sin registros con estos filtros.</p>
+  </div>
+
+  <div class="bit__backdrop" *ngIf="detail" (click)="closeDetail()"></div>
+  <div class="bit__modal" *ngIf="detail" role="dialog" aria-modal="true">
+    <h3>Detalle de registro</h3>
+    <dl class="bit__dl">
+      <dt>ID</dt>
+      <dd>{{ detail.id }}</dd>
+      <dt>Fecha</dt>
+      <dd>{{ detail.created_at | date : 'medium' }}</dd>
+      <dt>Usuario</dt>
+      <dd>{{ detail.usuario_id ?? '—' }}</dd>
+      <dt>IP</dt>
+      <dd>{{ detail.ip_address || '—' }}</dd>
+      <dt>Módulo / entidad</dt>
+      <dd>
+        {{ detail.modulo }} / {{ detail.entidad
+        }}<ng-container *ngIf="detail.entidad_id != null"> #{{ detail.entidad_id }}</ng-container>
+      </dd>
+      <dt>Acción</dt>
+      <dd>{{ detail.accion }}</dd>
+      <dt>Descripción</dt>
+      <dd>{{ detail.descripcion || '—' }}</dd>
+    </dl>
+    <button type="button" class="bit__btn bit__btn--primary" (click)="closeDetail()">Cerrar</button>
+  </div>
+</div>

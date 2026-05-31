@@ -1,0 +1,91 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.emg__h {
+  @include ui.ev-page-title;
+}
+
+.emg__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.emg__alert {
+  @include ui.ev-alert-error;
+}
+
+.emg__toolbar {
+  @include ui.ev-toolbar;
+  flex-wrap: wrap;
+}
+
+.emg__search,
+.emg__select,
+.emg__date {
+  @include ui.ev-input;
+}
+
+.emg__search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+}
+
+.emg__datewrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 140px;
+}
+
+.emg__btn {
+  @include ui.ev-btn-ghost;
+}
+
+.emg__muted {
+  color: t.$ev-muted;
+  font-size: 0.8125rem;
+}
+
+.emg__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.emg__table {
+  @include ui.ev-table;
+}
+
+.emg__pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(76, 201, 240, 0.12);
+  color: t.$ev-cyan;
+  border: 1px solid rgba(76, 201, 240, 0.25);
+}
+
+.emg__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.emg__mini {
+  @include ui.ev-btn-ghost;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+
+  &--link {
+    text-decoration: none;
+    cursor: pointer;
+  }
+}
+
+.emg__empty {
+  padding: 1rem;
+  color: t.$ev-muted;
+}

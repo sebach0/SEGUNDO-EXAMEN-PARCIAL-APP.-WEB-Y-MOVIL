@@ -1,0 +1,244 @@
+<div class="emg">
+  <nav class="emg__crumb" aria-label="Migas de pan">
+    <a routerLink="/taller/panel/emergencias/solicitudes" class="emg__crumb-link">Solicitudes</a>
+    <span class="emg__muted" aria-hidden="true"> / </span>
+    <span>Detalle</span>
+  </nav>
+
+  <h2 class="emg__h">Incidente estructurado</h2>
+  <p class="emg__lead" *ngIf="detalle">Solicitud #{{ detalle.solicitud_id }} · Bandeja {{ detalle.bandeja_id }}</p>
+
+  <div class="emg__alert" *ngIf="error" role="alert">{{ error }}</div>
+  <div class="emg__ok" *ngIf="successMsg" role="status">{{ successMsg }}</div>
+  <p class="emg__muted" *ngIf="loading">Cargando…</p>
+
+  <ng-container *ngIf="!loading && detalle">
+    <div class="emg__actionsbar">
+      <span class="emg__pill">{{ detalle.estado_bandeja }}</span>
+      <span class="emg__pill emg__pill--muted">{{ detalle.estado_solicitud }}</span>
+      <div class="emg__spacer"></div>
+      <button
+        type="button"
+        class="emg__btn emg__btn--primary"
+        *ngIf="puedeOperarBandeja() && puedeAceptar()"
+        [disabled]="busy"
+        (click)="openAceptar()"
+      >
+        Aceptar asistencia
+      </button>
+      <button
+        type="button"
+        class="emg__btn emg__btn--danger"
+        *ngIf="puedeOperarBandeja() && puedeRechazar()"
+        [disabled]="busy"
+        (click)="openRechazar()"
+      >
+        Rechazar
+      </button>
+    </div>
+
+    <div class="emg__grid">
+      <section class="emg__card">
+        <h3 class="emg__card-title">Cliente</h3>
+        <dl class="emg__dl">
+          <dt>Nombre</dt>
+          <dd>{{ detalle.nombres }} {{ detalle.apellidos }}</dd>
+          <dt>ID cliente</dt>
+          <dd>{{ detalle.cliente_id }}</dd>
+        </dl>
+      </section>
+
+      <section class="emg__card">
+        <h3 class="emg__card-title">Vehículo</h3>
+        <dl class="emg__dl">
+          <dt>Placa</dt>
+          <dd>{{ detalle.placa }}</dd>
+          <dt>Marca / modelo</dt>
+          <dd>{{ detalle.marca || '—' }} {{ detalle.modelo || '' }}</dd>
+          <dt>Tipo</dt>
+          <dd>{{ detalle.tipo_vehiculo || '—' }}</dd>
+          <dt>ID vehículo</dt>
+          <dd>{{ detalle.vehiculo_id }}</dd>
+        </dl>
+      </section>
+
+      <section class="emg__card emg__card--wide">
+        <h3 class="emg__card-title">Ubicación</h3>
+        <dl class="emg__dl">
+          <dt>Coordenadas</dt>
+          <dd>
+            <ng-container *ngIf="detalle.latitud && detalle.longitud; else sinGeo">
+              {{ detalle.latitud }}, {{ detalle.longitud }}
+              <a *ngIf="externalMapLink() as map" [href]="map" class="emg__link" target="_blank" rel="noopener noreferrer"
+                >Abrir en mapa</a
+              >
+            </ng-container>
+            <ng-template #sinGeo>—</ng-template>
+          </dd>
+          <dt>Referencia</dt>
+          <dd>{{ detalle.direccion_referencia || '—' }}</dd>
+        </dl>
+      </section>
+
+      <section class="emg__card emg__card--wide">
+        <h3 class="emg__card-title">Descripción y estado</h3>
+        <p class="emg__text">{{ detalle.descripcion_texto || 'Sin texto adicional registrado.' }}</p>
+        <dl class="emg__dl emg__dl--inline">
+          <dt>Alta solicitud</dt>
+          <dd>{{ detalle.created_at | date : 'medium' }}</dd>
+          <dt>Entrada bandeja</dt>
+          <dd>{{ detalle.creado_at | date : 'medium' }}</dd>
+          <dt>Respondido</dt>
+          <dd>{{ detalle.respondido_at ? (detalle.respondido_at | date : 'medium') : '—' }}</dd>
+        </dl>
+        <p class="emg__muted" *ngIf="detalle.motivo_rechazo"><strong>Motivo rechazo:</strong> {{ detalle.motivo_rechazo }}</p>
+      </section>
+
+      <section class="emg__card emg__card--wide" *ngIf="detalle">
+        <h3 class="emg__card-title">Análisis asistido (IA)</h3>
+        <ng-container *ngIf="aiTieneContenido(detalle); else sinIaTaller">
+          <p class="emg__text" *ngIf="aiCategoriaUi(detalle) as cat">
+            <strong>Categoría sugerida:</strong> {{ cat
+            }}<ng-container *ngIf="aiConfianzaClasificacion(detalle) as conf">
+              ({{ (conf * 100) | number : '1.0-0' }}%)
+            </ng-container>
+          </p>
+          <p class="emg__text" *ngIf="aiPrioridadUi(detalle) as pr"><strong>Prioridad sugerida:</strong> {{ pr }}</p>
+          <p class="emg__muted" *ngIf="aiPrioridadMotivos(detalle).length">
+            {{ aiPrioridadMotivos(detalle).join(' · ') }}
+          </p>
+          <p class="emg__text" *ngIf="aiResumenTexto(detalle) as r"><strong>Resumen:</strong> {{ r }}</p>
+          <ul class="emg__asig-list" *ngIf="aiHallazgosVision(detalle).length">
+            <li *ngFor="let h of aiHallazgosVision(detalle)">{{ h }}</li>
+          </ul>
+        </ng-container>
+        <ng-template #sinIaTaller>
+          <p class="emg__muted">
+            No hay análisis asistido aún, o el servicio de IA no estaba activo al procesar la solicitud.
+          </p>
+        </ng-template>
+        <p class="emg__muted" style="margin-top: 0.75rem; font-style: italic">
+          Indicación automática; puede requerir validación humana.
+        </p>
+      </section>
+
+      <section class="emg__card emg__card--wide" *ngIf="debeMostrarBloqueAsignacion(detalle)">
+        <h3 class="emg__card-title">Asignación de técnico</h3>
+        <p class="emg__muted" *ngIf="loadingAsignData">Cargando técnicos e historial…</p>
+        <ng-container *ngIf="!loadingAsignData">
+          <p class="emg__text" *ngIf="asignaciones.length">
+            Historial de asignaciones (más reciente primero):
+          </p>
+          <ul class="emg__asig-list" *ngIf="asignaciones.length">
+            <li *ngFor="let a of asignaciones">
+              <span class="emg__pill emg__pill--muted">{{ a.estado }}</span>
+              {{ nombreTecnico(a.tecnico_id) }} — {{ a.created_at | date : 'medium' }}
+              <span class="emg__muted" *ngIf="a.observacion"> — {{ a.observacion }}</span>
+            </li>
+          </ul>
+          <ng-container *ngIf="puedeAsignarTecnico()">
+            <label class="emg__lbl" for="emg-tecnico">Técnico</label>
+            <select
+              id="emg-tecnico"
+              class="emg__select"
+              [(ngModel)]="selectedTecnicoId"
+              [disabled]="busy"
+              *ngIf="tecnicosActivos().length; else sinTecnicos"
+            >
+              <option [ngValue]="null">Seleccionar técnico</option>
+              <option *ngFor="let t of tecnicosActivos()" [ngValue]="t.id">
+                {{ t.nombres }} {{ t.apellidos }}{{ t.especialidad_nombre ? ' — ' + t.especialidad_nombre : '' }}
+              </option>
+            </select>
+            <ng-template #sinTecnicos>
+              <p class="emg__muted">No hay técnicos activos en el taller. Registrá uno en <a routerLink="/taller/panel/tecnicos" class="emg__link">Técnicos</a>.</p>
+            </ng-template>
+            <label class="emg__lbl" for="emg-eta-min">Tiempo estimado de llegada (minutos, opcional)</label>
+            <input
+              id="emg-eta-min"
+              type="number"
+              class="emg__select"
+              style="max-width: 8rem"
+              min="1"
+              max="10080"
+              [disabled]="busy"
+              [(ngModel)]="tiempoEstimadoMin"
+              placeholder="p. ej. 25"
+            />
+            <p class="emg__muted" style="margin-top: 0.25rem">Se muestra al cliente en la app móvil como ETA.</p>
+            <label class="emg__lbl" for="emg-obs-asig">Observación (opcional)</label>
+            <textarea
+              id="emg-obs-asig"
+              class="emg__textarea"
+              rows="2"
+              [(ngModel)]="observacionAsignacion"
+              [disabled]="busy"
+            ></textarea>
+            <div class="emg__row-actions">
+              <button
+                type="button"
+                class="emg__btn emg__btn--primary"
+                [disabled]="busy || !tecnicosActivos().length"
+                (click)="confirmarAsignarTecnico()"
+              >
+                Asignar técnico
+              </button>
+            </div>
+          </ng-container>
+          <p class="emg__muted" *ngIf="!puedeAsignarTecnico() && asignaciones.length === 0 && !loadingAsignData">
+            Aún no hay asignaciones. Se requiere el permiso <code>tecnicos:asignar</code> para asignar.
+          </p>
+        </ng-container>
+      </section>
+
+      <section class="emg__card emg__card--wide">
+        <h3 class="emg__card-title">Fotos y audio</h3>
+        <p class="emg__muted" *ngIf="!evidenciasSafe(detalle).length">No hay fotos ni audios adjuntos en esta solicitud.</p>
+        <div class="emg__media-grid" *ngIf="evidenciasSafe(detalle).length">
+          <figure *ngFor="let ev of evidenciasSafe(detalle)" class="emg__media-item">
+            <ng-container *ngIf="ev.tipo === 'FOTO'; else evAudio">
+              <img
+                [src]="evidenciaSrc(ev.archivo_url)"
+                [alt]="ev.nombre_archivo || 'Evidencia fotográfica'"
+                class="emg__media-img"
+                loading="lazy"
+              />
+              <figcaption class="emg__media-cap">
+                {{ ev.nombre_archivo || 'Foto' }} · {{ ev.created_at | date : 'short' }}
+              </figcaption>
+            </ng-container>
+            <ng-template #evAudio>
+              <p class="emg__text">{{ ev.nombre_archivo || 'Audio' }}</p>
+              <audio [src]="evidenciaSrc(ev.archivo_url)" class="emg__media-audio" controls preload="metadata"></audio>
+              <p class="emg__muted emg__media-cap">{{ ev.created_at | date : 'short' }}</p>
+            </ng-template>
+          </figure>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+</div>
+
+<div class="emg__backdrop" *ngIf="modalAceptar || modalRechazar" (click)="closeModals()"></div>
+
+<div class="emg__modal" *ngIf="modalAceptar" role="dialog" aria-modal="true" aria-labelledby="emg-aceptar-title">
+  <h3 id="emg-aceptar-title">Confirmar aceptación</h3>
+  <p class="emg__muted">
+    Al aceptar, el taller confirma la asistencia. El backend puede marcar como expiradas otras entradas de bandeja
+    pendientes para la misma solicitud.
+  </p>
+  <div class="emg__modal-actions">
+    <button type="button" class="emg__btn" (click)="closeModals()" [disabled]="busy">Cancelar</button>
+    <button type="button" class="emg__btn emg__btn--primary" [disabled]="busy" (click)="confirmAceptar()">Confirmar</button>
+  </div>
+</div>
+
+<div class="emg__modal" *ngIf="modalRechazar" role="dialog" aria-modal="true" aria-labelledby="emg-rechazar-title">
+  <h3 id="emg-rechazar-title">Rechazar solicitud</h3>
+  <label class="emg__lbl" for="emg-motivo">Motivo (mín. 3 caracteres)</label>
+  <textarea id="emg-motivo" class="emg__textarea" rows="4" [(ngModel)]="motivoRechazo"></textarea>
+  <div class="emg__modal-actions">
+    <button type="button" class="emg__btn" (click)="closeModals()" [disabled]="busy">Cancelar</button>
+    <button type="button" class="emg__btn emg__btn--danger" [disabled]="busy" (click)="confirmRechazar()">Rechazar</button>
+  </div>
+</div>

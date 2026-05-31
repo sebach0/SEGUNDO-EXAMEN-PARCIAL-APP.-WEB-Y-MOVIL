@@ -1,0 +1,77 @@
+<div class="emg">
+  <h2 class="emg__h">{{ titulo() }}</h2>
+  <p class="emg__lead">{{ subtitulo() }}</p>
+
+  <div class="emg__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="emg__toolbar" *ngIf="!loading">
+    <input
+      type="search"
+      class="emg__search"
+      [(ngModel)]="search"
+      placeholder="Buscar por placa, cliente, solicitud…"
+      aria-label="Buscar en el listado"
+    />
+    <ng-container *ngIf="modo === 'historial'">
+      <select class="emg__select" [(ngModel)]="estado" aria-label="Filtrar por estado">
+        <option value="">Todos los estados</option>
+        <option *ngFor="let e of estados" [value]="e">{{ estadoUi(e) }}</option>
+      </select>
+      <label class="emg__datewrap">
+        <span class="emg__muted">Desde</span>
+        <input type="date" class="emg__date" [(ngModel)]="desde" aria-label="Fecha desde" />
+      </label>
+      <label class="emg__datewrap">
+        <span class="emg__muted">Hasta</span>
+        <input type="date" class="emg__date" [(ngModel)]="hasta" aria-label="Fecha hasta" />
+      </label>
+    </ng-container>
+    <button type="button" class="emg__btn" (click)="reload()">Actualizar</button>
+  </div>
+
+  <p class="emg__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="emg__tablewrap" *ngIf="!loading">
+    <table class="emg__table">
+      <thead>
+        <tr>
+          <th>Solicitud</th>
+          <th>Cliente</th>
+          <th>Vehículo</th>
+          <th>Estado</th>
+          <th>Técnico</th>
+          <th>Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of filtered">
+          <td>
+            <strong>#{{ r.solicitud_id }}</strong>
+            <span class="emg__muted" *ngIf="r.bandeja_id != null"><br />Bandeja {{ r.bandeja_id }}</span>
+          </td>
+          <td>{{ r.nombres }} {{ r.apellidos }}</td>
+          <td>
+            <strong>{{ r.placa }}</strong>
+            <span class="emg__muted" *ngIf="r.marca || r.modelo"><br />{{ r.marca || '' }} {{ r.modelo || '' }}</span>
+          </td>
+          <td>
+            <span class="emg__pill">{{ estadoUi(r.estado) }}</span>
+          </td>
+          <td class="emg__muted">{{ nombreTecnico(r.tecnico_id) }}</td>
+          <td class="emg__muted" style="font-size: 0.8rem">{{ r.created_at | date : 'short' }}</td>
+          <td class="emg__actions">
+            <a
+              *ngIf="linkDetalle(r) as link; else sinLink"
+              class="emg__mini emg__mini--link"
+              [routerLink]="link"
+              >Ver detalle</a
+            >
+            <ng-template #sinLink><span class="emg__muted">—</span></ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="emg__empty" *ngIf="!filtered.length">No hay registros que coincidan con los filtros.</p>
+  </div>
+</div>

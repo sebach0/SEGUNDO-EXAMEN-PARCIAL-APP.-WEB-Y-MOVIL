@@ -1,0 +1,24 @@
+# docker-compose.override.yml
+# =========================================================
+# Override DESARROLLO LOCAL (se fusiona con docker-compose.yml).
+# Producción: docker compose -f docker-compose.yml up si
+# =========================================================
+
+services:
+  backend:
+    command:
+      [
+        "sh",
+        "-c",
+        "exec uvicorn app.main:app --host 0.0.0.0 --port $${UVICORN_PORT:-8000} --reload",
+      ]
+    volumes:
+      - ./backend:/app
+    environment:
+      DEBUG: "true"
+      ENVIRONMENT: "development"
+      # Dev local: seeds idempotentes al arrancar (admin + opcional cliente + taller).
+      SEED_ADMIN_ON_START: "true"
+      SEED_CLIENTE_ON_START: "true"
+      SEED_TALLER_ON_START: "true"
+      SEED_TECNICO_ON_START: "true"

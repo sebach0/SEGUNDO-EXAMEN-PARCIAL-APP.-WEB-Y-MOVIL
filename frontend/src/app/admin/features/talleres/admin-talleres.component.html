@@ -1,0 +1,159 @@
+<div class="tal">
+  <h2 class="tal__h">Gestión de talleres</h2>
+  <p class="tal__lead">Alta, edición y estados</p>
+
+  <div class="tal__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="tal__toolbar" *ngIf="!loading">
+    <input
+      type="search"
+      class="tal__search"
+      [(ngModel)]="search"
+      placeholder="Buscar por nombre, ciudad o email…"
+      aria-label="Buscar talleres"
+    />
+    <select class="tal__select" [(ngModel)]="estado" aria-label="Filtrar por estado">
+      <option value="">Todos los estados</option>
+      <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+    </select>
+    <button type="button" class="tal__btn tal__btn--primary" (click)="openCreateModal()">Nuevo taller</button>
+  </div>
+
+  <p class="tal__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="tal__tablewrap" *ngIf="!loading">
+    <table class="tal__table">
+      <thead>
+        <tr>
+          <th>Nombre comercial</th>
+          <th>Ciudad</th>
+          <th>Contacto</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of filtered">
+          <td><strong>{{ t.nombre_comercial }}</strong></td>
+          <td>{{ t.ciudad }}</td>
+          <td>{{ t.email_contacto }}</td>
+          <td><span class="tal__pill">{{ t.estado }}</span></td>
+          <td class="tal__actions">
+            <button type="button" class="tal__mini" (click)="openDetail(t)">Ver</button>
+            <button type="button" class="tal__mini" (click)="openEdit(t)">Editar</button>
+            <button
+              type="button"
+              class="tal__mini"
+              *ngIf="t.estado !== 'ACTIVO'"
+              [disabled]="busy"
+              (click)="setEstado(t, 'ACTIVO')"
+            >
+              Activar
+            </button>
+            <button
+              type="button"
+              class="tal__mini"
+              *ngIf="t.estado !== 'SUSPENDIDO'"
+              [disabled]="busy"
+              (click)="setEstado(t, 'SUSPENDIDO')"
+            >
+              Suspender
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="tal__empty" *ngIf="!filtered.length">Sin resultados.</p>
+  </div>
+
+  <div class="tal__backdrop" *ngIf="detail || modalEdit || modalCreate" (click)="closeModals()"></div>
+
+  <div class="tal__modal" *ngIf="detail" role="dialog" aria-modal="true">
+    <h3>{{ detail.nombre_comercial }}</h3>
+    <dl class="tal__dl">
+      <dt>ID</dt>
+      <dd>{{ detail.id }}</dd>
+      <dt>Responsable (usuario id)</dt>
+      <dd>{{ detail.usuario_responsable_id }}</dd>
+      <dt>Dirección</dt>
+      <dd>{{ detail.direccion }}</dd>
+      <dt>Teléfono</dt>
+      <dd>{{ detail.telefono_contacto }}</dd>
+      <dt>Descripción</dt>
+      <dd>{{ detail.descripcion || '—' }}</dd>
+      <dt>Estado</dt>
+      <dd>{{ detail.estado }}</dd>
+    </dl>
+    <button type="button" class="tal__btn tal__btn--primary" (click)="closeModals()">Cerrar</button>
+  </div>
+
+  <div class="tal__modal" *ngIf="modalEdit" role="dialog" aria-modal="true">
+    <h3>Editar taller</h3>
+    <label class="tal__lbl">Nombre comercial</label>
+    <input class="tal__inp" [(ngModel)]="editForm.nombre_comercial" />
+    <label class="tal__lbl">Teléfono</label>
+    <input class="tal__inp" [(ngModel)]="editForm.telefono_contacto" />
+    <label class="tal__lbl">Email</label>
+    <input class="tal__inp" [(ngModel)]="editForm.email_contacto" />
+    <label class="tal__lbl">Dirección</label>
+    <input class="tal__inp" [(ngModel)]="editForm.direccion" />
+    <label class="tal__lbl">Ciudad</label>
+    <input class="tal__inp" [(ngModel)]="editForm.ciudad" />
+    <label class="tal__lbl">Descripción</label>
+    <input class="tal__inp" [(ngModel)]="editForm.descripcion" />
+    <label class="tal__lbl">Estado</label>
+    <select class="tal__inp" [(ngModel)]="editForm.estado">
+      <option *ngFor="let e of estados" [ngValue]="e">{{ e }}</option>
+    </select>
+    <div class="tal__modal-actions">
+      <button type="button" class="tal__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="tal__btn tal__btn--primary" [disabled]="busy" (click)="saveEdit()">
+        Guardar
+      </button>
+    </div>
+  </div>
+
+  <div class="tal__modal tal__modal--wide" *ngIf="modalCreate" role="dialog" aria-modal="true">
+    <h3>Nuevo taller</h3>
+    <p class="tal__muted" *ngIf="!responsablesTaller.length" role="status">
+      No hay usuarios con rol <strong>TALLER_RESPONSABLE</strong>. Asígnalo en Usuarios → Roles y vuelve aquí.
+    </p>
+    <label class="tal__lbl">Usuario responsable (rol taller)</label>
+    <select
+      class="tal__inp"
+      [(ngModel)]="createForm.usuario_responsable_id"
+      [disabled]="!responsablesTaller.length"
+    >
+      <option *ngFor="let u of responsablesTaller" [ngValue]="u.id">
+        {{ u.nombres }} {{ u.apellidos }} — {{ u.email }}
+      </option>
+    </select>
+    <label class="tal__lbl">Nombre comercial</label>
+    <input class="tal__inp" [(ngModel)]="createForm.nombre_comercial" />
+    <label class="tal__lbl">Teléfono contacto</label>
+    <input class="tal__inp" [(ngModel)]="createForm.telefono_contacto" />
+    <label class="tal__lbl">Email contacto</label>
+    <input class="tal__inp" [(ngModel)]="createForm.email_contacto" />
+    <label class="tal__lbl">Dirección</label>
+    <input class="tal__inp" [(ngModel)]="createForm.direccion" />
+    <label class="tal__lbl">Ciudad</label>
+    <input class="tal__inp" [(ngModel)]="createForm.ciudad" />
+    <label class="tal__lbl">Descripción</label>
+    <input class="tal__inp" [(ngModel)]="createForm.descripcion" />
+    <label class="tal__lbl">Estado inicial</label>
+    <select class="tal__inp" [(ngModel)]="createForm.estado">
+      <option *ngFor="let e of estados" [ngValue]="e">{{ e }}</option>
+    </select>
+    <div class="tal__modal-actions">
+      <button type="button" class="tal__btn" (click)="closeModals()">Cancelar</button>
+      <button
+        type="button"
+        class="tal__btn tal__btn--primary"
+        [disabled]="busy || !responsablesTaller.length"
+        (click)="create()"
+      >
+        Crear
+      </button>
+    </div>
+  </div>
+</div>

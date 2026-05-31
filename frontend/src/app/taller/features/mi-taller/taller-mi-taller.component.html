@@ -1,0 +1,35 @@
+<div class="mt">
+  <h2 class="mt__h">Mi taller</h2>
+  <p class="mt__lead">Datos del taller y del responsable</p>
+
+  <div class="mt__alert" *ngIf="error" role="alert">{{ error }}</div>
+  <p class="mt__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="mt__card" *ngIf="!loading && m">
+    <p class="mt__badge">Estado: {{ m.estado }}</p>
+    <p class="mt__note">Correo de acceso (responsable): <strong>{{ m.responsable_email }}</strong> — no editable aquí.</p>
+
+    <h3 class="mt__sub">Taller</h3>
+    <div class="mt__grid2">
+      <label class="mt__lbl">Nombre comercial<input class="mt__inp" [(ngModel)]="nombre_comercial" /></label>
+      <label class="mt__lbl">Teléfono contacto<input class="mt__inp" [(ngModel)]="telefono_contacto" /></label>
+      <label class="mt__lbl">Email contacto<input class="mt__inp" [(ngModel)]="email_contacto" type="email" /></label>
+      <label class="mt__lbl">Ciudad<input class="mt__inp" [(ngModel)]="ciudad" /></label>
+      <label class="mt__lbl mt__full">Dirección<input class="mt__inp" [(ngModel)]="direccion" /></label>
+      <label class="mt__lbl mt__full">Descripción<textarea class="mt__inp mt__ta" rows="3" [(ngModel)]="descripcion"></textarea></label>
+    </div>
+
+    <h3 class="mt__sub">Responsable</h3>
+    <div class="mt__grid2">
+      <label class="mt__lbl">Nombres<input class="mt__inp" [(ngModel)]="resp_nombres" /></label>
+      <label class="mt__lbl">Apellidos<input class="mt__inp" [(ngModel)]="resp_apellidos" /></label>
+      <label class="mt__lbl">Teléfono<input class="mt__inp" [(ngModel)]="resp_telefono" /></label>
+    </div>
+
+    <div class="mt__actions">
+      <button type="button" class="mt__btn mt__btn--primary" [disabled]="busy" (click)="save()">
+        {{ busy ? 'Guardando…' : 'Guardar cambios' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,214 @@
+# docker-compose.yml
+# =========================================================
+# Stack: PostgreSQL, FastAPI backend, Angular frontend, Mailhog.
+#
+# Copy .env.example to .env in the repo root; Compose loads ./.env automatically. si
+# =========================================================
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: emergencias_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ:-America/La_Paz}
+      PGTZ: ${PGTZ:-America/La_Paz}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/migrations/init.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+      - ./backend/migrations/0002_ciclo2_fase1_emergencias.sql:/docker-entrypoint-initdb.d/02_ciclo2_fase1_emergencias.sql:ro
+      - ./backend/migrations/0003_ciclo2_fase2_seguimiento.sql:/docker-entrypoint-initdb.d/03_ciclo2_fase2_seguimiento.sql:ro
+      - ./backend/migrations/0004_ciclo2_fase3_comunicaciones.sql:/docker-entrypoint-initdb.d/04_ciclo2_fase3_comunicaciones.sql:ro
+      - ./backend/migrations/0005_ciclo2_fase4_pagos.sql:/docker-entrypoint-initdb.d/05_ciclo2_fase4_pagos.sql:ro
+      - ./backend/migrations/0006_tecnico_asignado_at.sql:/docker-entrypoint-initdb.d/06_tecnico_asignado_at.sql:ro
+      - ./backend/migrations/0007_taller_operacion_permisos.sql:/docker-entrypoint-initdb.d/07_taller_operacion_permisos.sql:ro
+      - ./backend/migrations/0008_taller_bandeja_disponibilidad.sql:/docker-entrypoint-initdb.d/08_taller_bandeja_disponibilidad.sql:ro
+      - ./backend/migrations/0009_taller_asignacion_tecnico.sql:/docker-entrypoint-initdb.d/09_taller_asignacion_tecnico.sql:ro
+      - ./backend/migrations/0010_taller_comisiones.sql:/docker-entrypoint-initdb.d/10_taller_comisiones.sql:ro
+      - ./backend/migrations/0012_ia_modulo.sql:/docker-entrypoint-initdb.d/12_ia_modulo.sql:ro
+      - ./backend/migrations/0011_usuario_tokens_seguridad.sql:/docker-entrypoint-initdb.d/11_usuario_tokens_seguridad.sql:ro
+      - ./backend/migrations/0013_tecnico_ubicacion_compartida.sql:/docker-entrypoint-initdb.d/13_tecnico_ubicacion_compartida.sql:ro
+      - ./backend/migrations/0014_presupuesto_bob_solicitud.sql:/docker-entrypoint-initdb.d/14_presupuesto_bob_solicitud.sql:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - emergencias_net
+    # start_period: initdb + muchos scripts en docker-entrypoint-initdb.d; pg_isready puede fallar
+    # mientras Postgres reinicia de init → modo normal. Sin start_period, el primer `up` a veces marca unhealthy.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 240s
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: emergencias_mailhog
+    restart: unless-stopped
+    environment:
+      TZ: ${TZ:-America/La_Paz}
+    ports:
+      - "${MAILHOG_SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_WEB_PORT:-8025}:8025"
+    networks:
+      - emergencias_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: emergencias_backend
+    restart: unless-stopped
+    command:
+      [
+        "sh",
+        "-c",
+        "exec uvicorn app.main:app --host 0.0.0.0 --port $${UVICORN_PORT:-8000}",
+      ]
+    environment:
+      # Puerto 5432 es el del contenedor Postgres en la red Docker (no POSTGRES_PORT del host).
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST:-db}:5432/${POSTGRES_DB}
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      DEBUG: ${DEBUG:-true}
+      API_PREFIX: ${API_PREFIX:-/api}
+      UVICORN_PORT: ${UVICORN_PORT:-8000}
+      SEED_ADMIN_ON_START: ${SEED_ADMIN_ON_START:-false}
+      # Defaults alineados con `app/seeds/identidades_demo_sc.py` (Santa Cruz, BO). Sobreescribir en `.env` raíz.
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-patricio.mendez@sc-demo.test}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-scdemo1}
+      SEED_ADMIN_TELEFONO: ${SEED_ADMIN_TELEFONO:-+59177010010}
+      SEED_ADMIN_NOMBRES: ${SEED_ADMIN_NOMBRES:-Patricio}
+      SEED_ADMIN_APELLIDOS: ${SEED_ADMIN_APELLIDOS:-Méndez}
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
+      SEED_CLIENTE_ON_START: ${SEED_CLIENTE_ON_START:-false}
+      SEED_CLIENTE_EMAIL: ${SEED_CLIENTE_EMAIL:-carlos.vega@sc-demo.test}
+      SEED_CLIENTE_PASSWORD: ${SEED_CLIENTE_PASSWORD:-scdemo1}
+      SEED_CLIENTE_TELEFONO: ${SEED_CLIENTE_TELEFONO:-+59177010011}
+      SEED_CLIENTE_NOMBRES: ${SEED_CLIENTE_NOMBRES:-Carlos}
+      SEED_CLIENTE_APELLIDOS: ${SEED_CLIENTE_APELLIDOS:-Vega}
+      SEED_CLIENTE_CIUDAD: ${SEED_CLIENTE_CIUDAD:-Santa Cruz de la Sierra}
+      SEED_CLIENTE_DIRECCION: ${SEED_CLIENTE_DIRECCION:-Barrio Equipetrol, Santa Cruz}
+      SEED_TALLER_ON_START: ${SEED_TALLER_ON_START:-false}
+      SEED_TALLER_EMAIL: ${SEED_TALLER_EMAIL:-luis.rivera@sc-demo.test}
+      SEED_TALLER_PASSWORD: ${SEED_TALLER_PASSWORD:-scdemo1}
+      SEED_TALLER_TELEFONO: ${SEED_TALLER_TELEFONO:-+59177010012}
+      SEED_TALLER_RESPONSABLE_NOMBRES: ${SEED_TALLER_RESPONSABLE_NOMBRES:-Luis}
+      SEED_TALLER_RESPONSABLE_APELLIDOS: ${SEED_TALLER_RESPONSABLE_APELLIDOS:-Rivera}
+      SEED_TALLER_NOMBRE_COMERCIAL: ${SEED_TALLER_NOMBRE_COMERCIAL:-Mecánica Express Rivero}
+      SEED_TALLER_CIUDAD: ${SEED_TALLER_CIUDAD:-Santa Cruz de la Sierra}
+      SEED_TALLER_DIRECCION: ${SEED_TALLER_DIRECCION:-Av. Monseñor Rivero 1521, Santa Cruz}
+      SEED_TALLER_DESCRIPCION: ${SEED_TALLER_DESCRIPCION:-Mecánica general y auxilio vial en Santa Cruz}
+      SEED_TECNICO_ON_START: ${SEED_TECNICO_ON_START:-false}
+      SEED_TECNICO_EMAIL: ${SEED_TECNICO_EMAIL:-marco.salas@sc-demo.test}
+      SEED_TECNICO_PASSWORD: ${SEED_TECNICO_PASSWORD:-scdemo1}
+      SEED_TECNICO_TELEFONO: ${SEED_TECNICO_TELEFONO:-+59177010013}
+      SEED_TECNICO_NOMBRES: ${SEED_TECNICO_NOMBRES:-Marco}
+      SEED_TECNICO_APELLIDOS: ${SEED_TECNICO_APELLIDOS:-Salas}
+      FCM_ENABLED: ${FCM_ENABLED:-false}
+      FIREBASE_CREDENTIALS_PATH: ${FIREBASE_CREDENTIALS_PATH:-/app/firebase-credentials.json}
+      PAGO_SIMULADO_AUTOCOMPLETE: ${PAGO_SIMULADO_AUTOCOMPLETE:-true}
+      PAGO_PROVEEDOR_DEFAULT: ${PAGO_PROVEEDOR_DEFAULT:-SIMULADO}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      EVIDENCIAS_PUBLIC_BASE_URL: ${EVIDENCIAS_PUBLIC_BASE_URL}
+      EVIDENCIA_MAX_UPLOAD_BYTES: ${EVIDENCIA_MAX_UPLOAD_BYTES}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USE_TLS: ${SMTP_USE_TLS}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_TIMEOUT_SECONDS: ${SMTP_TIMEOUT_SECONDS}
+      EMAIL_ENABLED: ${EMAIL_ENABLED}
+      EMAIL_STRICT: ${EMAIL_STRICT}
+      MAIL_FROM: ${MAIL_FROM}
+      EMAIL_LINK_BASE_URL: ${EMAIL_LINK_BASE_URL}
+      FRONTEND_PUBLIC_URL: ${FRONTEND_PUBLIC_URL}
+      API_PUBLIC_URL: ${API_PUBLIC_URL}
+      APP_PUBLIC_URL: ${APP_PUBLIC_URL}
+      AI_ENABLED: ${AI_ENABLED:-false}
+      AI_INFERENCE_BASE_URL: ${AI_INFERENCE_BASE_URL}
+      AI_INFERENCE_TIMEOUT_S: ${AI_INFERENCE_TIMEOUT_S:-120}
+      AI_INFERENCE_STUB: ${AI_INFERENCE_STUB:-false}
+      AI_MAX_AUDIO_BYTES: ${AI_MAX_AUDIO_BYTES:-15728640}
+      AI_MAX_IMAGE_BYTES: ${AI_MAX_IMAGE_BYTES:-12582912}
+      TZ: ${TZ:-America/La_Paz}
+    ports:
+      - "${BACKEND_HOST_PORT:-8000}:${UVICORN_PORT:-8000}"
+    depends_on:
+      db:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    networks:
+      - emergencias_net
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - python -c "import os,urllib.request as u;p=os.environ.get('UVICORN_PORT','8000');u.urlopen('http://127.0.0.1:'+p+'/health',timeout=5).read()"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./backend/firebase-credentials.json:/app/firebase-credentials.json:ro
+      - ./backend/uploads:/app/uploads
+
+  ai-inference:
+    profiles: ["ai"]
+    build:
+      # Contexto acotado: evita enviar mobile/frontend/docs al daemon (build mucho más rápido).
+      context: ./services/ai-inference
+      dockerfile: Dockerfile
+    container_name: emergencias_ai_inference
+    restart: unless-stopped
+    environment:
+      WHISPER_MODEL_SIZE: ${WHISPER_MODEL_SIZE:-small}
+      OMP_NUM_THREADS: ${OMP_NUM_THREADS:-4}
+      YOLO_ENABLED: ${YOLO_ENABLED:-true}
+      YOLO_TASK: ${YOLO_TASK:-detect}
+      YOLO_MODEL: ${YOLO_MODEL:-yolov8n.pt}
+      YOLO_CONF: ${YOLO_CONF:-0.35}
+      YOLO_IMGSZ: ${YOLO_IMGSZ:-640}
+      TZ: ${TZ:-America/La_Paz}
+    volumes:
+      - ai_inference_cache:/root/.cache
+    networks:
+      - emergencias_net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        MAILHOG_WEB_URL: ${MAILHOG_WEB_URL:-}
+    container_name: emergencias_frontend
+    restart: unless-stopped
+    environment:
+      BACKEND_UPSTREAM: ${BACKEND_UPSTREAM:-backend:8000}
+      TZ: ${TZ:-America/La_Paz}
+    ports:
+      - "${FRONTEND_HTTP_PORT:-80}:80"
+    depends_on:
+      - backend
+    networks:
+      - emergencias_net
+
+volumes:
+  postgres_data:
+    name: emergencias_postgres_data
+  ai_inference_cache:
+    name: emergencias_ai_inference_cache
+
+networks:
+  emergencias_net:
+    name: emergencias_network
+    driver: bridge

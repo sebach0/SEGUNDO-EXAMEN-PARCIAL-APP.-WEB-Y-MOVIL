@@ -1,0 +1,131 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.emg__h {
+  @include ui.ev-page-title;
+}
+
+.emg__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.emg__alert {
+  @include ui.ev-alert-error;
+}
+
+.emg__success {
+  @include ui.ev-card;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-color: rgba(76, 201, 240, 0.35);
+  color: t.$ev-cyan;
+  font-size: 0.875rem;
+}
+
+.emg__dismiss {
+  @include ui.ev-btn-ghost;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.emg__toolbar {
+  @include ui.ev-toolbar;
+}
+
+.emg__search,
+.emg__select {
+  @include ui.ev-input;
+}
+
+.emg__search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 320px;
+}
+
+.emg__btn {
+  @include ui.ev-btn-ghost;
+}
+
+.emg__muted {
+  color: t.$ev-muted;
+  font-size: 0.8125rem;
+}
+
+.emg__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.emg__table {
+  @include ui.ev-table;
+}
+
+.emg__pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(76, 201, 240, 0.12);
+  color: t.$ev-cyan;
+  border: 1px solid rgba(76, 201, 240, 0.25);
+
+  &--pri-alta {
+    color: #fecaca;
+    background: rgba(248, 113, 113, 0.18);
+    border-color: rgba(248, 113, 113, 0.45);
+  }
+
+  &--pri-media {
+    color: #fef08a;
+    background: rgba(234, 179, 8, 0.2);
+    border-color: rgba(250, 204, 21, 0.45);
+  }
+
+  &--pri-baja {
+    color: #bbf7d0;
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.35);
+  }
+
+  &--pri-revision {
+    color: #c4b5fd;
+    background: rgba(139, 92, 246, 0.2);
+    border-color: rgba(139, 92, 246, 0.4);
+  }
+
+  &--pri-unknown {
+    color: t.$ev-muted;
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.3);
+  }
+}
+
+.emg__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.emg__mini {
+  @include ui.ev-btn-ghost;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+
+  &--link {
+    text-decoration: none;
+    cursor: pointer;
+  }
+}
+
+.emg__empty {
+  padding: 1rem;
+  color: t.$ev-muted;
+}

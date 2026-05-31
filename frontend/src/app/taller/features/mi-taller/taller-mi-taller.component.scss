@@ -1,0 +1,97 @@
+@use '../../../admin/admin-theme' as t;
+@use '../../../admin/admin-ui' as ui;
+
+.mt__h {
+  @include ui.ev-page-title;
+}
+
+.mt__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.mt__alert {
+  @include ui.ev-alert-error;
+}
+
+.mt__muted {
+  color: t.$ev-muted;
+}
+
+.mt__card {
+  @include ui.ev-card;
+  max-width: 720px;
+}
+
+.mt__badge {
+  display: inline-block;
+  margin: 0 0 0.75rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.28);
+}
+
+.mt__note {
+  font-size: 0.8125rem;
+  color: t.$ev-muted;
+  margin: 0 0 1rem;
+}
+
+.mt__sub {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: t.$ev-text;
+}
+
+.mt__grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem 1rem;
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mt__full {
+  grid-column: 1 / -1;
+}
+
+.mt__lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.mt__inp {
+  @include ui.ev-input;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mt__ta {
+  resize: vertical;
+  min-height: 72px;
+}
+
+.mt__actions {
+  margin-top: 1.25rem;
+}
+
+.mt__btn {
+  @include ui.ev-btn-ghost;
+
+  &--primary {
+    @include ui.ev-btn-primary;
+  }
+}

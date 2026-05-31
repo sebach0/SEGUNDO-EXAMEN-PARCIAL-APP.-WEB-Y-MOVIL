@@ -1,0 +1,158 @@
+<div class="usr">
+  <h2 class="usr__h">Gestión de usuarios</h2>
+  <p class="usr__lead">Alta, edición, roles y estados</p>
+
+  <div class="usr__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="usr__toolbar" *ngIf="!loading">
+    <input
+      type="search"
+      class="usr__search"
+      [(ngModel)]="search"
+      placeholder="Buscar por nombre, email…"
+      aria-label="Buscar usuarios"
+    />
+    <select class="usr__select" [(ngModel)]="estado" aria-label="Filtrar por estado">
+      <option value="">Todos los estados</option>
+      <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+    </select>
+    <select class="usr__select" [(ngModel)]="rolFilter" aria-label="Filtrar por rol">
+      <option value="">Todos los roles</option>
+      <option *ngFor="let r of roles" [value]="r.nombre">{{ r.nombre }}</option>
+    </select>
+    <button type="button" class="usr__btn usr__btn--primary" (click)="modalCreate = true">Crear usuario</button>
+  </div>
+
+  <p class="usr__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="usr__tablewrap" *ngIf="!loading">
+    <table class="usr__table">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Nombre</th>
+          <th>Roles</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let u of filtered">
+          <td>{{ u.email }}</td>
+          <td>{{ u.nombres }} {{ u.apellidos }}</td>
+          <td>{{ (u.roles || []).join(', ') || '—' }}</td>
+          <td><span class="usr__pill">{{ u.estado }}</span></td>
+          <td class="usr__actions">
+            <button type="button" class="usr__mini" (click)="openDetail(u)">Ver</button>
+            <button type="button" class="usr__mini" (click)="openEdit(u)">Editar</button>
+            <button type="button" class="usr__mini" (click)="openRoles(u)">Roles</button>
+            <button
+              type="button"
+              class="usr__mini"
+              *ngIf="u.estado !== 'ACTIVO'"
+              [disabled]="busy"
+              (click)="setEstado(u, 'ACTIVO')"
+            >
+              Activar
+            </button>
+            <button
+              type="button"
+              class="usr__mini"
+              *ngIf="u.estado !== 'BLOQUEADO'"
+              [disabled]="busy"
+              (click)="setEstado(u, 'BLOQUEADO')"
+            >
+              Bloquear
+            </button>
+            <button type="button" class="usr__mini usr__mini--danger" [disabled]="busy" (click)="deactivate(u)">
+              Desactivar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="usr__empty" *ngIf="!filtered.length">Sin resultados.</p>
+  </div>
+
+  <div class="usr__backdrop" *ngIf="modalCreate || modalEdit || modalDetail || modalRoles" (click)="closeModals()">
+  </div>
+
+  <div class="usr__modal" *ngIf="modalDetail && selected" role="dialog" aria-modal="true">
+    <h3>Usuario</h3>
+    <dl class="usr__dl">
+      <dt>ID</dt>
+      <dd>{{ selected.id }}</dd>
+      <dt>Email</dt>
+      <dd>{{ selected.email }}</dd>
+      <dt>Teléfono</dt>
+      <dd>{{ selected.telefono }}</dd>
+      <dt>Username</dt>
+      <dd>{{ selected.username || '—' }}</dd>
+      <dt>Roles</dt>
+      <dd>{{ (selected.roles || []).join(', ') || '—' }}</dd>
+      <dt>Estado</dt>
+      <dd>{{ selected.estado }}</dd>
+      <dt>Último acceso</dt>
+      <dd>{{ selected.ultimo_acceso_at | date : 'medium' }}</dd>
+    </dl>
+    <button type="button" class="usr__btn usr__btn--primary" (click)="closeModals()">Cerrar</button>
+  </div>
+
+  <div class="usr__modal usr__modal--wide" *ngIf="modalCreate" role="dialog" aria-modal="true">
+    <h3>Crear usuario</h3>
+    <div class="usr__grid2">
+      <label class="usr__lbl">Nombres<input class="usr__inp" [(ngModel)]="createForm.nombres" /></label>
+      <label class="usr__lbl">Apellidos<input class="usr__inp" [(ngModel)]="createForm.apellidos" /></label>
+      <label class="usr__lbl">Email<input class="usr__inp" [(ngModel)]="createForm.email" type="email" /></label>
+      <label class="usr__lbl">Teléfono<input class="usr__inp" [(ngModel)]="createForm.telefono" /></label>
+      <label class="usr__lbl">Username<input class="usr__inp" [(ngModel)]="createForm.username" /></label>
+      <label class="usr__lbl">Contraseña<input class="usr__inp" [(ngModel)]="createForm.password" type="password" /></label>
+      <label class="usr__lbl"
+        >Estado
+        <select class="usr__inp" [(ngModel)]="createForm.estado">
+          <option *ngFor="let e of estados" [ngValue]="e">{{ e }}</option>
+        </select>
+      </label>
+    </div>
+    <div class="usr__modal-actions">
+      <button type="button" class="usr__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="usr__btn usr__btn--primary" [disabled]="busy" (click)="create()">Crear</button>
+    </div>
+  </div>
+
+  <div class="usr__modal usr__modal--wide" *ngIf="modalEdit && selected" role="dialog" aria-modal="true">
+    <h3>Editar usuario</h3>
+    <div class="usr__grid2">
+      <label class="usr__lbl">Nombres<input class="usr__inp" [(ngModel)]="editForm.nombres" /></label>
+      <label class="usr__lbl">Apellidos<input class="usr__inp" [(ngModel)]="editForm.apellidos" /></label>
+      <label class="usr__lbl">Teléfono<input class="usr__inp" [(ngModel)]="editForm.telefono" /></label>
+      <label class="usr__lbl">Username<input class="usr__inp" [(ngModel)]="editForm.username" /></label>
+      <label class="usr__lbl"
+        >Estado
+        <select class="usr__inp" [(ngModel)]="editForm.estado">
+          <option *ngFor="let e of estados" [ngValue]="e">{{ e }}</option>
+        </select>
+      </label>
+    </div>
+    <div class="usr__modal-actions">
+      <button type="button" class="usr__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="usr__btn usr__btn--primary" [disabled]="busy" (click)="saveEdit()">Guardar</button>
+    </div>
+  </div>
+
+  <div class="usr__modal usr__modal--wide" *ngIf="modalRoles && selected" role="dialog" aria-modal="true">
+    <h3>Roles — {{ selected.email }}</h3>
+    <p class="usr__muted">Selecciona uno o varios roles y guarda.</p>
+    <label class="usr__check" *ngFor="let r of roles">
+      <input type="checkbox" [checked]="rolIds.has(r.id)" (change)="toggleRol(r.id)" />
+      <span>{{ r.nombre }}</span>
+      <span class="usr__hint" *ngIf="r.descripcion">— {{ r.descripcion }}</span>
+    </label>
+    <div class="usr__modal-actions">
+      <button type="button" class="usr__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="usr__btn usr__btn--primary" [disabled]="busy" (click)="saveRoles()">
+        Guardar roles
+      </button>
+    </div>
+  </div>
+</div>

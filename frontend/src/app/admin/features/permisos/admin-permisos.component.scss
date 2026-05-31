@@ -1,0 +1,74 @@
+@use '../../admin-theme' as t;
+@use '../../admin-ui' as ui;
+
+.perm__h {
+  @include ui.ev-page-title;
+}
+
+.perm__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.perm__info {
+  @include ui.ev-alert-info;
+}
+
+.perm__alert {
+  @include ui.ev-alert-error;
+}
+
+.perm__toolbar {
+  @include ui.ev-toolbar;
+}
+
+.perm__select,
+.perm__search {
+  @include ui.ev-input;
+  min-width: 160px;
+}
+
+.perm__search {
+  flex: 1;
+  max-width: 320px;
+}
+
+.perm__btn {
+  @include ui.ev-btn-primary;
+
+  &--disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: grayscale(0.3);
+  }
+}
+
+.perm__muted {
+  color: t.$ev-muted;
+}
+
+.perm__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.perm__table {
+  @include ui.ev-table;
+}
+
+.perm__pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(114, 9, 183, 0.15);
+  color: #d8b4fe;
+  border: 1px solid rgba(114, 9, 183, 0.35);
+}
+
+.perm__empty {
+  padding: 1rem;
+  color: t.$ev-muted;
+}

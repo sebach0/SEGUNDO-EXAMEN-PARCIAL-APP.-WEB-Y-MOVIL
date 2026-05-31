@@ -1,0 +1,72 @@
+<div class="emg">
+  <h2 class="emg__h">Solicitudes disponibles</h2>
+  <p class="emg__lead">Bandeja operativa — emergencias</p>
+
+  <div class="emg__success" *ngIf="successFlash" role="status">
+    {{ successFlash }}
+    <button type="button" class="emg__dismiss" (click)="dismissFlash()">Cerrar</button>
+  </div>
+  <div class="emg__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="emg__toolbar" *ngIf="!loading">
+    <input
+      type="search"
+      class="emg__search"
+      [(ngModel)]="search"
+      placeholder="Buscar por placa, cliente, modelo…"
+      aria-label="Buscar solicitudes"
+    />
+    <select class="emg__select" [(ngModel)]="estadoSolicitud" aria-label="Filtrar por estado de solicitud">
+      <option value="">Todos los estados</option>
+      <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+    </select>
+    <button type="button" class="emg__btn" (click)="reload()">Actualizar</button>
+  </div>
+
+  <p class="emg__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="emg__tablewrap" *ngIf="!loading">
+    <table class="emg__table">
+      <thead>
+        <tr>
+          <th>Solicitud</th>
+          <th>Cliente</th>
+          <th>Vehículo</th>
+          <th>Prioridad</th>
+          <th>Estado</th>
+          <th>Registro</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of filtered">
+          <td>
+            <strong>#{{ r.solicitud_id }}</strong>
+            <span class="emg__muted"><br />Bandeja {{ r.bandeja_id }}</span>
+          </td>
+          <td>{{ r.nombres }} {{ r.apellidos }}</td>
+          <td>
+            <strong>{{ r.placa }}</strong
+            ><span class="emg__muted" *ngIf="r.marca || r.modelo"
+              ><br />{{ r.marca || '' }} {{ r.modelo || '' }}</span
+            >
+          </td>
+          <td>
+            <span *ngIf="prioridadTexto(r) as pr; else sinPrio" class="emg__pill" [ngClass]="prioridadPillClass(r)">{{
+              pr
+            }}</span>
+            <ng-template #sinPrio><span class="emg__muted">—</span></ng-template>
+          </td>
+          <td><span class="emg__pill">{{ r.estado_solicitud }}</span></td>
+          <td class="emg__muted" style="font-size: 0.8rem">{{ r.created_at | date : 'short' }}</td>
+          <td class="emg__actions">
+            <a class="emg__mini emg__mini--link" [routerLink]="['/taller/panel/emergencias/solicitudes', r.bandeja_id]"
+              >Ver detalle</a
+            >
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="emg__empty" *ngIf="!filtered.length">No hay solicitudes que coincidan con los filtros.</p>
+  </div>
+</div>

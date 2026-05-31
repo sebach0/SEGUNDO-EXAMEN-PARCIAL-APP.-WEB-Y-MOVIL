@@ -1,0 +1,46 @@
+/* Global: evita franja clara (html/body default + track scrollbar) en vistas oscuras */
+html {
+  box-sizing: border-box;
+  overflow-x: clip;
+  scrollbar-gutter: stable;
+  scrollbar-color: #30363d #05070a;
+  background-color: #05070a;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  min-height: 100%;
+  background-color: #05070a;
+  color: #f0f6fc;
+}
+
+app-root {
+  display: block;
+  min-height: 100%;
+}
+
+/* Scrollbar WebKit (Chrome/Edge): track ya no blanco */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #05070a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}

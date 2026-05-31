@@ -1,0 +1,172 @@
+@use '../../admin-theme' as t;
+@use '../../admin-ui' as ui;
+
+.usr__h {
+  @include ui.ev-page-title;
+}
+
+.usr__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.usr__alert {
+  @include ui.ev-alert-error;
+}
+
+.usr__toolbar {
+  @include ui.ev-toolbar;
+}
+
+.usr__search,
+.usr__select {
+  @include ui.ev-input;
+}
+
+.usr__search {
+  flex: 1;
+  min-width: 180px;
+  max-width: 280px;
+}
+
+.usr__btn {
+  @include ui.ev-btn-ghost;
+
+  &--primary {
+    @include ui.ev-btn-primary;
+  }
+}
+
+.usr__muted {
+  color: t.$ev-muted;
+  font-size: 0.8125rem;
+}
+
+.usr__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.usr__table {
+  @include ui.ev-table;
+}
+
+.usr__pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(76, 201, 240, 0.12);
+  color: t.$ev-cyan;
+  border: 1px solid rgba(76, 201, 240, 0.25);
+}
+
+.usr__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.usr__mini {
+  @include ui.ev-btn-ghost;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+
+  &--danger {
+    border-color: rgba(248, 81, 73, 0.35);
+    color: #fecaca;
+  }
+}
+
+.usr__empty {
+  padding: 1rem;
+  color: t.$ev-muted;
+}
+
+.usr__backdrop {
+  @include ui.ev-modal-backdrop;
+}
+
+.usr__modal {
+  @include ui.ev-modal;
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  &--wide {
+    max-width: 560px;
+  }
+
+  h3 {
+    margin: 0 0 0.75rem;
+  }
+}
+
+.usr__dl {
+  margin: 0 0 1rem;
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+
+  dt {
+    color: t.$ev-muted;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.usr__grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1rem;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.usr__lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.usr__inp {
+  @include ui.ev-input;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.usr__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.usr__check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.usr__hint {
+  color: t.$ev-muted;
+  font-size: 0.75rem;
+}

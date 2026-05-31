@@ -1,0 +1,352 @@
+-- =========================================================
+-- migrations/init.sql
+-- Script inicial ejecutado por Docker al crear el contenedor.
+-- DDL + seed deben mantenerse alineados con Script.db (raíz del repo).
+-- =========================================================
+
+BEGIN;
+
+-- =========================
+-- ENUMS
+-- =========================
+
+CREATE TYPE estado_usuario AS ENUM (
+    'ACTIVO',
+    'INACTIVO',
+    'BLOQUEADO',
+    'PENDIENTE'
+);
+
+CREATE TYPE estado_sesion AS ENUM (
+    'ACTIVA',
+    'CERRADA',
+    'EXPIRADA',
+    'REVOCADA'
+);
+
+CREATE TYPE estado_taller AS ENUM (
+    'ACTIVO',
+    'INACTIVO',
+    'SUSPENDIDO',
+    'PENDIENTE'
+);
+
+CREATE TYPE estado_tecnico AS ENUM (
+    'ACTIVO',
+    'INACTIVO'
+);
+
+CREATE TYPE accion_bitacora AS ENUM (
+    'CREAR',
+    'ACTUALIZAR',
+    'ELIMINAR',
+    'INICIAR_SESION',
+    'CERRAR_SESION',
+    'RESTABLECER_CONTRASENA',
+    'ASIGNAR_ROL',
+    'ASIGNAR_PERMISO',
+    'CONSULTAR'
+);
+
+-- =========================
+-- SEGURIDAD Y ACCESO
+-- =========================
+
+CREATE TABLE roles (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre          VARCHAR(50) NOT NULL UNIQUE,
+    descripcion     VARCHAR(255),
+    created_at      TIMESTAMP,
+    updated_at      TIMESTAMP
+);
+
+CREATE TABLE permisos (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    codigo          VARCHAR(80) NOT NULL UNIQUE,
+    nombre          VARCHAR(80) NOT NULL,
+    modulo          VARCHAR(80) NOT NULL,
+    descripcion     VARCHAR(255),
+    created_at      TIMESTAMP,
+    updated_at      TIMESTAMP
+);
+
+CREATE TABLE usuarios (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombres             VARCHAR(100) NOT NULL,
+    apellidos           VARCHAR(100) NOT NULL,
+    username            VARCHAR(50) UNIQUE,
+    email               VARCHAR(120) NOT NULL UNIQUE,
+    telefono            VARCHAR(30) NOT NULL UNIQUE,
+    password_hash       VARCHAR(255) NOT NULL,
+    estado              estado_usuario NOT NULL,
+    ultimo_acceso_at    TIMESTAMP,
+    created_at          TIMESTAMP,
+    updated_at          TIMESTAMP
+);
+
+CREATE TABLE rol_permiso (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    rol_id          INTEGER NOT NULL,
+    permiso_id      INTEGER NOT NULL,
+    created_at      TIMESTAMP,
+    CONSTRAINT uq_rol_permiso UNIQUE (rol_id, permiso_id),
+    CONSTRAINT fk_rol_permiso_rol
+        FOREIGN KEY (rol_id) REFERENCES roles(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_rol_permiso_permiso
+        FOREIGN KEY (permiso_id) REFERENCES permisos(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE usuario_rol (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario_id      INTEGER NOT NULL,
+    rol_id          INTEGER NOT NULL,
+    asignado_at     TIMESTAMP,
+    CONSTRAINT uq_usuario_rol UNIQUE (usuario_id, rol_id),
+    CONSTRAINT fk_usuario_rol_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_usuario_rol_rol
+        FOREIGN KEY (rol_id) REFERENCES roles(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE sesiones (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario_id      INTEGER NOT NULL,
+    token_jti       VARCHAR(255) NOT NULL UNIQUE,
+    ip_address      VARCHAR(45),
+    user_agent      TEXT,
+    dispositivo     VARCHAR(100),
+    plataforma      VARCHAR(50),
+    iniciado_at     TIMESTAMP NOT NULL,
+    cerrado_at      TIMESTAMP,
+    expira_at       TIMESTAMP,
+    estado          estado_sesion NOT NULL,
+    CONSTRAINT fk_sesiones_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+-- =========================
+-- CLIENTES
+-- =========================
+
+CREATE TABLE clientes (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario_id      INTEGER NOT NULL UNIQUE,
+    ciudad          VARCHAR(100),
+    direccion       TEXT,
+    created_at      TIMESTAMP,
+    updated_at      TIMESTAMP,
+    CONSTRAINT fk_clientes_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+-- =========================
+-- TALLERES Y TECNICOS
+-- =========================
+
+CREATE TABLE talleres (
+    id                      INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario_responsable_id  INTEGER NOT NULL UNIQUE,
+    nombre_comercial        VARCHAR(150) NOT NULL,
+    telefono_contacto       VARCHAR(30) NOT NULL,
+    email_contacto          VARCHAR(120) NOT NULL,
+    direccion               TEXT NOT NULL,
+    ciudad                  VARCHAR(100) NOT NULL,
+    descripcion             TEXT,
+    estado                  estado_taller NOT NULL,
+    created_at              TIMESTAMP,
+    updated_at              TIMESTAMP,
+    CONSTRAINT fk_talleres_usuario_responsable
+        FOREIGN KEY (usuario_responsable_id) REFERENCES usuarios(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE especialidades_tecnico (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre          VARCHAR(100) NOT NULL UNIQUE,
+    descripcion     VARCHAR(255)
+);
+
+CREATE TABLE tecnicos (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario_id          INTEGER NOT NULL UNIQUE,
+    taller_id           INTEGER NOT NULL,
+    especialidad_id     INTEGER,
+    documento_identidad VARCHAR(50),
+    disponibilidad      VARCHAR(120),
+    estado              estado_tecnico NOT NULL,
+    created_at          TIMESTAMP,
+    updated_at          TIMESTAMP,
+    CONSTRAINT fk_tecnicos_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_tecnicos_taller
+        FOREIGN KEY (taller_id) REFERENCES talleres(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_tecnicos_especialidad
+        FOREIGN KEY (especialidad_id) REFERENCES especialidades_tecnico(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+-- =========================
+-- VEHICULOS
+-- =========================
+
+CREATE TABLE marcas_vehiculo (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre          VARCHAR(80) NOT NULL UNIQUE
+);
+
+CREATE TABLE modelos_vehiculo (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    marca_id        INTEGER NOT NULL,
+    nombre          VARCHAR(80) NOT NULL,
+    CONSTRAINT uq_modelos_vehiculo UNIQUE (marca_id, nombre),
+    CONSTRAINT fk_modelos_vehiculo_marca
+        FOREIGN KEY (marca_id) REFERENCES marcas_vehiculo(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+CREATE TABLE tipos_vehiculo (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nombre          VARCHAR(50) NOT NULL UNIQUE
+);
+
+CREATE TABLE vehiculos (
+    id                  INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    cliente_id          INTEGER NOT NULL,
+    placa               VARCHAR(20) NOT NULL UNIQUE,
+    marca_id            INTEGER NOT NULL,
+    modelo_id           INTEGER NOT NULL,
+    tipo_vehiculo_id    INTEGER NOT NULL,
+    anio                INTEGER,
+    color               VARCHAR(50),
+    created_at          TIMESTAMP,
+    updated_at          TIMESTAMP,
+    CONSTRAINT fk_vehiculos_cliente
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_vehiculos_marca
+        FOREIGN KEY (marca_id) REFERENCES marcas_vehiculo(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_vehiculos_modelo
+        FOREIGN KEY (modelo_id) REFERENCES modelos_vehiculo(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT fk_vehiculos_tipo
+        FOREIGN KEY (tipo_vehiculo_id) REFERENCES tipos_vehiculo(id)
+        ON UPDATE CASCADE ON DELETE RESTRICT
+);
+
+-- =========================
+-- BITACORA / AUDITORIA
+-- =========================
+
+CREATE TABLE bitacora (
+    id              INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    usuario_id      INTEGER,
+    modulo          VARCHAR(100) NOT NULL,
+    entidad         VARCHAR(100) NOT NULL,
+    entidad_id      INTEGER,
+    accion          accion_bitacora NOT NULL,
+    descripcion     TEXT,
+    ip_address      VARCHAR(45),
+    created_at      TIMESTAMP NOT NULL,
+    CONSTRAINT fk_bitacora_usuario
+        FOREIGN KEY (usuario_id) REFERENCES usuarios(id)
+        ON UPDATE CASCADE ON DELETE SET NULL
+);
+
+-- =========================
+-- INDICES
+-- =========================
+
+CREATE INDEX idx_rol_permiso_rol_id ON rol_permiso(rol_id);
+CREATE INDEX idx_rol_permiso_permiso_id ON rol_permiso(permiso_id);
+CREATE INDEX idx_usuario_rol_usuario_id ON usuario_rol(usuario_id);
+CREATE INDEX idx_usuario_rol_rol_id ON usuario_rol(rol_id);
+CREATE INDEX idx_sesiones_usuario_id ON sesiones(usuario_id);
+CREATE INDEX idx_clientes_usuario_id ON clientes(usuario_id);
+CREATE INDEX idx_talleres_usuario_responsable_id ON talleres(usuario_responsable_id);
+CREATE INDEX idx_tecnicos_usuario_id ON tecnicos(usuario_id);
+CREATE INDEX idx_tecnicos_taller_id ON tecnicos(taller_id);
+CREATE INDEX idx_tecnicos_especialidad_id ON tecnicos(especialidad_id);
+CREATE INDEX idx_modelos_vehiculo_marca_id ON modelos_vehiculo(marca_id);
+CREATE INDEX idx_vehiculos_cliente_id ON vehiculos(cliente_id);
+CREATE INDEX idx_vehiculos_marca_id ON vehiculos(marca_id);
+CREATE INDEX idx_vehiculos_modelo_id ON vehiculos(modelo_id);
+CREATE INDEX idx_vehiculos_tipo_vehiculo_id ON vehiculos(tipo_vehiculo_id);
+CREATE INDEX idx_bitacora_usuario_id ON bitacora(usuario_id);
+CREATE INDEX idx_bitacora_modulo ON bitacora(modulo);
+CREATE INDEX idx_bitacora_entidad ON bitacora(entidad);
+CREATE INDEX idx_bitacora_created_at ON bitacora(created_at);
+
+-- =========================
+-- DATOS INICIALES (SEED)
+-- =========================
+
+-- Roles base del sistema
+INSERT INTO roles (nombre, descripcion, created_at, updated_at) VALUES
+    ('ADMIN', 'Administrador del sistema con acceso total', NOW(), NOW()),
+    ('CLIENTE', 'Cliente registrado del sistema', NOW(), NOW()),
+    ('TECNICO', 'Técnico mecánico asignado a un taller', NOW(), NOW()),
+    ('TALLER_RESPONSABLE', 'Responsable de un taller mecánico', NOW(), NOW());
+
+-- Permisos por módulo
+INSERT INTO permisos (codigo, nombre, modulo, created_at, updated_at) VALUES
+    ('usuarios:crear', 'Crear usuarios', 'usuarios', NOW(), NOW()),
+    ('usuarios:leer', 'Ver usuarios', 'usuarios', NOW(), NOW()),
+    ('usuarios:actualizar', 'Editar usuarios', 'usuarios', NOW(), NOW()),
+    ('usuarios:eliminar', 'Desactivar usuarios', 'usuarios', NOW(), NOW()),
+    ('vehiculos:crear', 'Registrar vehículos', 'vehiculos', NOW(), NOW()),
+    ('vehiculos:leer', 'Ver vehículos', 'vehiculos', NOW(), NOW()),
+    ('vehiculos:actualizar', 'Editar vehículos', 'vehiculos', NOW(), NOW()),
+    ('talleres:crear', 'Registrar talleres', 'talleres', NOW(), NOW()),
+    ('talleres:leer', 'Ver talleres', 'talleres', NOW(), NOW()),
+    ('talleres:actualizar', 'Editar talleres', 'talleres', NOW(), NOW()),
+    ('bitacora:leer', 'Ver bitácora de auditoría', 'bitacora', NOW(), NOW()),
+    ('roles:gestionar', 'Gestionar roles y permisos', 'acceso', NOW(), NOW());
+
+-- Permisos efectivos por rol (evita matriz vacía en panel y coherencia con /auth/me)
+INSERT INTO rol_permiso (rol_id, permiso_id, created_at)
+SELECT r.id, p.id, NOW()
+FROM roles r
+CROSS JOIN permisos p
+WHERE r.nombre = 'ADMIN';
+
+INSERT INTO rol_permiso (rol_id, permiso_id, created_at)
+SELECT r.id, p.id, NOW()
+FROM roles r
+JOIN permisos p ON p.codigo IN ('talleres:crear', 'talleres:leer', 'talleres:actualizar')
+WHERE r.nombre = 'TALLER_RESPONSABLE';
+
+-- Catálogo mínimo: tipos, marcas y modelos (móvil / registro de vehículo)
+INSERT INTO tipos_vehiculo (nombre) VALUES
+    ('Sedán'), ('SUV'), ('Pickup'), ('Hatchback'), ('Motocicleta')
+ON CONFLICT (nombre) DO NOTHING;
+
+INSERT INTO marcas_vehiculo (nombre) VALUES
+    ('Toyota'), ('Chevrolet'), ('Suzuki'), ('Ford'), ('Hyundai')
+ON CONFLICT (nombre) DO NOTHING;
+
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Corolla' FROM marcas_vehiculo WHERE nombre = 'Toyota' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Hilux' FROM marcas_vehiculo WHERE nombre = 'Toyota' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'RAV4' FROM marcas_vehiculo WHERE nombre = 'Toyota' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Spark' FROM marcas_vehiculo WHERE nombre = 'Chevrolet' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Sail' FROM marcas_vehiculo WHERE nombre = 'Chevrolet' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'D-Max' FROM marcas_vehiculo WHERE nombre = 'Chevrolet' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Swift' FROM marcas_vehiculo WHERE nombre = 'Suzuki' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Vitara' FROM marcas_vehiculo WHERE nombre = 'Suzuki' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Jimny' FROM marcas_vehiculo WHERE nombre = 'Suzuki' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Ranger' FROM marcas_vehiculo WHERE nombre = 'Ford' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'EcoSport' FROM marcas_vehiculo WHERE nombre = 'Ford' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Fiesta' FROM marcas_vehiculo WHERE nombre = 'Ford' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Tucson' FROM marcas_vehiculo WHERE nombre = 'Hyundai' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Accent' FROM marcas_vehiculo WHERE nombre = 'Hyundai' ON CONFLICT (marca_id, nombre) DO NOTHING;
+INSERT INTO modelos_vehiculo (marca_id, nombre) SELECT id, 'Santa Fe' FROM marcas_vehiculo WHERE nombre = 'Hyundai' ON CONFLICT (marca_id, nombre) DO NOTHING;
+
+COMMIT;

@@ -1,0 +1,96 @@
+<div class="roles">
+  <h2 class="roles__h">Gestión de roles</h2>
+  <p class="roles__lead">Catálogo de roles y permisos asociados</p>
+
+  <div class="roles__alert" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="roles__toolbar" *ngIf="!loading">
+    <input
+      type="search"
+      class="roles__search"
+      [(ngModel)]="search"
+      placeholder="Buscar por nombre o descripción…"
+      aria-label="Buscar roles"
+    />
+    <button type="button" class="roles__btn roles__btn--primary" (click)="modalCreate = true">
+      Crear rol
+    </button>
+  </div>
+
+  <p class="roles__muted" *ngIf="loading">Cargando…</p>
+
+  <div class="roles__tablewrap" *ngIf="!loading">
+    <table class="roles__table">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of filtered">
+          <td><strong>{{ r.nombre }}</strong></td>
+          <td>{{ r.descripcion || '—' }}</td>
+          <td>{{ r.created_at | date : 'short' }}</td>
+          <td class="roles__actions">
+            <button type="button" class="roles__mini" (click)="openView(r)">Ver</button>
+            <button type="button" class="roles__mini" (click)="openPerm(r)">Permisos</button>
+            <button type="button" class="roles__mini roles__mini--disabled" disabled title="No expuesto en la API actual">
+              Eliminar
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="roles__empty" *ngIf="!filtered.length">Sin resultados.</p>
+  </div>
+
+  <!-- Modal crear -->
+  <div class="roles__backdrop" *ngIf="modalCreate" (click)="closeModals()"></div>
+  <div class="roles__modal" *ngIf="modalCreate" role="dialog" aria-modal="true" aria-labelledby="mcr-title">
+    <h3 id="mcr-title">Crear rol</h3>
+    <label class="roles__lbl">Nombre</label>
+    <input class="roles__inp" [(ngModel)]="newNombre" />
+    <label class="roles__lbl">Descripción</label>
+    <input class="roles__inp" [(ngModel)]="newDesc" />
+    <div class="roles__modal-actions">
+      <button type="button" class="roles__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="roles__btn roles__btn--primary" [disabled]="busy" (click)="createRol()">
+        Guardar
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal ver -->
+  <div class="roles__backdrop" *ngIf="modalView" (click)="closeModals()"></div>
+  <div class="roles__modal" *ngIf="modalView && selectedRol" role="dialog" aria-modal="true">
+    <h3>Rol: {{ selectedRol.nombre }}</h3>
+    <p class="roles__muted">{{ selectedRol.descripcion || 'Sin descripción' }}</p>
+    <p class="roles__meta">ID: {{ selectedRol.id }}</p>
+    <button type="button" class="roles__btn roles__btn--primary" (click)="closeModals()">Cerrar</button>
+  </div>
+
+  <!-- Modal permisos -->
+  <div class="roles__backdrop" *ngIf="modalPerm" (click)="closeModals()"></div>
+  <div class="roles__modal roles__modal--wide" *ngIf="modalPerm && selectedRol" role="dialog" aria-modal="true">
+    <h3>Permisos — {{ selectedRol.nombre }}</h3>
+    <p class="roles__muted">Marca los permisos del rol y guarda.</p>
+    <div class="roles__perm-scroll">
+      <div class="roles__mod" *ngFor="let mod of permisosByModulo() | keyvalue">
+        <h4 class="roles__mod-title">{{ mod.key }}</h4>
+        <label class="roles__check" *ngFor="let p of mod.value">
+          <input type="checkbox" [checked]="permIds.has(p.id)" (change)="togglePerm(p.id)" />
+          <span><code>{{ p.codigo }}</code> — {{ p.nombre }}</span>
+        </label>
+      </div>
+    </div>
+    <div class="roles__modal-actions">
+      <button type="button" class="roles__btn" (click)="closeModals()">Cancelar</button>
+      <button type="button" class="roles__btn roles__btn--primary" [disabled]="busy" (click)="savePermisos()">
+        Guardar
+      </button>
+    </div>
+  </div>
+</div>

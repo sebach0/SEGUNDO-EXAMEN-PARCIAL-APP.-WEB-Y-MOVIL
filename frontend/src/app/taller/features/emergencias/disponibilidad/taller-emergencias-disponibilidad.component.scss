@@ -1,0 +1,114 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.emg__h {
+  @include ui.ev-page-title;
+}
+
+.emg__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.emg__alert {
+  @include ui.ev-alert-error;
+}
+
+.emg__success {
+  @include ui.ev-card;
+  margin-bottom: 1rem;
+  border-color: rgba(76, 201, 240, 0.35);
+  color: t.$ev-cyan;
+  font-size: 0.875rem;
+}
+
+.emg__muted {
+  color: t.$ev-muted;
+  font-size: 0.8125rem;
+}
+
+.emg__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.emg__card {
+  @include ui.ev-card;
+
+  &--meta {
+    padding: 0.75rem 1rem;
+  }
+}
+
+.emg__card-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+}
+
+.emg__switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  input {
+    margin-top: 0.2rem;
+    cursor: pointer;
+  }
+}
+
+.emg__hint {
+  margin: 0.35rem 0 0;
+  color: t.$ev-muted;
+  font-size: 0.75rem;
+  line-height: 1.45;
+
+  &--spaced {
+    margin-top: 0.85rem;
+  }
+}
+
+.emg__lbl {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+  margin-bottom: 0.35rem;
+}
+
+.emg__inp {
+  @include ui.ev-input;
+  width: 100%;
+  max-width: 200px;
+  box-sizing: border-box;
+}
+
+.emg__textarea {
+  @include ui.ev-input;
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 88px;
+}
+
+.emg__form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.emg__btn {
+  @include ui.ev-btn-ghost;
+
+  &--primary {
+    @include ui.ev-btn-primary;
+  }
+}

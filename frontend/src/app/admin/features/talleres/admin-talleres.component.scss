@@ -1,0 +1,142 @@
+@use '../../admin-theme' as t;
+@use '../../admin-ui' as ui;
+
+.tal__h {
+  @include ui.ev-page-title;
+}
+
+.tal__lead {
+  margin: -1rem 0 1rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.tal__alert {
+  @include ui.ev-alert-error;
+}
+
+.tal__toolbar {
+  @include ui.ev-toolbar;
+}
+
+.tal__search,
+.tal__select {
+  @include ui.ev-input;
+}
+
+.tal__search {
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.tal__btn {
+  @include ui.ev-btn-ghost;
+
+  &--primary {
+    @include ui.ev-btn-primary;
+  }
+}
+
+.tal__muted {
+  color: t.$ev-muted;
+}
+
+.tal__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.tal__table {
+  @include ui.ev-table;
+}
+
+.tal__pill {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  background: rgba(67, 97, 238, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(67, 97, 238, 0.35);
+}
+
+.tal__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.tal__mini {
+  @include ui.ev-btn-ghost;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+.tal__empty {
+  padding: 1rem;
+  color: t.$ev-muted;
+}
+
+.tal__backdrop {
+  @include ui.ev-modal-backdrop;
+}
+
+.tal__modal {
+  @include ui.ev-modal;
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  &--wide {
+    max-width: 520px;
+  }
+
+  h3 {
+    margin: 0 0 0.75rem;
+  }
+}
+
+.tal__lbl {
+  display: block;
+  margin-top: 0.65rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.tal__inp {
+  @include ui.ev-input;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 0.25rem;
+}
+
+.tal__dl {
+  margin: 0 0 1rem;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+
+  dt {
+    color: t.$ev-muted;
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.tal__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}

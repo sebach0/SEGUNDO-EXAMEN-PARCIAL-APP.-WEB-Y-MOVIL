@@ -1,0 +1,153 @@
+@use '../../admin-theme' as t;
+@use '../../admin-ui' as ui;
+
+.roles__h {
+  @include ui.ev-page-title;
+}
+
+.roles__lead {
+  margin: -1rem 0 1.5rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.roles__alert {
+  @include ui.ev-alert-error;
+}
+
+.roles__toolbar {
+  @include ui.ev-toolbar;
+}
+
+.roles__search {
+  @include ui.ev-input;
+  flex: 1;
+  min-width: 200px;
+  max-width: 360px;
+}
+
+.roles__btn {
+  @include ui.ev-btn-ghost;
+
+  &--primary {
+    @include ui.ev-btn-primary;
+  }
+}
+
+.roles__muted {
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.roles__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.roles__table {
+  @include ui.ev-table;
+}
+
+.roles__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.roles__mini {
+  @include ui.ev-btn-ghost;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.75rem;
+
+  &--disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.roles__empty {
+  padding: 1rem 1.5rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.roles__backdrop {
+  @include ui.ev-modal-backdrop;
+}
+
+.roles__modal {
+  @include ui.ev-modal;
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  &--wide {
+    max-width: 640px;
+  }
+
+  h3 {
+    margin: 0 0 0.75rem;
+    font-size: 1.05rem;
+  }
+}
+
+.roles__lbl {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+  margin: 0.75rem 0 0.35rem;
+}
+
+.roles__inp {
+  @include ui.ev-input;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.roles__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.roles__meta {
+  font-size: 0.8125rem;
+  color: t.$ev-muted;
+}
+
+.roles__perm-scroll {
+  max-height: 50vh;
+  overflow: auto;
+  margin-top: 0.75rem;
+}
+
+.roles__mod {
+  margin-bottom: 1rem;
+}
+
+.roles__mod-title {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  color: t.$ev-cyan;
+}
+
+.roles__check {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  margin-bottom: 0.35rem;
+  cursor: pointer;
+
+  code {
+    font-size: 0.72rem;
+    color: t.$ev-link;
+  }
+}
