@@ -59,6 +59,12 @@ class Pago(Base):
     conciliado_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     pagado_at: Mapped[datetime | None] = mapped_column(DateTime)
+    tenant_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+    )
+    cotizacion_id: Mapped[int | None] = mapped_column(
+        ForeignKey("cotizaciones.id", ondelete="SET NULL"), nullable=True
+    )
     # ── Responsable de pago / seguro ──────────────────────────────────────────
     responsable_pago: Mapped[ResponsablePagoEnum] = mapped_column(
         _responsable_pago_sa, nullable=False, default=ResponsablePagoEnum.CLIENTE

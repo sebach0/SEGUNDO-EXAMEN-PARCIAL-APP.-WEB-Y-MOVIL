@@ -1,19 +1,14 @@
-from __future__ import annotations
-
-from datetime import date
-
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import require_permission, get_current_user
+from app.core.dependencies import require_permission
 from app.modules.kpis import service
+from app.modules.kpis.deps import get_kpi_filters
+from app.modules.kpis.filters import KpiFilters
 from app.modules.kpis.schemas import KpiSummaryRead
-from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
 router = APIRouter(prefix="/kpis", tags=["KPIs operacionales"])
-
-_DEFAULT_TENANT_ID = 1
 
 
 @router.get(
@@ -22,22 +17,20 @@ _DEFAULT_TENANT_ID = 1
     dependencies=[Depends(require_permission("kpis:leer"))],
 )
 async def kpi_summary(
-    desde: date | None = Query(None, description="Fecha inicio inclusive (YYYY-MM-DD)"),
-    hasta: date | None = Query(None, description="Fecha fin inclusive (YYYY-MM-DD)"),
-    taller_id: int | None = Query(None, description="Filtrar por taller específico"),
-    current_user: Usuario = Depends(get_current_user),
+    filters: KpiFilters = Depends(get_kpi_filters),
     db: AsyncSession = Depends(get_db),
 ):
     """
-    Dashboard de KPIs operacionales para talleres y redes de talleres.
-    Todos los datos provienen de la base de datos (sin hardcodeo).
-    Filtra por tenant del usuario autenticado.
+    Dashboard de KPIs operacionales (compatibilidad Ciclo 4).
+    Filtra por tenant del usuario o tenant_id explícito (admin global).
     """
-    tenant_id: int = current_user.tenant_id or _DEFAULT_TENANT_ID
     return await service.get_kpi_summary(
         db,
-        tenant_id=tenant_id,
-        desde=desde,
-        hasta=hasta,
-        taller_id=taller_id,
+        tenant_id=filters.tenant_id,
+        desde=filters.desde,
+        hasta=filters.hasta,
+        taller_id=filters.taller_id,
+        zona_id=filters.zona_id,
+        tipo_incidente_id=filters.tipo_incidente_id,
+        tipo_incidente_nombre=filters.tipo_incidente_nombre,
     )

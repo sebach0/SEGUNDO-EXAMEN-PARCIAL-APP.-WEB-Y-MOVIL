@@ -1,10 +1,38 @@
 # NEXT_STEPS.md
 # =========================================================
 # Próximos pasos ordenados por prioridad
-# Actualizado: 2026-06-07 — Mapa taller + oferta minimalista
+# Actualizado: 2026-06-07 — Ciclo 5 Etapa 1D–E completada
 # =========================================================
 
-## ALTA — Validar mapa taller y cotización (2026-06-07)
+## ALTA — Validar Ciclo 5 Etapa 1D–E (cotizaciones + pagos tenant)
+
+1. `docker compose exec backend alembic upgrade head` (revisión `0014_ciclo5_cotiz_pagos`).
+2. Cliente móvil: listar cotizaciones → rechazar una ENVIADA (`PATCH .../rechazar`).
+3. Cliente: seleccionar otra cotización → crear pago con monto = `monto_total` aceptado.
+4. Admin: `GET /api/admin/payments?tenant_id=1` y `PATCH .../validate-manual` en pago TRANSFERENCIA PENDIENTE.
+5. Usuario tenant 2 no debe ver cotizaciones/pagos de tenant 1 (403).
+
+## ALTA — Validar Ciclo 5 Etapa 1B (KPIs / reportes / SLA)
+
+1. `docker compose exec backend alembic upgrade head` (revisión `0013_ciclo5_reports_sla`).
+2. Login admin → `GET /api/admin/dashboard/kpis?desde=2026-01-01`.
+3. `GET /api/admin/reports/incidents` y `/export/csv`.
+4. `GET /api/admin/sla/workshops` y `/workshops/{id}`.
+5. Usuario sin `tenants:gestionar` no debe poder filtrar otro `tenant_id`.
+
+## ALTA — Aplicar migración Ciclo 5 Etapa 1A
+
+1. `docker compose exec backend alembic upgrade head` (revisión `0012_ciclo5_tenants_actualizado_permisos`).
+2. Probar CU43: `GET/POST/PATCH /api/admin/tenants/` con token admin.
+3. Probar CU44: `POST /api/admin/tenants/1/assign-users` con `{ "ids": [N] }`.
+4. Verificar bitácora tras crear/editar tenant.
+
+## ALTA — Ciclo 5 Etapa 2 Angular (siguiente implementación)
+
+- [ ] Pantallas admin: `/admin/dashboard`, `/admin/reports`, `/admin/sla`, `/admin/payments`.
+- [ ] Etapa 3 Flutter: rechazar cotización + errores cross-tenant.
+
+## MEDIA — Pendiente fase 2
 
 1. Login taller demo → `/taller/panel/mi-taller` → marcar mapa → Guardar.
 2. Abrir cotización de solicitud con GPS de incidente → ver distancia, ETA sugerida y mapa.

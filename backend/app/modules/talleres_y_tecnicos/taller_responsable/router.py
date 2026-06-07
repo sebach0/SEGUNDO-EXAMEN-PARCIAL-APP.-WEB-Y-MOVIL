@@ -179,11 +179,18 @@ async def actualizar_mi_grua(
 async def listar_cotizaciones_solicitud(
     solicitud_id: int,
     ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    user_and_perms: tuple[Usuario, list[str]] = Depends(get_current_user_permisos),
     db: AsyncSession = Depends(get_db),
 ):
     """Cotizaciones de una solicitud (portal taller; usa token /app/taller)."""
+    user, permisos = user_and_perms
     _ = ctx
-    return await cotizaciones_service.listar_cotizaciones(solicitud_id=solicitud_id, db=db)
+    return await cotizaciones_service.listar_cotizaciones(
+        solicitud_id=solicitud_id,
+        db=db,
+        user=user,
+        permisos=permisos,
+    )
 
 
 @router.get(
@@ -213,13 +220,17 @@ async def proponer_cotizacion_solicitud(
     solicitud_id: int,
     body: CotizacionCreateIn,
     ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    user_and_perms: tuple[Usuario, list[str]] = Depends(get_current_user_permisos),
     db: AsyncSession = Depends(get_db),
 ):
     """Envía cotización al marketplace para la solicitud indicada."""
     _, taller = ctx
+    user, permisos = user_and_perms
     return await cotizaciones_service.proponer_cotizacion(
         solicitud_id=solicitud_id,
         taller_id=taller.id,
         body=body,
         db=db,
+        user=user,
+        permisos=permisos,
     )

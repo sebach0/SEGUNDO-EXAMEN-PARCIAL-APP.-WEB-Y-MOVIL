@@ -1,8 +1,38 @@
 # CURRENT_STATE.md
 # =========================================================
 # Estado actual del proyecto
-# Última actualización: 2026-06-07 — Asignación automática técnico disponible ✅
+# Última actualización: 2026-06-07 — Ciclo 5 Etapa 1D–E cotizaciones/pagos tenant ✅
 # =========================================================
+
+## Ciclo 5 Etapa 1D–E — Cotizaciones + pagos multi-tenant (2026-06-07) ✅
+
+- **CU47:** `tenant_id` en `cotizaciones` y `cotizacion_items` (backfill desde solicitud).
+- **CU48:** Rechazar/responder cotización — `PATCH .../rechazar`, `PATCH .../respond`; permiso `cotizaciones:rechazar`.
+- **CU49:** `tenant_id` + `cotizacion_id` en `pagos`; admin `GET /api/admin/payments`, `PATCH .../validate-manual` (`pagos:admin`).
+- Validación tenant en listar/proponer/seleccionar/rechazar cotizaciones y pagos cliente.
+- Pago cliente valida monto contra cotización **ACEPTADA** (fallback `presupuesto_bob`).
+- Helper `cotizaciones/tenant_guard.py`; WS `COTIZACION_ACTUALIZADA` al rechazar.
+- Migración Alembic `0014_ciclo5_cotiz_pagos` + SQL `0022`.
+- Tests: `backend/tests/test_ciclo5_cotizaciones_pagos.py`.
+- Sesión: `docs/ai/sessions/2026-06-07-ciclo5-etapa1de-cotizaciones-pagos-tenant.md`.
+
+## Ciclo 5 Etapa 1B — KPIs, reportes y SLA (2026-06-07) ✅
+
+- **CU45:** Dashboard admin `/api/admin/dashboard/*` (kpis, por tipo, zona, talleres, cancelados, SLA).
+- **CU46:** Reportes `/api/admin/reports/*` + export CSV (`reports:leer`, `reports:exportar`).
+- **CU50:** SLA por taller `/api/admin/sla/workshops` y detalle `/{workshop_id}` (`sla:leer`).
+- KPIs refactorizados: `kpis/filters.py`, `resolve_tenant_scope`, filtros `tenant_id`, fechas, taller, zona, tipo.
+- Compatibilidad: `GET /api/kpis/summary` sigue activo.
+- Migración Alembic `0013_ciclo5_reports_sla` + SQL `0021`.
+- Sesión: `docs/ai/sessions/2026-06-07-ciclo5-etapa1b-kpis-reportes-sla.md`.
+
+## Ciclo 5 Etapa 1A — Tenants CU43–CU44 (2026-06-07) ✅
+
+- **CU43:** CRUD admin tenants en `/api/admin/tenants/` (crear, editar, activar/desactivar, slug único, bitácora).
+- **CU44:** Asignación usuarios/talleres/técnicos a tenant + permiso `tenants:asignar`.
+- Migración Alembic `0012` + SQL `0020` (`actualizado_en`, permiso).
+- Helper `resolve_tenant_scope()` en `ciclo4/deps.py` para filtros multi-tenant (CU45+).
+- Sesión: `docs/ai/sessions/2026-06-07-ciclo5-etapa1a-tenants-cu43-cu44.md`.
 
 ## Asignación automática de técnico (2026-06-07) ✅
 

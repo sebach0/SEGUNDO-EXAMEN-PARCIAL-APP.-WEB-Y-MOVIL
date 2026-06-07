@@ -71,6 +71,7 @@ class CotizacionRead(BaseModel):
     id: int
     solicitud_id: int
     taller_id: int
+    tenant_id: int | None = None
     taller_nombre: str | None = None
     estado: EstadoCotizacionEnum
     descripcion_danio: str
@@ -87,3 +88,13 @@ class CotizacionRead(BaseModel):
     creado_at: datetime
     actualizado_at: datetime
     items: list[CotizacionItemRead] = Field(default_factory=list)
+
+
+class CotizacionRespondIn(BaseModel):
+    """CU48 — aprobar (ACEPTADA) o rechazar (RECHAZADA) cotización."""
+    decision: str = Field(..., pattern=r"^(APROBADA|RECHAZADA|ACEPTADA)$")
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+class CotizacionRechazarIn(BaseModel):
+    comment: str | None = Field(default=None, max_length=2000)

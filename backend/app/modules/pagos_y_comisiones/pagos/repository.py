@@ -74,10 +74,14 @@ async def insert_pago(
     estado,
     proveedor: str,
     created_at,
+    tenant_id: int | None = None,
+    cotizacion_id: int | None = None,
 ) -> Pago:
     row = Pago(
         solicitud_id=solicitud_id,
         cliente_id=cliente_id,
+        tenant_id=tenant_id,
+        cotizacion_id=cotizacion_id,
         monto=monto,
         moneda=moneda,
         metodo=metodo,

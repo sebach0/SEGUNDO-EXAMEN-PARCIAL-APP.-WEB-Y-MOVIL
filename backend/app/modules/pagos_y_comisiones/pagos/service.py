@@ -6,6 +6,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 import anyio
 from fastapi import HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,6 +16,8 @@ from app.modules.acceso_y_administracion.bitacora.models import AccionBitacoraEn
 from app.modules.acceso_y_administracion.bitacora.service import registrar_accion
 from app.modules.comunicacion_y_notificaciones.notificaciones.models import TipoNotificacionEnum
 from app.modules.comunicacion_y_notificaciones.notificaciones import service as notificaciones_service
+from app.modules.cotizaciones.models import Cotizacion, EstadoCotizacionEnum
+from app.modules.cotizaciones.tenant_guard import assert_user_tenant_access, effective_tenant_id
 from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum
 from app.modules.pagos_y_comisiones.pagos import repository
 from app.modules.pagos_y_comisiones.pagos.gateway import PasarelaSimulada
@@ -48,6 +51,42 @@ def _assert_solicitud_pagable(sol) -> None:
                 f"({sol.estado.value}). Permitido cuando está en atención o finalizada."
             ),
         )
+
+
+async def _cotizacion_aceptada(db: AsyncSession, solicitud_id: int) -> Cotizacion | None:
+    res = await db.execute(
+        select(Cotizacion).where(
+            Cotizacion.solicitud_id == solicitud_id,
+            Cotizacion.estado == EstadoCotizacionEnum.ACEPTADA,
+        )
+    )
+    return res.scalar_one_or_none()
+
+
+async def _resolver_monto_y_cotizacion(
+    db: AsyncSession,
+    *,
+    sol,
+    monto: Decimal,
+) -> tuple[Decimal, int | None]:
+    cot = await _cotizacion_aceptada(db, sol.id)
+    if cot is not None:
+        esperado = _quantize_monto(cot.monto_total)
+        if monto != esperado:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"El monto debe coincidir con la cotización aceptada: {esperado} BOB.",
+            )
+        return monto, cot.id
+
+    if sol.presupuesto_bob is not None and sol.presupuesto_bob > 0:
+        esperado = _quantize_monto(sol.presupuesto_bob)
+        if monto != esperado:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"El monto debe ser el presupuesto acordado: {esperado} BOB.",
+            )
+    return monto, None
 
 
 def _monto_a_unidad_menor(monto: Decimal) -> int:
@@ -122,10 +161,13 @@ async def listar_pagos_solicitud(
     cliente_id: int,
     solicitud_id: int,
     db: AsyncSession,
+    permisos: list[str] | None = None,
 ) -> list[PagoRead]:
     sol = await repository.get_solicitud_cliente(db, solicitud_id=solicitud_id, cliente_id=cliente_id)
     if sol is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada.")
+    if permisos is not None:
+        assert_user_tenant_access(user, sol.tenant_id, permisos)
     rows = await repository.list_pagos_solicitud(db, solicitud_id=solicitud_id, cliente_id=cliente_id)
     return [PagoRead.model_validate(x) for x in rows]
 
@@ -136,10 +178,13 @@ async def crear_pago_solicitud(
     solicitud_id: int,
     body: PagoSolicitudCreateIn,
     db: AsyncSession,
+    permisos: list[str] | None = None,
 ) -> PagoIniciadoRead:
     sol = await repository.get_solicitud_cliente(db, solicitud_id=solicitud_id, cliente_id=cliente_id)
     if sol is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada.")
+    if permisos is not None:
+        assert_user_tenant_access(user, sol.tenant_id, permisos)
 
     _assert_solicitud_pagable(sol)
 
@@ -154,15 +199,8 @@ async def crear_pago_solicitud(
     if monto > _MAX_MONTO:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Monto fuera de rango permitido.")
 
-    if sol.presupuesto_bob is not None and sol.presupuesto_bob > 0:
-        esperado = _quantize_monto(sol.presupuesto_bob)
-        if monto != esperado:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=f"El monto debe ser el presupuesto acordado: {esperado} BOB.",
-            )
-
-    now = utc_now_naive()
+    monto, cotizacion_id = await _resolver_monto_y_cotizacion(db, sol=sol, monto=monto)
+    tenant_id = effective_tenant_id(sol.tenant_id)
     # Stripe (PaymentIntent + PaymentSheet) solo aplica a tarjeta. Otros métodos usan flujo simulado / comprobación manual.
     usar_stripe_tarjeta = (
         bool(settings.stripe_enabled and settings.STRIPE_SECRET_KEY)
@@ -170,11 +208,14 @@ async def crear_pago_solicitud(
     )
     proveedor = "STRIPE" if usar_stripe_tarjeta else settings.PAGO_PROVEEDOR_DEFAULT
 
+    now = utc_now_naive()
     try:
         pago = await repository.insert_pago(
             db,
             solicitud_id=solicitud_id,
             cliente_id=cliente_id,
+            tenant_id=tenant_id,
+            cotizacion_id=cotizacion_id,
             monto=monto,
             moneda=body.moneda,
             metodo=body.metodo,

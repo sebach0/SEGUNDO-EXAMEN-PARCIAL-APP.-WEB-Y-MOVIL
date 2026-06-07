@@ -24,8 +24,18 @@ from app.modules.cotizaciones.schemas import (
     CotizacionCreateIn,
     CotizacionItemIn,
     CotizacionRead,
+    CotizacionRespondIn,
     ServicioOfrecidoRead,
 )
+from app.modules.cotizaciones.tenant_guard import (
+    assert_cliente_solicitud,
+    assert_taller_mismo_tenant_solicitud,
+    assert_user_tenant_access,
+    get_solicitud_o_404,
+    resolve_tenant_for_cotizacion,
+)
+from app.modules.acceso_y_administracion.usuarios.models import Usuario
+from app.modules.ciclo4.websocket.manager import manager as ws_manager
 from app.modules.incidentes.emergencias import repository as emergencias_repository
 from app.modules.incidentes.emergencias.models import (
     EstadoSolicitudSeguimientoEnum,
@@ -43,6 +53,13 @@ from app.modules.talleres_y_tecnicos.talleres.service import get_servicios_talle
 
 
 TRASLADO_ITEM_DESCRIPCION = "Traslado del técnico al lugar de la emergencia"
+
+_ESTADOS_SOLICITUD_NO_COTIZABLES = frozenset(
+    {
+        EstadoSolicitudSeguimientoEnum.CANCELADA,
+        EstadoSolicitudSeguimientoEnum.FINALIZADA,
+    }
+)
 
 
 def _tarifa_traslado_bs_km() -> Decimal:
@@ -201,6 +218,52 @@ async def contexto_oferta_taller(
     )
 
 
+async def _notificar_taller_cotizacion(
+    db: AsyncSession,
+    *,
+    taller_id: int,
+    solicitud: SolicitudEmergencia,
+    titulo: str,
+    mensaje: str,
+) -> None:
+    res = await db.execute(select(Taller).where(Taller.id == taller_id))
+    taller = res.scalar_one_or_none()
+    if taller is None:
+        return
+    await notificaciones_service.crear_notificacion_y_push(
+        db,
+        usuario_destino_id=taller.usuario_responsable_id,
+        solicitud_id=solicitud.id,
+        tipo=TipoNotificacionEnum.ESTADO_ACTUALIZADO,
+        titulo=titulo,
+        mensaje=mensaje,
+    )
+
+
+async def _emit_cotizacion_ws(
+    solicitud_id: int,
+    *,
+    estado: str,
+    message: str,
+    cotizacion_id: int,
+) -> None:
+    await ws_manager.broadcast_to_incident(
+        solicitud_id,
+        "COTIZACION_ACTUALIZADA",
+        status=estado,
+        message=message,
+        payload={"cotizacion_id": cotizacion_id, "estado": estado},
+    )
+
+
+async def _assert_solicitud_cotizable(sol: SolicitudEmergencia) -> None:
+    if sol.estado in _ESTADOS_SOLICITUD_NO_COTIZABLES:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"No se puede operar sobre cotizaciones en estado '{sol.estado.value}'.",
+        )
+
+
 async def _snapshot_servicios_taller(db: AsyncSession, taller_id: int) -> list[dict]:
     servicios = await get_servicios_taller(taller_id, db)
     return [{"id": s.id, "nombre": s.nombre, "codigo": s.codigo} for s in servicios]
@@ -213,7 +276,6 @@ async def _finalizar_asignacion_por_cotizacion(
     taller_id: int,
     now,
 ) -> None:
-    """Marca bandeja ganadora, expira competidores e incrementa carga del taller."""
     res_b = await db.execute(
         select(SolicitudTallerBandeja).where(
             SolicitudTallerBandeja.solicitud_id == sol.id,
@@ -258,13 +320,14 @@ async def proponer_cotizacion(
     taller_id: int,
     body: CotizacionCreateIn,
     db: AsyncSession,
+    user: Usuario | None = None,
+    permisos: list[str] | None = None,
 ) -> CotizacionRead:
-    res_sol = await db.execute(
-        select(SolicitudEmergencia).where(SolicitudEmergencia.id == solicitud_id)
-    )
-    sol = res_sol.scalar_one_or_none()
-    if sol is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada.")
+    sol = await get_solicitud_o_404(db, solicitud_id)
+    if user is not None and permisos is not None:
+        assert_user_tenant_access(user, sol.tenant_id, permisos)
+    await _assert_solicitud_cotizable(sol)
+    taller = await assert_taller_mismo_tenant_solicitud(db, solicitud=sol, taller_id=taller_id)
 
     if sol.taller_id is not None and sol.taller_id != taller_id:
         raise HTTPException(
@@ -305,11 +368,13 @@ async def proponer_cotizacion(
         items_finales.append(_item_traslado_in(distancia))
 
     monto_final = body.monto_total + costo_traslado
+    tenant_id = resolve_tenant_for_cotizacion(sol, taller)
 
     now = utc_now_naive()
     cot = Cotizacion(
         solicitud_id=solicitud_id,
         taller_id=taller_id,
+        tenant_id=tenant_id,
         estado=EstadoCotizacionEnum.ENVIADA,
         descripcion_danio=body.descripcion_danio,
         detalle_servicio=body.detalle_servicio,
@@ -331,6 +396,7 @@ async def proponer_cotizacion(
         db.add(
             CotizacionItem(
                 cotizacion_id=cot.id,
+                tenant_id=tenant_id,
                 descripcion=item_in.descripcion,
                 cantidad=item_in.cantidad,
                 precio_unitario=item_in.precio_unitario,
@@ -368,7 +434,16 @@ async def listar_cotizaciones(
     *,
     solicitud_id: int,
     db: AsyncSession,
+    user: Usuario | None = None,
+    permisos: list[str] | None = None,
+    cliente_id: int | None = None,
 ) -> list[CotizacionRead]:
+    sol = await get_solicitud_o_404(db, solicitud_id)
+    if user is not None and permisos is not None:
+        assert_user_tenant_access(user, sol.tenant_id, permisos)
+    if cliente_id is not None:
+        await assert_cliente_solicitud(db, solicitud=sol, cliente_id=cliente_id)
+
     result = await db.execute(
         select(Cotizacion)
         .options(selectinload(Cotizacion.items))
@@ -396,6 +471,9 @@ async def seleccionar_cotizacion(
     solicitud_id: int,
     cotizacion_id: int,
     db: AsyncSession,
+    user: Usuario | None = None,
+    permisos: list[str] | None = None,
+    cliente_id: int | None = None,
 ) -> CotizacionRead:
     res_sol = await db.execute(
         select(SolicitudEmergencia)
@@ -405,6 +483,11 @@ async def seleccionar_cotizacion(
     sol = res_sol.scalar_one_or_none()
     if sol is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada.")
+    if user is not None and permisos is not None:
+        assert_user_tenant_access(user, sol.tenant_id, permisos)
+    if cliente_id is not None:
+        await assert_cliente_solicitud(db, solicitud=sol, cliente_id=cliente_id)
+    await _assert_solicitud_cotizable(sol)
 
     res_ya = await db.execute(
         select(Cotizacion).where(
@@ -427,6 +510,8 @@ async def seleccionar_cotizacion(
     cot = res_cot.scalar_one_or_none()
     if cot is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cotización no encontrada.")
+    if user is not None and permisos is not None:
+        assert_user_tenant_access(user, cot.tenant_id or sol.tenant_id, permisos)
     if cot.estado != EstadoCotizacionEnum.ENVIADA:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -504,7 +589,15 @@ async def seleccionar_cotizacion(
         "cotizaciones",
         AccionBitacoraEnum.ACTUALIZAR,
         descripcion=f"Cliente seleccionó cotización_id={cotizacion_id} solicitud_id={solicitud_id}",
+        usuario_id=user.id if user else None,
         entidad_id=cotizacion_id,
+    )
+
+    await _emit_cotizacion_ws(
+        solicitud_id,
+        estado=cot.estado.value,
+        message="Cotización aceptada por el cliente",
+        cotizacion_id=cot.id,
     )
 
     await db.flush()
@@ -512,3 +605,108 @@ async def seleccionar_cotizacion(
     res_t = await db.execute(select(Taller.nombre_comercial).where(Taller.id == cot.taller_id))
     nombre = res_t.scalar_one_or_none()
     return _to_read(cot, nombre)
+
+
+async def rechazar_cotizacion(
+    *,
+    solicitud_id: int,
+    cotizacion_id: int,
+    db: AsyncSession,
+    user: Usuario | None = None,
+    permisos: list[str] | None = None,
+    cliente_id: int | None = None,
+    comment: str | None = None,
+) -> CotizacionRead:
+    res_sol = await db.execute(
+        select(SolicitudEmergencia).where(SolicitudEmergencia.id == solicitud_id).with_for_update()
+    )
+    sol = res_sol.scalar_one_or_none()
+    if sol is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada.")
+    if user is not None and permisos is not None:
+        assert_user_tenant_access(user, sol.tenant_id, permisos)
+    if cliente_id is not None:
+        await assert_cliente_solicitud(db, solicitud=sol, cliente_id=cliente_id)
+    await _assert_solicitud_cotizable(sol)
+
+    res_cot = await db.execute(
+        select(Cotizacion)
+        .options(selectinload(Cotizacion.items))
+        .where(Cotizacion.id == cotizacion_id, Cotizacion.solicitud_id == solicitud_id)
+        .with_for_update()
+    )
+    cot = res_cot.scalar_one_or_none()
+    if cot is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cotización no encontrada.")
+    if user is not None and permisos is not None:
+        assert_user_tenant_access(user, cot.tenant_id or sol.tenant_id, permisos)
+    if cot.estado != EstadoCotizacionEnum.ENVIADA:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"La cotización no puede rechazarse (estado: {cot.estado.value}).",
+        )
+
+    now = utc_now_naive()
+    cot.estado = EstadoCotizacionEnum.RECHAZADA
+    if comment:
+        cot.comentarios = (cot.comentarios or "") + f"\n[Cliente rechaza] {comment}".strip()
+    cot.actualizado_at = now
+
+    res_t = await db.execute(select(Taller.nombre_comercial).where(Taller.id == cot.taller_id))
+    nombre_taller = res_t.scalar_one_or_none() or "Taller"
+
+    await _notificar_taller_cotizacion(
+        db,
+        taller_id=cot.taller_id,
+        solicitud=sol,
+        titulo="Cotización rechazada",
+        mensaje=f"El cliente rechazó tu propuesta de Bs. {cot.monto_total:.2f}.",
+    )
+    await _emit_cotizacion_ws(
+        solicitud_id,
+        estado=cot.estado.value,
+        message="Cotización rechazada por el cliente",
+        cotizacion_id=cot.id,
+    )
+    await registrar_accion(
+        db,
+        "cotizaciones",
+        "cotizaciones",
+        AccionBitacoraEnum.ACTUALIZAR,
+        descripcion=f"Cotización rechazada id={cotizacion_id} solicitud_id={solicitud_id}",
+        usuario_id=user.id if user else None,
+        entidad_id=cotizacion_id,
+    )
+    await db.flush()
+    return _to_read(cot, nombre_taller)
+
+
+async def responder_cotizacion(
+    *,
+    solicitud_id: int,
+    cotizacion_id: int,
+    body: CotizacionRespondIn,
+    db: AsyncSession,
+    user: Usuario,
+    permisos: list[str],
+    cliente_id: int,
+) -> CotizacionRead:
+    decision = body.decision.upper()
+    if decision in ("APROBADA", "ACEPTADA"):
+        return await seleccionar_cotizacion(
+            solicitud_id=solicitud_id,
+            cotizacion_id=cotizacion_id,
+            db=db,
+            user=user,
+            permisos=permisos,
+            cliente_id=cliente_id,
+        )
+    return await rechazar_cotizacion(
+        solicitud_id=solicitud_id,
+        cotizacion_id=cotizacion_id,
+        db=db,
+        user=user,
+        permisos=permisos,
+        cliente_id=cliente_id,
+        comment=body.comment,
+    )

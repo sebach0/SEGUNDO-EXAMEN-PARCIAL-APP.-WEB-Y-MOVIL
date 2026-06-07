@@ -51,6 +51,9 @@ class Cotizacion(Base):
     distancia_km: Mapped[Decimal | None] = mapped_column(Numeric(8, 2))
     servicios_ofrecidos: Mapped[list | None] = mapped_column(JSON)
     seleccionada_at: Mapped[datetime | None] = mapped_column(DateTime)
+    tenant_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+    )
     creado_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     actualizado_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
@@ -69,6 +72,9 @@ class CotizacionItem(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     cotizacion_id: Mapped[int] = mapped_column(
         ForeignKey("cotizaciones.id", ondelete="CASCADE"), nullable=False
+    )
+    tenant_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
     )
     descripcion: Mapped[str] = mapped_column(String(255), nullable=False)
     cantidad: Mapped[Decimal] = mapped_column(Numeric(10, 3), nullable=False, default=1)

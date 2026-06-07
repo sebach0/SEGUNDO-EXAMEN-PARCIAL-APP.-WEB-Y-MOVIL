@@ -3,6 +3,34 @@
 # Handoff para el próximo agente/sesión
 # Fecha: 2026-06-07
 
+## Cambios recientes (2026-06-07) — Ciclo 5 Etapa 1D–E cotizaciones/pagos tenant ✅
+
+- **CU47–48:** `tenant_id` cotizaciones; endpoints rechazar/respond con aislamiento tenant + rol cliente.
+- **CU49:** `pagos.tenant_id`, `pagos.cotizacion_id`; admin pagos list + validate-manual.
+- Migración `0014` / SQL `0022`; permisos `cotizaciones:rechazar`, `pagos:admin`.
+- Tests: `backend/tests/test_ciclo5_cotizaciones_pagos.py` (8 OK en Docker).
+- Sesión: `docs/ai/sessions/2026-06-07-ciclo5-etapa1de-cotizaciones-pagos-tenant.md`.
+- **Siguiente:** Etapa 2 Angular (dashboard/reportes/SLA admin UI) + Etapa 3 Flutter (rechazar cotización).
+
+## Cambios recientes (2026-06-07) — Ciclo 5 Etapa 1B KPIs/reportes/SLA ✅
+
+- **CU45:** `/api/admin/dashboard/*` — KPIs desde `solicitudes_emergencia`, filtros multi-tenant.
+- **CU46:** `/api/admin/reports/*` + CSV; permisos `reports:leer`, `reports:exportar`.
+- **CU50:** `/api/admin/sla/workshops` + detalle por taller; permiso `sla:leer`.
+- Refactor `kpis/filters.py`; `GET /api/kpis/summary` compatible con filtros extendidos.
+- Migración `0013` / SQL `0021`.
+- Sesión: `docs/ai/sessions/2026-06-07-ciclo5-etapa1b-kpis-reportes-sla.md`.
+- **Siguiente:** Etapa 1D — cotizaciones (tenant + rechazo) y pagos.
+
+## Cambios recientes (2026-06-07) — Ciclo 5 Etapa 1A tenants CU43–CU44 ✅
+
+- **CU43:** `/api/admin/tenants/` CRUD + activate/deactivate; `actualizado_en`; bitácora.
+- **CU44:** assign-users/workshops/technicians + PATCH individual; permiso `tenants:asignar`.
+- Migración `0012` / SQL `0020`; helper `resolve_tenant_scope()` en `ciclo4/deps.py`.
+- Tests: `backend/tests/test_ciclo5_tenants.py` (schemas + tenant scope).
+- Sesión: `docs/ai/sessions/2026-06-07-ciclo5-etapa1a-tenants-cu43-cu44.md`.
+- **Siguiente:** Etapa 1B — KPIs admin desglosados (CU45) + reportes CSV (CU46).
+
 ## Cambios recientes (2026-06-07) — Fix admin 403 usuarios/talleres ✅
 
 - **Causa:** redirect 307 sin trailing slash pierde `Authorization`.

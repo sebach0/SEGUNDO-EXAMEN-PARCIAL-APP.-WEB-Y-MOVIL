@@ -27,6 +27,8 @@ class PagoRead(BaseModel):
     id: int
     solicitud_id: int
     cliente_id: int
+    tenant_id: int | None = None
+    cotizacion_id: int | None = None
     monto: Decimal
     moneda: str
     metodo: MetodoPagoEnum
@@ -53,3 +55,15 @@ class PagoStripeConfirmIn(BaseModel):
         default=None,
         description="Si se omite, se usa ``referencia_externa`` del pago (PaymentIntent id).",
     )
+
+
+class PagoValidateManualIn(BaseModel):
+    """Admin valida pago manual (transferencia / efectivo)."""
+
+    aprobado: bool = True
+    observacion: str | None = Field(default=None, max_length=500)
+
+
+class AdminPagoListRead(BaseModel):
+    items: list[PagoRead]
+    total: int

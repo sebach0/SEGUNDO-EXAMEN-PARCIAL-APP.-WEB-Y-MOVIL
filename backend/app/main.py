@@ -103,14 +103,22 @@ from app.modules.comunicacion_y_notificaciones.comunicaciones.router import (
 )
 from app.modules.talleres_y_tecnicos.tecnico.router import router as tecnico_router
 from app.modules.pagos_y_comisiones.pagos.router import emergencias_pagos_cliente_router
+from app.modules.pagos_y_comisiones.pagos.admin_router import admin_payments_router
 from app.modules.ai.router import router as ai_router
 # ── Ciclo 4: Tiempo real + Offline Sync + Multi-tenant ───────────────────────
 from app.modules.ciclo4.incidentes.router import incidents_router, ws_router
 from app.modules.ciclo4.sync.router import sync_router
-from app.modules.ciclo4.tenants.router import tenants_router
+from app.modules.ciclo4.tenants.router import (
+    admin_tenant_assign_router,
+    admin_tenants_router,
+    tenants_router,
+)
 # ── Ciclo 4 Segunda Fase: Servicios, Cotizaciones, Cancelación, KPIs ─────────
 from app.modules.cotizaciones.router import router as cotizaciones_router
 from app.modules.kpis.router import router as kpis_router
+from app.modules.kpis.admin_router import admin_dashboard_router
+from app.modules.reports.router import reports_router
+from app.modules.sla.router import sla_router
 
 # ── Crear aplicación ─────────────────────────────────────────
 app = FastAPI(
@@ -157,15 +165,21 @@ app.include_router(emergencias_mensajes_cliente_router, prefix=PREFIX)
 app.include_router(comunicaciones_tecnico_router, prefix=PREFIX)
 app.include_router(tecnico_router, prefix=PREFIX)
 app.include_router(emergencias_pagos_cliente_router, prefix=PREFIX)
+app.include_router(admin_payments_router, prefix=PREFIX)
 app.include_router(ai_router, prefix=PREFIX)
 # ── Ciclo 4 ───────────────────────────────────────────────────────────────────
 app.include_router(incidents_router, prefix=PREFIX)
 app.include_router(ws_router, prefix=PREFIX)
 app.include_router(sync_router, prefix=PREFIX)
 app.include_router(tenants_router, prefix=PREFIX)
+app.include_router(admin_tenants_router, prefix=PREFIX)
+app.include_router(admin_tenant_assign_router, prefix=PREFIX)
 # ── Ciclo 4 Segunda Fase ──────────────────────────────────────────────────────
 app.include_router(cotizaciones_router, prefix=PREFIX)
 app.include_router(kpis_router, prefix=PREFIX)
+app.include_router(admin_dashboard_router, prefix=PREFIX)
+app.include_router(reports_router, prefix=PREFIX)
+app.include_router(sla_router, prefix=PREFIX)
 
 # Archivos de evidencia (foto/audio) servidos en HTTPS/HTTP según el entorno. si
 _evid_dir = settings.evidencias_upload_dir

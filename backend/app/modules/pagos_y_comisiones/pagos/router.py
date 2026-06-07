@@ -18,7 +18,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_user, require_permission
+from app.core.dependencies import get_current_user, get_current_user_permisos, require_permission
 from app.modules.clientes_y_vehiculos.clientes.service import get_cliente_row_for_usuario, require_cliente_rol
 from app.modules.pagos_y_comisiones.pagos import service
 from app.modules.pagos_y_comisiones.pagos.schemas import PagoIniciadoRead, PagoRead, PagoSolicitudCreateIn, PagoStripeConfirmIn
@@ -43,12 +43,15 @@ async def _cliente_id(user: Usuario, db: AsyncSession) -> int:
 )
 async def listar_pagos_de_solicitud(
     solicitud_id: int,
-    current_user: Usuario = Depends(get_current_user),
+    user_and_perms: tuple[Usuario, list[str]] = Depends(get_current_user_permisos),
     db: AsyncSession = Depends(get_db),
 ):
     """Historial de intentos / pagos de una solicitud propia."""
+    current_user, permisos = user_and_perms
     cid = await _cliente_id(current_user, db)
-    return await service.listar_pagos_solicitud(current_user, cid, solicitud_id, db)
+    return await service.listar_pagos_solicitud(
+        current_user, cid, solicitud_id, db, permisos=permisos
+    )
 
 
 @emergencias_pagos_cliente_router.post(
@@ -60,7 +63,7 @@ async def listar_pagos_de_solicitud(
 async def iniciar_pago_solicitud(
     solicitud_id: int,
     body: PagoSolicitudCreateIn,
-    current_user: Usuario = Depends(get_current_user),
+    user_and_perms: tuple[Usuario, list[str]] = Depends(get_current_user_permisos),
     db: AsyncSession = Depends(get_db),
 ):
     """
@@ -71,8 +74,11 @@ async def iniciar_pago_solicitud(
     - Si no: con ``PAGO_SIMULADO_AUTOCOMPLETE=true`` confirma al instante; si ``false``, queda **PENDIENTE**
       y ``POST .../pagos/{pago_id}/completar-simulado`` completa la simulación.
     """
+    current_user, permisos = user_and_perms
     cid = await _cliente_id(current_user, db)
-    return await service.crear_pago_solicitud(current_user, cid, solicitud_id, body, db)
+    return await service.crear_pago_solicitud(
+        current_user, cid, solicitud_id, body, db, permisos=permisos
+    )
 
 
 @emergencias_pagos_cliente_router.post(
