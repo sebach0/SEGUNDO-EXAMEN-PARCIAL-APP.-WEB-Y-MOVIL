@@ -1,0 +1,175 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h2 class="page__title">Reportes Operacionales</h2>
+      <p class="page__subtitle">CU46 — Datos reales de la base de datos · Exportar a CSV</p>
+    </div>
+    <button
+      class="btn btn--primary"
+      [disabled]="exportBusy"
+      (click)="exportCsv()"
+    >
+      {{ exportBusy ? 'Exportando…' : 'Exportar CSV' }}
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <label class="filter-field">
+      <span class="filter-label">Desde</span>
+      <input class="input" type="date" [(ngModel)]="desde" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Hasta</span>
+      <input class="input" type="date" [(ngModel)]="hasta" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Estado</span>
+      <select class="input" [(ngModel)]="estado">
+        <option *ngFor="let e of estadoOpts" [value]="e.value">{{ e.label }}</option>
+      </select>
+    </label>
+    <div class="filter-actions">
+      <button class="btn btn--primary" (click)="load()">Aplicar</button>
+      <button class="btn btn--ghost" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert">{{ error }}</div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab" [class.tab--active]="activeTab === 'incidentes'" (click)="setTab('incidentes')">Incidentes</button>
+    <button class="tab" [class.tab--active]="activeTab === 'performance'" (click)="setTab('performance')">Rendimiento</button>
+    <button class="tab" [class.tab--active]="activeTab === 'talleres'" (click)="setTab('talleres')">Talleres</button>
+  </div>
+
+  <div *ngIf="loading" class="state">Generando reporte…</div>
+
+  <!-- Tab: Incidentes -->
+  <div *ngIf="!loading && activeTab === 'incidentes' && incidents">
+    <div *ngIf="incidents.message" class="empty-state">{{ incidents.message }}</div>
+
+    <!-- Totales -->
+    <div class="totals-row" *ngIf="!incidents.message">
+      <div class="total-card">
+        <span class="total-card__label">Total</span>
+        <span class="total-card__value">{{ incidents.totals.total }}</span>
+      </div>
+      <div class="total-card">
+        <span class="total-card__label">Finalizados</span>
+        <span class="total-card__value">{{ incidents.totals.finalizados }}</span>
+      </div>
+      <div class="total-card">
+        <span class="total-card__label">Cancelados</span>
+        <span class="total-card__value">{{ incidents.totals.cancelados }}</span>
+      </div>
+      <div class="total-card">
+        <span class="total-card__label">Cumpl. SLA</span>
+        <span class="total-card__value">{{ formatPct(incidents.totals.cumplimiento_sla_pct) }}</span>
+      </div>
+    </div>
+
+    <div class="table-wrap" *ngIf="incidents.items.length > 0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Cliente</th>
+            <th>Vehículo</th>
+            <th>Tipo</th>
+            <th>Zona</th>
+            <th>Taller</th>
+            <th>Estado</th>
+            <th>Reportado</th>
+            <th>Asignado</th>
+            <th>Finalizado</th>
+            <th>Min asig.</th>
+            <th>Min llegada</th>
+            <th>SLA</th>
+            <th>Pagado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of incidents.items">
+            <td>{{ row.solicitud_id }}</td>
+            <td>{{ row.cliente || '—' }}</td>
+            <td>{{ row.vehiculo_placa || '—' }}</td>
+            <td>{{ row.tipo_incidente || '—' }}</td>
+            <td>{{ row.zona || '—' }}</td>
+            <td>{{ row.taller || '—' }}</td>
+            <td><span class="pill" [class.pill--done]="row.estado === 'FINALIZADA'" [class.pill--cancel]="row.estado === 'CANCELADA'">{{ row.estado }}</span></td>
+            <td>{{ formatDate(row.reportado_en) }}</td>
+            <td>{{ formatDate(row.asignado_en) }}</td>
+            <td>{{ formatDate(row.finalizado_en) }}</td>
+            <td>{{ formatMin(row.minutos_asignacion) }}</td>
+            <td>{{ formatMin(row.minutos_llegada) }}</td>
+            <td [class.sla-ok]="row.cumple_sla === true" [class.sla-fail]="row.cumple_sla === false">{{ slaLabel(row.cumple_sla) }}</td>
+            <td>{{ row.monto_pagado != null ? ('Bs. ' + row.monto_pagado.toFixed(2)) : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tab: Performance -->
+  <div *ngIf="!loading && activeTab === 'performance' && performance">
+    <div *ngIf="performance.message" class="empty-state">{{ performance.message }}</div>
+    <div class="perf-grid" *ngIf="!performance.message">
+      <div class="perf-card">
+        <span class="perf-card__label">Total incidentes</span>
+        <span class="perf-card__value">{{ performance.total_incidentes }}</span>
+      </div>
+      <div class="perf-card">
+        <span class="perf-card__label">Prom. asignación</span>
+        <span class="perf-card__value">{{ formatMin(performance.promedio_asignacion_min) }}</span>
+      </div>
+      <div class="perf-card">
+        <span class="perf-card__label">Prom. llegada</span>
+        <span class="perf-card__value">{{ formatMin(performance.promedio_llegada_min) }}</span>
+      </div>
+      <div class="perf-card">
+        <span class="perf-card__label">Prom. total</span>
+        <span class="perf-card__value">{{ formatMin(performance.promedio_total_min) }}</span>
+      </div>
+      <div class="perf-card">
+        <span class="perf-card__label">Cumpl. SLA</span>
+        <span class="perf-card__value">{{ formatPct(performance.cumplimiento_sla_pct) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab: Talleres -->
+  <div *ngIf="!loading && activeTab === 'talleres' && workshops">
+    <div *ngIf="workshops.message" class="empty-state">{{ workshops.message }}</div>
+    <div class="table-wrap" *ngIf="workshops.items.length > 0">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Taller</th>
+            <th>Total</th>
+            <th>Finalizados</th>
+            <th>Cancelados</th>
+            <th>Prom. asig.</th>
+            <th>Prom. llegada</th>
+            <th>Cumpl. SLA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let w of workshops.items">
+            <td>{{ w.taller_id }}</td>
+            <td class="td--bold">{{ w.nombre_comercial }}</td>
+            <td>{{ w.total_servicios }}</td>
+            <td>{{ w.finalizados }}</td>
+            <td>{{ w.cancelados }}</td>
+            <td>{{ formatMin(w.promedio_asignacion_min) }}</td>
+            <td>{{ formatMin(w.promedio_llegada_min) }}</td>
+            <td>{{ formatPct(w.cumplimiento_sla_pct) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

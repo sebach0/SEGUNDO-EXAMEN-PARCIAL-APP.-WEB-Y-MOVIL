@@ -1,0 +1,212 @@
+@use '../../../admin-theme' as t;
+@use '../../../admin-ui' as ui;
+
+.page {
+  padding: calc(t.$ev-space * 3);
+}
+
+.page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: calc(t.$ev-space * 2);
+}
+
+.page__title {
+  @include ui.ev-page-title;
+  margin-bottom: 0.25rem;
+}
+
+.page__subtitle {
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.filters {
+  @include ui.ev-toolbar;
+  padding: calc(t.$ev-space * 1.5);
+  background: t.$ev-surface;
+  border: 1px solid t.$ev-border;
+  border-radius: t.$ev-radius-lg;
+  margin-bottom: calc(t.$ev-space * 2);
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filter-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.input {
+  @include ui.ev-input;
+}
+
+.btn {
+  @include ui.ev-btn-ghost;
+}
+
+.btn--primary {
+  @include ui.ev-btn-primary;
+}
+
+.btn--ghost {
+  @include ui.ev-btn-ghost;
+}
+
+.alert {
+  @include ui.ev-alert-error;
+  margin-bottom: calc(t.$ev-space * 2);
+}
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid t.$ev-border;
+  margin-bottom: calc(t.$ev-space * 2);
+}
+
+.tab {
+  @include ui.ev-btn-ghost;
+  border: none;
+  border-radius: 0;
+  border-bottom: 2px solid transparent;
+  padding: 0.65rem 1rem;
+  color: t.$ev-muted;
+
+  &--active {
+    color: t.$ev-text;
+    border-bottom-color: t.$ev-focus;
+  }
+}
+
+.state {
+  padding: 2rem;
+  text-align: center;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.empty-state {
+  @include ui.ev-alert-info;
+}
+
+// ── Totales ────────────────────────────────────────────────────────────────────
+
+.totals-row {
+  display: flex;
+  gap: calc(t.$ev-space * 1.5);
+  flex-wrap: wrap;
+  margin-bottom: calc(t.$ev-space * 2);
+}
+
+.total-card {
+  @include ui.ev-card;
+  min-width: 130px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.total-card__label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.total-card__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+// ── Tabla ─────────────────────────────────────────────────────────────────────
+
+.table-wrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.table {
+  @include ui.ev-table;
+}
+
+.td--bold {
+  font-weight: 600;
+}
+
+.pill {
+  display: inline-block;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(67, 97, 238, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(67, 97, 238, 0.3);
+
+  &--done {
+    background: rgba(16, 185, 129, 0.15);
+    color: #6ee7b7;
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+
+  &--cancel {
+    background: rgba(239, 68, 68, 0.1);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+}
+
+.sla-ok {
+  color: #6ee7b7;
+  font-weight: 700;
+}
+
+.sla-fail {
+  color: #fca5a5;
+  font-weight: 700;
+}
+
+// ── Performance ────────────────────────────────────────────────────────────────
+
+.perf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: calc(t.$ev-space * 1.5);
+}
+
+.perf-card {
+  @include ui.ev-card;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.perf-card__label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.perf-card__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+}

@@ -1,0 +1,137 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h2 class="page__title">Dashboard KPIs Operacionales</h2>
+      <p class="page__subtitle">CU45 — Indicadores en tiempo real desde la base de datos</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <label class="filter-field">
+      <span class="filter-label">Desde</span>
+      <input class="input" type="date" [(ngModel)]="desde" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Hasta</span>
+      <input class="input" type="date" [(ngModel)]="hasta" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Taller ID</span>
+      <input class="input" type="number" [(ngModel)]="tallerIdStr" placeholder="Todos" min="1" />
+    </label>
+    <div class="filter-actions">
+      <button class="btn btn--primary" (click)="load()">Aplicar</button>
+      <button class="btn btn--ghost" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="state">Calculando KPIs…</div>
+  <div *ngIf="error" class="alert">{{ error }}</div>
+
+  <ng-container *ngIf="!loading && kpis">
+
+    <!-- Tarjetas principales -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <span class="kpi-card__label">Total incidentes</span>
+        <span class="kpi-card__value">{{ kpis.total_incidents }}</span>
+      </div>
+      <div class="kpi-card kpi-card--active">
+        <span class="kpi-card__label">Activos</span>
+        <span class="kpi-card__value">{{ kpis.active_incidents }}</span>
+      </div>
+      <div class="kpi-card kpi-card--done">
+        <span class="kpi-card__label">Finalizados</span>
+        <span class="kpi-card__value">{{ kpis.completed_incidents }}</span>
+      </div>
+      <div class="kpi-card kpi-card--cancel">
+        <span class="kpi-card__label">Cancelados</span>
+        <span class="kpi-card__value">{{ kpis.cancelled_cases }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Tiempo prom. asignación</span>
+        <span class="kpi-card__value">{{ formatMin(kpis.average_assignment_minutes) }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Tiempo prom. llegada</span>
+        <span class="kpi-card__value">{{ formatMin(kpis.average_arrival_minutes) }}</span>
+      </div>
+      <div class="kpi-card">
+        <span class="kpi-card__label">Tiempo prom. total</span>
+        <span class="kpi-card__value">{{ formatMin(kpis.average_total_minutes) }}</span>
+      </div>
+      <div class="kpi-card" [ngClass]="slaColor(kpis.sla_compliance_percentage)">
+        <span class="kpi-card__label">Cumplimiento SLA</span>
+        <span class="kpi-card__value">{{ formatPct(kpis.sla_compliance_percentage) }}</span>
+      </div>
+    </div>
+
+    <!-- Segunda fila: incidentes por tipo + zonas -->
+    <div class="charts-row">
+
+      <!-- Incidentes por tipo -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">Incidentes por tipo</h3>
+        <div *ngIf="kpis.incidents_by_type.length === 0" class="empty">Sin datos.</div>
+        <div *ngFor="let item of kpis.incidents_by_type" class="bar-item">
+          <span class="bar-item__label">{{ item.tipo }}</span>
+          <div class="bar-wrap">
+            <div
+              class="bar"
+              [style.width.%]="kpis.total_incidents > 0 ? (item.total / kpis.total_incidents * 100) : 0"
+            ></div>
+          </div>
+          <span class="bar-item__count">{{ item.total }}</span>
+        </div>
+      </div>
+
+      <!-- Zonas con más incidentes -->
+      <div class="chart-card">
+        <h3 class="chart-card__title">Zonas con más incidentes</h3>
+        <div *ngIf="kpis.incidents_by_zone.length === 0" class="empty">Sin datos de zona.</div>
+        <div *ngFor="let z of kpis.incidents_by_zone; let i = index" class="bar-item">
+          <span class="bar-item__label">{{ z.zona }}</span>
+          <div class="bar-wrap">
+            <div
+              class="bar bar--zone"
+              [style.width.%]="kpis.total_incidents > 0 ? (z.total / kpis.total_incidents * 100) : 0"
+            ></div>
+          </div>
+          <span class="bar-item__count">{{ z.total }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Talleres más eficientes -->
+    <div class="section">
+      <h3 class="section__title">Talleres más eficientes</h3>
+      <div *ngIf="kpis.top_workshops.length === 0" class="empty">Sin datos de talleres finalizados.</div>
+      <div *ngIf="kpis.top_workshops.length > 0" class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Taller</th>
+              <th>Tiempo promedio</th>
+              <th>Total atendidos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let w of kpis.top_workshops; let i = index">
+              <td class="rank">{{ i + 1 }}</td>
+              <td class="td--bold">{{ w.nombre_comercial }}</td>
+              <td>{{ formatMin(w.tiempo_promedio_min) }}</td>
+              <td>{{ w.total_atendidos }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <div *ngIf="!loading && !kpis && !error" class="state">
+    No hay datos disponibles para los filtros seleccionados.
+  </div>
+</div>

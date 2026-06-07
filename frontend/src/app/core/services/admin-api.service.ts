@@ -4,18 +4,29 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import type {
   AccionBitacora,
+  AdminDashboardKpisDto,
   AdminFinanzasReportes,
   AdminFinanzasResumen,
+  AssignmentResultDto,
   BitacoraDto,
+  IncidentReportReadDto,
+  PerformanceReportReadDto,
   PermisoDto,
   RolDto,
   RolPermisosDto,
   TallerCreatePayload,
   TallerDto,
   TallerUpdatePayload,
+  TenantCreatePayload,
+  TenantDto,
+  TenantMembersDto,
+  TenantUpdatePayload,
   UsuarioCreatePayload,
   UsuarioListDto,
   UsuarioUpdatePayload,
+  WorkshopReportReadDto,
+  WorkshopSlaDetailDto,
+  WorkshopSlaDto,
 } from '../models/admin-api.models';
 
 @Injectable({ providedIn: 'root' })
@@ -122,5 +133,183 @@ export class AdminApiService {
     if (filters?.desde) params = params.set('desde', filters.desde);
     if (filters?.hasta) params = params.set('hasta', filters.hasta);
     return this.http.get<AdminFinanzasReportes>(`${this.base}/admin/finanzas/reportes`, { params });
+  }
+
+  // ── Ciclo 5 — Tenants (CU43) ───────────────────────────────────────────────
+
+  listTenants(): Observable<TenantDto[]> {
+    return this.http.get<TenantDto[]>(`${this.base}/admin/tenants/`);
+  }
+
+  getTenant(id: number): Observable<TenantDto> {
+    return this.http.get<TenantDto>(`${this.base}/admin/tenants/${id}`);
+  }
+
+  createTenant(body: TenantCreatePayload): Observable<TenantDto> {
+    return this.http.post<TenantDto>(`${this.base}/admin/tenants/`, body);
+  }
+
+  updateTenant(id: number, body: TenantUpdatePayload): Observable<TenantDto> {
+    return this.http.patch<TenantDto>(`${this.base}/admin/tenants/${id}`, body);
+  }
+
+  activateTenant(id: number): Observable<TenantDto> {
+    return this.http.patch<TenantDto>(`${this.base}/admin/tenants/${id}/activate`, {});
+  }
+
+  deactivateTenant(id: number): Observable<TenantDto> {
+    return this.http.patch<TenantDto>(`${this.base}/admin/tenants/${id}/deactivate`, {});
+  }
+
+  // ── Ciclo 5 — Asignaciones (CU44) ──────────────────────────────────────────
+
+  getTenantMembers(tenantId: number): Observable<TenantMembersDto> {
+    return this.http.get<TenantMembersDto>(`${this.base}/admin/tenants/${tenantId}/members`);
+  }
+
+  assignUsersToTenant(tenantId: number, ids: number[]): Observable<AssignmentResultDto> {
+    return this.http.post<AssignmentResultDto>(
+      `${this.base}/admin/tenants/${tenantId}/assign-users`,
+      { ids },
+    );
+  }
+
+  assignWorkshopsToTenant(tenantId: number, ids: number[]): Observable<AssignmentResultDto> {
+    return this.http.post<AssignmentResultDto>(
+      `${this.base}/admin/tenants/${tenantId}/assign-workshops`,
+      { ids },
+    );
+  }
+
+  assignTechniciansToTenant(tenantId: number, ids: number[]): Observable<AssignmentResultDto> {
+    return this.http.post<AssignmentResultDto>(
+      `${this.base}/admin/tenants/${tenantId}/assign-technicians`,
+      { ids },
+    );
+  }
+
+  patchUserTenant(userId: number, tenantId: number): Observable<AssignmentResultDto> {
+    return this.http.patch<AssignmentResultDto>(`${this.base}/admin/users/${userId}/tenant`, {
+      tenant_id: tenantId,
+    });
+  }
+
+  patchWorkshopTenant(workshopId: number, tenantId: number): Observable<AssignmentResultDto> {
+    return this.http.patch<AssignmentResultDto>(
+      `${this.base}/admin/workshops/${workshopId}/tenant`,
+      { tenant_id: tenantId },
+    );
+  }
+
+  // ── Ciclo 5 — KPI Dashboard (CU45) ─────────────────────────────────────────
+
+  getAdminDashboardKpis(filters?: {
+    tenant_id?: number;
+    desde?: string;
+    hasta?: string;
+    taller_id?: number;
+    zona_id?: number;
+  }): Observable<AdminDashboardKpisDto> {
+    let params = new HttpParams();
+    if (filters?.tenant_id != null) params = params.set('tenant_id', String(filters.tenant_id));
+    if (filters?.desde) params = params.set('desde', filters.desde);
+    if (filters?.hasta) params = params.set('hasta', filters.hasta);
+    if (filters?.taller_id != null) params = params.set('taller_id', String(filters.taller_id));
+    if (filters?.zona_id != null) params = params.set('zona_id', String(filters.zona_id));
+    return this.http.get<AdminDashboardKpisDto>(`${this.base}/admin/dashboard/kpis`, { params });
+  }
+
+  // ── Ciclo 5 — Reportes (CU46) ──────────────────────────────────────────────
+
+  getIncidentsReport(filters?: {
+    tenant_id?: number;
+    desde?: string;
+    hasta?: string;
+    taller_id?: number;
+    zona_id?: number;
+    estado?: string;
+  }): Observable<IncidentReportReadDto> {
+    let params = new HttpParams();
+    if (filters?.tenant_id != null) params = params.set('tenant_id', String(filters.tenant_id));
+    if (filters?.desde) params = params.set('desde', filters.desde);
+    if (filters?.hasta) params = params.set('hasta', filters.hasta);
+    if (filters?.taller_id != null) params = params.set('taller_id', String(filters.taller_id));
+    if (filters?.zona_id != null) params = params.set('zona_id', String(filters.zona_id));
+    if (filters?.estado) params = params.set('estado', filters.estado);
+    return this.http.get<IncidentReportReadDto>(`${this.base}/admin/reports/incidents`, { params });
+  }
+
+  getPerformanceReport(filters?: {
+    tenant_id?: number;
+    desde?: string;
+    hasta?: string;
+  }): Observable<PerformanceReportReadDto> {
+    let params = new HttpParams();
+    if (filters?.tenant_id != null) params = params.set('tenant_id', String(filters.tenant_id));
+    if (filters?.desde) params = params.set('desde', filters.desde);
+    if (filters?.hasta) params = params.set('hasta', filters.hasta);
+    return this.http.get<PerformanceReportReadDto>(`${this.base}/admin/reports/performance`, { params });
+  }
+
+  getWorkshopsReport(filters?: {
+    tenant_id?: number;
+    desde?: string;
+    hasta?: string;
+  }): Observable<WorkshopReportReadDto> {
+    let params = new HttpParams();
+    if (filters?.tenant_id != null) params = params.set('tenant_id', String(filters.tenant_id));
+    if (filters?.desde) params = params.set('desde', filters.desde);
+    if (filters?.hasta) params = params.set('hasta', filters.hasta);
+    return this.http.get<WorkshopReportReadDto>(`${this.base}/admin/reports/workshops`, { params });
+  }
+
+  exportReportCsv(filters?: {
+    tenant_id?: number;
+    desde?: string;
+    hasta?: string;
+    estado?: string;
+  }): Observable<Blob> {
+    let params = new HttpParams();
+    if (filters?.tenant_id != null) params = params.set('tenant_id', String(filters.tenant_id));
+    if (filters?.desde) params = params.set('desde', filters.desde);
+    if (filters?.hasta) params = params.set('hasta', filters.hasta);
+    if (filters?.estado) params = params.set('estado', filters.estado);
+    return this.http.get(`${this.base}/admin/reports/export/csv`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  // ── Ciclo 5 — SLA por taller (CU50) ────────────────────────────────────────
+
+  getSlaWorkshops(filters?: {
+    tenant_id?: number;
+    desde?: string;
+    hasta?: string;
+    taller_id?: number;
+    zona_id?: number;
+  }): Observable<WorkshopSlaDto[]> {
+    let params = new HttpParams();
+    if (filters?.tenant_id != null) params = params.set('tenant_id', String(filters.tenant_id));
+    if (filters?.desde) params = params.set('desde', filters.desde);
+    if (filters?.hasta) params = params.set('hasta', filters.hasta);
+    if (filters?.taller_id != null) params = params.set('taller_id', String(filters.taller_id));
+    if (filters?.zona_id != null) params = params.set('zona_id', String(filters.zona_id));
+    return this.http.get<WorkshopSlaDto[]>(`${this.base}/admin/sla/workshops`, { params });
+  }
+
+  getSlaWorkshopDetail(workshopId: number, filters?: {
+    tenant_id?: number;
+    desde?: string;
+    hasta?: string;
+  }): Observable<WorkshopSlaDetailDto> {
+    let params = new HttpParams();
+    if (filters?.tenant_id != null) params = params.set('tenant_id', String(filters.tenant_id));
+    if (filters?.desde) params = params.set('desde', filters.desde);
+    if (filters?.hasta) params = params.set('hasta', filters.hasta);
+    return this.http.get<WorkshopSlaDetailDto>(
+      `${this.base}/admin/sla/workshops/${workshopId}`,
+      { params },
+    );
   }
 }

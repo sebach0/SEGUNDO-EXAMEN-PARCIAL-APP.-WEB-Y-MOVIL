@@ -1,0 +1,133 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h2 class="page__title">Cumplimiento SLA por Taller</h2>
+      <p class="page__subtitle">CU50 — Análisis de tiempos y cumplimiento de niveles de servicio</p>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters">
+    <label class="filter-field">
+      <span class="filter-label">Desde</span>
+      <input class="input" type="date" [(ngModel)]="desde" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Hasta</span>
+      <input class="input" type="date" [(ngModel)]="hasta" />
+    </label>
+    <label class="filter-field">
+      <span class="filter-label">Taller ID</span>
+      <input class="input" type="number" [(ngModel)]="tallerIdStr" placeholder="Todos" min="1" />
+    </label>
+    <div class="filter-actions">
+      <button class="btn btn--primary" (click)="load()">Aplicar</button>
+      <button class="btn btn--ghost" (click)="clearFilters()">Limpiar</button>
+    </div>
+  </div>
+
+  <div *ngIf="error" class="alert">{{ error }}</div>
+  <div *ngIf="loading" class="state">Calculando SLA…</div>
+
+  <ng-container *ngIf="!loading">
+    <div *ngIf="workshops.length === 0 && !error" class="empty-state">
+      No hay datos de SLA para los filtros seleccionados.
+    </div>
+
+    <div *ngIf="workshops.length > 0" class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Taller</th>
+            <th>Total casos</th>
+            <th>Finalizados</th>
+            <th>Cancelados</th>
+            <th>Prom. asig.</th>
+            <th>Prom. llegada</th>
+            <th>Cumpl. SLA</th>
+            <th>Fuera SLA</th>
+            <th>Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let w of workshops">
+            <tr>
+              <td>{{ w.workshop_id }}</td>
+              <td class="td--bold">{{ w.workshop_name }}</td>
+              <td>{{ w.total_cases }}</td>
+              <td>{{ w.completed_cases }}</td>
+              <td>{{ w.cancelled_cases }}</td>
+              <td>{{ formatMin(w.average_assignment_minutes) }}</td>
+              <td>{{ formatMin(w.average_arrival_minutes) }}</td>
+              <td>
+                <span class="sla-badge" [ngClass]="slaClass(w.sla_compliance_percentage)">
+                  {{ formatPct(w.sla_compliance_percentage) }}
+                </span>
+              </td>
+              <td>
+                <span *ngIf="w.cases_out_of_sla > 0" class="out-badge">{{ w.cases_out_of_sla }}</span>
+                <span *ngIf="w.cases_out_of_sla === 0" class="text-ok">0</span>
+              </td>
+              <td>
+                <button
+                  class="btn btn--sm"
+                  [class.btn--active]="detailWorkshopId === w.workshop_id"
+                  (click)="loadDetail(w.workshop_id)"
+                >
+                  {{ detailWorkshopId === w.workshop_id ? 'Cerrar' : 'Ver casos' }}
+                </button>
+              </td>
+            </tr>
+            <!-- Detalle de casos fuera de SLA -->
+            <tr *ngIf="detailWorkshopId === w.workshop_id">
+              <td colspan="10" class="detail-row">
+                <div *ngIf="loadingDetail" class="state-inline">Cargando detalle…</div>
+                <div *ngIf="!loadingDetail && detail">
+                  <p class="detail-title">
+                    Casos fuera de SLA — {{ detail.workshop.workshop_name }}
+                    ({{ detail.cases_out_of_sla.length }} casos)
+                  </p>
+                  <div *ngIf="detail.cases_out_of_sla.length === 0" class="text-ok detail-ok">
+                    Todos los casos finalizados cumplieron el SLA.
+                  </div>
+                  <table *ngIf="detail.cases_out_of_sla.length > 0" class="table table--inner">
+                    <thead>
+                      <tr>
+                        <th>Solicitud</th>
+                        <th>Reportado</th>
+                        <th>Finalizado</th>
+                        <th>SLA (min)</th>
+                        <th>Total (min)</th>
+                        <th>Exceso (min)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let c of detail.cases_out_of_sla">
+                        <td>#{{ c.solicitud_id }}</td>
+                        <td>{{ formatDate(c.reportado_en) }}</td>
+                        <td>{{ formatDate(c.finalizado_en) }}</td>
+                        <td>{{ c.sla_minutos ?? '—' }}</td>
+                        <td class="sla-fail">{{ c.minutos_totales.toFixed(1) }}</td>
+                        <td class="sla-fail">
+                          {{ c.sla_minutos != null ? (c.minutos_totales - c.sla_minutos).toFixed(1) : '—' }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="legend" *ngIf="workshops.length > 0">
+      <span class="legend-item"><span class="dot dot--green"></span> ≥ 90 % — Excelente</span>
+      <span class="legend-item"><span class="dot dot--yellow"></span> 70–89 % — Aceptable</span>
+      <span class="legend-item"><span class="dot dot--red"></span> &lt; 70 % — Crítico</span>
+    </div>
+  </ng-container>
+</div>

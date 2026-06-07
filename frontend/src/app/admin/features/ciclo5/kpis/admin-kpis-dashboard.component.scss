@@ -1,0 +1,242 @@
+@use '../../../admin-theme' as t;
+@use '../../../admin-ui' as ui;
+
+.page {
+  padding: calc(t.$ev-space * 3);
+}
+
+.page__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: calc(t.$ev-space * 2);
+}
+
+.page__title {
+  @include ui.ev-page-title;
+  margin-bottom: 0.25rem;
+}
+
+.page__subtitle {
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.filters {
+  @include ui.ev-toolbar;
+  margin-bottom: calc(t.$ev-space * 3);
+  padding: calc(t.$ev-space * 1.5);
+  background: t.$ev-surface;
+  border: 1px solid t.$ev-border;
+  border-radius: t.$ev-radius-lg;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filter-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+
+.input {
+  @include ui.ev-input;
+}
+
+.btn {
+  @include ui.ev-btn-ghost;
+}
+
+.btn--primary {
+  @include ui.ev-btn-primary;
+}
+
+.btn--ghost {
+  @include ui.ev-btn-ghost;
+}
+
+.state {
+  padding: 2rem;
+  text-align: center;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+.alert {
+  @include ui.ev-alert-error;
+}
+
+// ── KPI Cards ─────────────────────────────────────────────────────────────────
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: calc(t.$ev-space * 1.5);
+  margin-bottom: calc(t.$ev-space * 3);
+}
+
+.kpi-card {
+  @include ui.ev-card;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: relative;
+  overflow: hidden;
+
+  &--active {
+    border-color: rgba(59, 130, 246, 0.4);
+  }
+
+  &--done {
+    border-color: rgba(16, 185, 129, 0.4);
+  }
+
+  &--cancel {
+    border-color: rgba(239, 68, 68, 0.3);
+  }
+
+  &.kpi--green {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.07);
+  }
+
+  &.kpi--yellow {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(245, 158, 11, 0.07);
+  }
+
+  &.kpi--red {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.06);
+  }
+}
+
+.kpi-card__label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.kpi-card__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: t.$ev-text;
+}
+
+// ── Charts Row ────────────────────────────────────────────────────────────────
+
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(t.$ev-space * 2);
+  margin-bottom: calc(t.$ev-space * 3);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-card {
+  @include ui.ev-card;
+}
+
+.chart-card__title {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.bar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.8125rem;
+}
+
+.bar-item__label {
+  width: 110px;
+  min-width: 110px;
+  color: t.$ev-text;
+  font-size: 0.78rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bar-wrap {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.bar {
+  height: 100%;
+  background: t.$ev-gradient-cta;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+
+  &--zone {
+    background: rgba(59, 130, 246, 0.6);
+  }
+}
+
+.bar-item__count {
+  width: 32px;
+  text-align: right;
+  color: t.$ev-muted;
+  font-size: 0.78rem;
+}
+
+// ── Talleres eficientes ───────────────────────────────────────────────────────
+
+.section {
+  @include ui.ev-card;
+}
+
+.section__title {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+.table {
+  @include ui.ev-table;
+}
+
+.rank {
+  color: t.$ev-muted;
+  font-weight: 700;
+  width: 32px;
+}
+
+.td--bold {
+  font-weight: 600;
+}
+
+.empty {
+  color: t.$ev-muted;
+  font-size: 0.8125rem;
+  padding: 1rem 0;
+}

@@ -19,6 +19,8 @@ from datetime import date
 from app.modules.kpis.filters import KpiFilters, apply_solicitud_filters
 from app.modules.kpis.schemas import AdminDashboardKpisRead, SlaSummaryRead
 from app.modules.incidentes.emergencias.models import SolicitudEmergencia
+import app.modules.clientes_y_vehiculos.clientes.models  # noqa: F401 — registra mapper Cliente
+import app.modules.clientes_y_vehiculos.vehiculos.models  # noqa: F401 — registra mapper Vehiculo
 from sqlalchemy import select
 
 

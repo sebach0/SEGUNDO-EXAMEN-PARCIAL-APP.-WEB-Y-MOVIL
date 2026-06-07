@@ -66,6 +66,42 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.OperationalDashboardComponent,
           ),
       },
+      // ── Ciclo 5: Tenants, KPIs completo, Reportes, SLA ────────────────────
+      {
+        path: 'ciclo5/tenants',
+        loadComponent: () =>
+          import('./features/ciclo5/tenants/admin-tenants.component').then(
+            (m) => m.AdminTenantsComponent,
+          ),
+      },
+      {
+        path: 'ciclo5/tenants/:id/asignaciones',
+        loadComponent: () =>
+          import('./features/ciclo5/asignaciones/admin-tenant-asignaciones.component').then(
+            (m) => m.AdminTenantAsignacionesComponent,
+          ),
+      },
+      {
+        path: 'ciclo5/dashboard',
+        loadComponent: () =>
+          import('./features/ciclo5/kpis/admin-kpis-dashboard.component').then(
+            (m) => m.AdminKpisDashboardComponent,
+          ),
+      },
+      {
+        path: 'ciclo5/reports',
+        loadComponent: () =>
+          import('./features/ciclo5/reports/admin-reports.component').then(
+            (m) => m.AdminReportsComponent,
+          ),
+      },
+      {
+        path: 'ciclo5/sla',
+        loadComponent: () =>
+          import('./features/ciclo5/sla/admin-sla.component').then(
+            (m) => m.AdminSlaComponent,
+          ),
+      },
     ],
   },
   {

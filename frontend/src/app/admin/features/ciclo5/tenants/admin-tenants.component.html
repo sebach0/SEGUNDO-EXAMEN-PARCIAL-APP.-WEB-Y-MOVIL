@@ -1,0 +1,148 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h2 class="page__title">Tenants / Organizaciones</h2>
+      <p class="page__subtitle">CU43 — Gestión multi-tenant de la plataforma</p>
+    </div>
+    <button class="btn btn--primary" (click)="openCreate()">+ Nuevo tenant</button>
+  </div>
+
+  <div *ngIf="successMsg" class="alert alert--success">{{ successMsg }}</div>
+  <div *ngIf="error && !modalCreate && !modalEdit" class="alert alert--error">{{ error }}</div>
+
+  <div class="toolbar">
+    <input
+      class="input input--search"
+      type="text"
+      placeholder="Buscar por nombre o slug…"
+      [(ngModel)]="search"
+    />
+    <span class="toolbar__count">{{ filtered.length }} registro(s)</span>
+  </div>
+
+  <div *ngIf="loading" class="state state--loading">Cargando tenants…</div>
+
+  <div *ngIf="!loading && filtered.length === 0 && !error" class="state state--empty">
+    No hay tenants que coincidan con la búsqueda.
+  </div>
+
+  <div *ngIf="!loading && filtered.length > 0" class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Slug</th>
+          <th>Estado</th>
+          <th>Creado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let t of filtered">
+          <td>{{ t.id }}</td>
+          <td class="td--bold">{{ t.nombre }}</td>
+          <td><code class="slug">{{ t.slug }}</code></td>
+          <td>
+            <span class="badge" [ngClass]="estadoBadgeClass(t.estado)">{{ t.estado }}</span>
+          </td>
+          <td>{{ t.creado_en | date:'dd/MM/yyyy' }}</td>
+          <td class="td--actions">
+            <button class="btn btn--sm btn--outline" (click)="openEdit(t)">Editar</button>
+            <a class="btn btn--sm btn--outline" [routerLink]="['/admin/panel/ciclo5/tenants', t.id, 'asignaciones']">
+              Asignar
+            </a>
+            <button
+              *ngIf="t.estado !== 'ACTIVO'"
+              class="btn btn--sm btn--success"
+              [disabled]="busy"
+              (click)="activate(t)"
+            >Activar</button>
+            <button
+              *ngIf="t.estado === 'ACTIVO'"
+              class="btn btn--sm btn--danger"
+              [disabled]="busy"
+              (click)="deactivate(t)"
+            >Desactivar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: crear tenant -->
+<div class="modal-backdrop" *ngIf="modalCreate" (click)="closeModals()"></div>
+<div class="modal" *ngIf="modalCreate">
+  <div class="modal__header">
+    <h3>Nuevo tenant</h3>
+    <button class="modal__close" (click)="closeModals()">✕</button>
+  </div>
+  <div *ngIf="error" class="alert alert--error">{{ error }}</div>
+  <div class="modal__body">
+    <label class="field">
+      <span class="field__label">Nombre *</span>
+      <input
+        class="input"
+        type="text"
+        [(ngModel)]="createForm.nombre"
+        (ngModelChange)="autoSlug()"
+        placeholder="Ej: Grupo Norte"
+      />
+    </label>
+    <label class="field">
+      <span class="field__label">Slug *</span>
+      <input
+        class="input"
+        type="text"
+        [(ngModel)]="createForm.slug"
+        placeholder="ej: grupo-norte"
+      />
+      <span class="field__hint">Solo letras minúsculas, números y guiones. Debe ser único.</span>
+    </label>
+    <label class="field">
+      <span class="field__label">Estado</span>
+      <select class="input" [(ngModel)]="createForm.estado">
+        <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+      </select>
+    </label>
+  </div>
+  <div class="modal__footer">
+    <button class="btn btn--outline" (click)="closeModals()">Cancelar</button>
+    <button class="btn btn--primary" [disabled]="busy" (click)="create()">
+      {{ busy ? 'Guardando…' : 'Crear' }}
+    </button>
+  </div>
+</div>
+
+<!-- Modal: editar tenant -->
+<div class="modal-backdrop" *ngIf="modalEdit" (click)="closeModals()"></div>
+<div class="modal" *ngIf="modalEdit">
+  <div class="modal__header">
+    <h3>Editar tenant — {{ editTarget?.nombre }}</h3>
+    <button class="modal__close" (click)="closeModals()">✕</button>
+  </div>
+  <div *ngIf="error" class="alert alert--error">{{ error }}</div>
+  <div class="modal__body">
+    <label class="field">
+      <span class="field__label">Nombre</span>
+      <input class="input" type="text" [(ngModel)]="editForm.nombre" />
+    </label>
+    <label class="field">
+      <span class="field__label">Slug</span>
+      <input class="input" type="text" [(ngModel)]="editForm.slug" />
+    </label>
+    <label class="field">
+      <span class="field__label">Estado</span>
+      <select class="input" [(ngModel)]="editForm.estado">
+        <option *ngFor="let e of estados" [value]="e">{{ e }}</option>
+      </select>
+    </label>
+  </div>
+  <div class="modal__footer">
+    <button class="btn btn--outline" (click)="closeModals()">Cancelar</button>
+    <button class="btn btn--primary" [disabled]="busy" (click)="saveEdit()">
+      {{ busy ? 'Guardando…' : 'Guardar' }}
+    </button>
+  </div>
+</div>

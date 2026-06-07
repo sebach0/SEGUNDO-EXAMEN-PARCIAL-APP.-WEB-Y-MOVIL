@@ -1,0 +1,149 @@
+<div class="page">
+  <div class="back-link">
+    <a [routerLink]="['/admin/panel/ciclo5/tenants']" class="btn btn--ghost">&larr; Tenants</a>
+  </div>
+
+  <div *ngIf="loading" class="state">Cargando…</div>
+  <div *ngIf="error && !loading" class="alert alert--error">{{ error }}</div>
+  <div *ngIf="successMsg" class="alert alert--success">{{ successMsg }}</div>
+
+  <ng-container *ngIf="!loading && tenant">
+    <div class="page__header">
+      <div>
+        <h2 class="page__title">Asignaciones — {{ tenant.nombre }}</h2>
+        <p class="page__subtitle">
+          CU44 · Tenant <code class="slug">{{ tenant.slug }}</code> ·
+          <span class="badge" [class.badge--activo]="tenant.estado === 'ACTIVO'"
+                [class.badge--inactivo]="tenant.estado !== 'ACTIVO'">{{ tenant.estado }}</span>
+        </p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab" [class.tab--active]="activeTab === 'usuarios'" (click)="setTab('usuarios')">
+        Usuarios ({{ members?.usuarios?.length ?? 0 }})
+      </button>
+      <button class="tab" [class.tab--active]="activeTab === 'talleres'" (click)="setTab('talleres')">
+        Talleres ({{ members?.talleres?.length ?? 0 }})
+      </button>
+      <button class="tab" [class.tab--active]="activeTab === 'tecnicos'" (click)="setTab('tecnicos')">
+        Técnicos ({{ members?.tecnicos?.length ?? 0 }})
+      </button>
+    </div>
+
+    <!-- Tab: Usuarios -->
+    <div *ngIf="activeTab === 'usuarios'" class="tab-content">
+      <div class="two-col">
+        <!-- Asignados -->
+        <div class="panel">
+          <h3 class="panel__title">Usuarios asignados</h3>
+          <div *ngIf="members?.usuarios?.length === 0" class="empty-state">Sin usuarios asignados.</div>
+          <table *ngIf="(members?.usuarios?.length ?? 0) > 0" class="table">
+            <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let u of members?.usuarios">
+                <td>{{ u.id }}</td>
+                <td>{{ u.nombres }} {{ u.apellidos }}</td>
+                <td>{{ u.email }}</td>
+                <td><span class="pill">{{ u.estado }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Disponibles para asignar -->
+        <div class="panel">
+          <h3 class="panel__title">Asignar usuarios</h3>
+          <div *ngIf="availableUsuarios.length === 0" class="empty-state">Todos los usuarios ya están asignados.</div>
+          <div *ngIf="availableUsuarios.length > 0">
+            <p class="panel__hint">Selecciona uno o más usuarios y presiona Asignar.</p>
+            <div class="check-list">
+              <label *ngFor="let u of availableUsuarios" class="check-item">
+                <input
+                  type="checkbox"
+                  [checked]="selectedUserIds.has(u.id)"
+                  (change)="toggleUser(u.id)"
+                />
+                <span>{{ u.nombres }} {{ u.apellidos }} <small>({{ u.email }})</small></span>
+              </label>
+            </div>
+            <button
+              class="btn btn--primary mt"
+              [disabled]="busy || selectedUserIds.size === 0"
+              (click)="assignUsers()"
+            >
+              {{ busy ? 'Asignando…' : 'Asignar seleccionados (' + selectedUserIds.size + ')' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Talleres -->
+    <div *ngIf="activeTab === 'talleres'" class="tab-content">
+      <div class="two-col">
+        <div class="panel">
+          <h3 class="panel__title">Talleres asignados</h3>
+          <div *ngIf="members?.talleres?.length === 0" class="empty-state">Sin talleres asignados.</div>
+          <table *ngIf="(members?.talleres?.length ?? 0) > 0" class="table">
+            <thead><tr><th>ID</th><th>Nombre</th><th>Ciudad</th><th>Estado</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let t of members?.talleres">
+                <td>{{ t.id }}</td>
+                <td>{{ t.nombre_comercial }}</td>
+                <td>{{ t.ciudad }}</td>
+                <td><span class="pill">{{ t.estado }}</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <h3 class="panel__title">Asignar talleres</h3>
+          <div *ngIf="availableTalleres.length === 0" class="empty-state">Todos los talleres ya están asignados.</div>
+          <div *ngIf="availableTalleres.length > 0">
+            <p class="panel__hint">Selecciona talleres y presiona Asignar.</p>
+            <div class="check-list">
+              <label *ngFor="let t of availableTalleres" class="check-item">
+                <input
+                  type="checkbox"
+                  [checked]="selectedWorkshopIds.has(t.id)"
+                  (change)="toggleWorkshop(t.id)"
+                />
+                <span>{{ t.nombre_comercial }} <small>({{ t.ciudad }})</small></span>
+              </label>
+            </div>
+            <button
+              class="btn btn--primary mt"
+              [disabled]="busy || selectedWorkshopIds.size === 0"
+              (click)="assignWorkshops()"
+            >
+              {{ busy ? 'Asignando…' : 'Asignar seleccionados (' + selectedWorkshopIds.size + ')' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Técnicos -->
+    <div *ngIf="activeTab === 'tecnicos'" class="tab-content">
+      <div class="panel">
+        <h3 class="panel__title">Técnicos asignados</h3>
+        <div *ngIf="members?.tecnicos?.length === 0" class="empty-state">Sin técnicos asignados directamente.</div>
+        <table *ngIf="(members?.tecnicos?.length ?? 0) > 0" class="table">
+          <thead><tr><th>ID</th><th>Usuario ID</th><th>Taller ID</th><th>Estado</th></tr></thead>
+          <tbody>
+            <tr *ngFor="let tec of members?.tecnicos">
+              <td>{{ tec.id }}</td>
+              <td>{{ tec.usuario_id }}</td>
+              <td>{{ tec.taller_id }}</td>
+              <td><span class="pill">{{ tec.estado }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="panel__hint mt">Los técnicos heredan el tenant de su taller. Asigna el taller al tenant para incluir sus técnicos.</p>
+      </div>
+    </div>
+  </ng-container>
+</div>
