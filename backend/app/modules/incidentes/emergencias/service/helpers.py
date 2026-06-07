@@ -10,6 +10,7 @@ from app.modules.incidentes.emergencias.models import (
     SolicitudEmergencia,
     TipoEvidenciaSolicitudEnum,
 )
+from app.modules.incidentes.emergencias.eta_service import minutos_retraso
 from app.modules.incidentes.emergencias.schemas import (
     SolicitudEmergenciaDetailRead,
     SolicitudEmergenciaRead,
@@ -57,6 +58,7 @@ def to_seguimiento(s: SolicitudEmergencia) -> SolicitudSeguimientoRead:
     tiene_ubic = bool(s.ubicaciones)
     tiene_foto = any(e.tipo == TipoEvidenciaSolicitudEnum.FOTO for e in s.evidencias)
     tiene_audio = any(e.tipo == TipoEvidenciaSolicitudEnum.AUDIO for e in s.evidencias)
+    retraso = minutos_retraso(s)
     return SolicitudSeguimientoRead(
         solicitud_id=s.id,
         estado=s.estado,
@@ -72,6 +74,10 @@ def to_seguimiento(s: SolicitudEmergencia) -> SolicitudSeguimientoRead:
         tiene_evidencia_audio=tiene_audio,
         presupuesto_bob=s.presupuesto_bob,
         presupuesto_registrado_at=s.presupuesto_registrado_at,
+        minutos_retraso=retraso,
+        servicio_retrasado=retraso is not None and retraso >= 5,
+        eta_actualizado_en=s.eta_actualizado_en,
+        eta_origen=s.eta_origen,
     )
 
 

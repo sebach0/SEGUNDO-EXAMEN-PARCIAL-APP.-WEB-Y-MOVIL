@@ -118,6 +118,9 @@ class SolicitudSeguimiento {
     this.tieneEvidenciaAudio = false,
     this.presupuestoBob,
     this.presupuestoRegistradoAt,
+    this.minutosRetraso,
+    this.servicioRetrasado = false,
+    this.etaOrigen,
   });
 
   final int solicitudId;
@@ -136,6 +139,9 @@ class SolicitudSeguimiento {
   /// Monto en bolivianos (BOB) indicado por el técnico al iniciar atención en sitio.
   final double? presupuestoBob;
   final DateTime? presupuestoRegistradoAt;
+  final int? minutosRetraso;
+  final bool servicioRetrasado;
+  final String? etaOrigen;
 
   factory SolicitudSeguimiento.fromJson(Map<String, dynamic> j) {
     return SolicitudSeguimiento(
@@ -162,6 +168,9 @@ class SolicitudSeguimiento {
       presupuestoRegistradoAt: j['presupuesto_registrado_at'] != null
           ? _asDateTime(j['presupuesto_registrado_at'])
           : null,
+      minutosRetraso: j['minutos_retraso'] as int?,
+      servicioRetrasado: j['servicio_retrasado'] as bool? ?? false,
+      etaOrigen: j['eta_origen'] as String?,
     );
   }
 }

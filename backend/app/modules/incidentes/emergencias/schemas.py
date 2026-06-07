@@ -206,3 +206,13 @@ class SolicitudSeguimientoRead(BaseModel):
         default=None,
         description="Momento en que el técnico registró el presupuesto.",
     )
+    minutos_retraso: int | None = Field(
+        default=None,
+        description="Minutos por encima del ETA publicado (0 = a tiempo).",
+    )
+    servicio_retrasado: bool = Field(
+        default=False,
+        description="True si hay retraso operativo respecto al ETA.",
+    )
+    eta_actualizado_en: datetime | None = None
+    eta_origen: str | None = None

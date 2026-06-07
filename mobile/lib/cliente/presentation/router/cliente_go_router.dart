@@ -26,6 +26,7 @@ import '../../comunicacion/presentation/screens/notificacion_detalle_screen.dart
 import '../../comunicacion/presentation/screens/notificaciones_centro_screen.dart';
 import '../../comunicacion/domain/notificacion_models.dart';
 import '../../emergencias/presentation/screens/emergencias_mis_solicitudes_screen.dart';
+import '../../cotizaciones/presentation/screens/cotizaciones_list_screen.dart';
 import '../screens/onboarding_screen.dart';
 import '../screens/splash_screen.dart';
 import '../shell/cliente_app_shell.dart';
@@ -248,6 +249,14 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               final id = int.tryParse(state.pathParameters['sid'] ?? '');
               if (id == null) return const SizedBox.shrink();
               return ChatSolicitudScreen(solicitudId: id);
+            },
+          ),
+          GoRoute(
+            path: '/cliente/app/emergencias/solicitudes/:sid/cotizaciones',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['sid'] ?? '');
+              if (id == null) return const SizedBox.shrink();
+              return CotizacionesListScreen(solicitudId: id);
             },
           ),
           GoRoute(

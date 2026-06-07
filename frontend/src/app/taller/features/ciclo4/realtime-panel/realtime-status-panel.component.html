@@ -1,0 +1,20 @@
+<section class="rsp">
+  <h3 class="rsp__title">Eventos en tiempo real</h3>
+
+  <div *ngIf="events.length === 0" class="rsp__empty">
+    <span class="rsp__empty-icon">📡</span>
+    <p>Esperando eventos… conectado al incidente.</p>
+  </div>
+
+  <ul class="rsp__list" *ngIf="events.length > 0">
+    <li *ngFor="let ev of events" class="rsp__item">
+      <span class="badge" [ngClass]="getBadgeClass(ev.type)">
+        {{ getBadgeLabel(ev.type) }}
+      </span>
+      <div class="rsp__body">
+        <p class="rsp__msg">{{ ev.message ?? ev.type }}</p>
+        <span class="rsp__time">{{ ev.emitted_at | date:'HH:mm:ss dd/MM' }}</span>
+      </div>
+    </li>
+  </ul>
+</section>

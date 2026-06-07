@@ -6,6 +6,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'cliente/presentation/router/cliente_go_router.dart';
 import 'core/config/app_env.dart';
 import 'core/push/fcm_message_listener.dart';
+import 'core/services/offline_emergencia_sync_listener.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/emergencias_shad_theme.dart';
 
@@ -26,8 +27,10 @@ class EmergenciasApp extends ConsumerWidget {
       supportedLocales: const [Locale('es', 'BO'), Locale('es')],
       routerConfig: router,
     );
-    return ScaffoldMessenger(
-      child: kIsWeb ? shad : FcmMessageListener(child: shad),
+    return OfflineEmergenciaSyncListener(
+      child: ScaffoldMessenger(
+        child: kIsWeb ? shad : FcmMessageListener(child: shad),
+      ),
     );
   }
 }

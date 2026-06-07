@@ -75,21 +75,33 @@ class _ClientePerfilScreenState extends ConsumerState<ClientePerfilScreen> {
     }
   }
 
+  bool _loggingOut = false;
+
   Future<void> _confirmLogout() async {
+    if (_loggingOut) return;
     final ok = await showDialog<bool>(
       context: context,
+      useRootNavigator: true,
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         title: const Text('Cerrar sesión'),
         content: const Text('¿Seguro que deseas salir de la aplicación?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Cerrar sesión')),
+          TextButton(onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(false), child: const Text('Cancelar')),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
+            child: const Text('Cerrar sesión'),
+          ),
         ],
       ),
     );
-    if (ok == true && mounted) {
+    if (ok != true || !mounted) return;
+    setState(() => _loggingOut = true);
+    try {
       await ref.read(clientAuthNotifierProvider.notifier).logout();
       if (mounted) context.go('/cliente/login');
+    } finally {
+      if (mounted) setState(() => _loggingOut = false);
     }
   }
 
@@ -139,8 +151,14 @@ class _ClientePerfilScreenState extends ConsumerState<ClientePerfilScreen> {
           ),
           const SizedBox(height: 24),
           OutlinedButton(
-            onPressed: _confirmLogout,
-            child: const Text('Cerrar sesión'),
+            onPressed: _loggingOut ? null : _confirmLogout,
+            child: _loggingOut
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Cerrar sesión'),
           ),
         ],
       ),

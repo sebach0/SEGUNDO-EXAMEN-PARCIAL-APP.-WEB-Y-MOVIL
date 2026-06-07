@@ -27,6 +27,8 @@ export interface MiTallerDto {
   responsable_email: string;
   responsable_telefono: string;
   pendiente_verificacion_email?: boolean;
+  latitud: number | null;
+  longitud: number | null;
 }
 
 export interface MiTallerUpdatePayload {
@@ -36,6 +38,8 @@ export interface MiTallerUpdatePayload {
   direccion?: string;
   ciudad?: string;
   descripcion?: string | null;
+  latitud?: number | null;
+  longitud?: number | null;
   usuario?: {
     nombres?: string;
     apellidos?: string;

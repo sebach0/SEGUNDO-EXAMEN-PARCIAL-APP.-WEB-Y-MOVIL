@@ -28,8 +28,15 @@ class MetodoPagoEnum(str, enum.Enum):
     OTRO = "OTRO"
 
 
+class ResponsablePagoEnum(str, enum.Enum):
+    CLIENTE = "CLIENTE"
+    SEGURO  = "SEGURO"
+    MIXTO   = "MIXTO"
+
+
 _estado_pago_sa = SAEnum(EstadoPagoEnum, name="estado_pago")
 _metodo_pago_sa = SAEnum(MetodoPagoEnum, name="metodo_pago")
+_responsable_pago_sa = SAEnum(ResponsablePagoEnum, name="responsable_pago")
 
 
 class Pago(Base):
@@ -52,3 +59,10 @@ class Pago(Base):
     conciliado_at: Mapped[datetime | None] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     pagado_at: Mapped[datetime | None] = mapped_column(DateTime)
+    # ── Responsable de pago / seguro ──────────────────────────────────────────
+    responsable_pago: Mapped[ResponsablePagoEnum] = mapped_column(
+        _responsable_pago_sa, nullable=False, default=ResponsablePagoEnum.CLIENTE
+    )
+    monto_seguro: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
+    numero_poliza: Mapped[str | None] = mapped_column(String(100))
+    aseguradora: Mapped[str | None] = mapped_column(String(150))

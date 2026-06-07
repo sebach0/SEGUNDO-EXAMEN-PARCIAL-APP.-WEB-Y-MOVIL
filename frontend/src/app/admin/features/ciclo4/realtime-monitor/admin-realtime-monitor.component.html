@@ -1,0 +1,113 @@
+<div class="arm">
+
+  <!-- Cabecera con estado WS -->
+  <div class="arm__header">
+    <div class="arm__header-left">
+      <h2 class="arm__h">Monitor de solicitudes activas</h2>
+      <div class="arm__ws-badge">
+        <span class="ws-dot" [ngClass]="wsStatusClass()"></span>
+        <span class="arm__ws-label">{{ wsStatusLabel() }}</span>
+      </div>
+    </div>
+    <button type="button" class="arm__refresh" (click)="loadSolicitudes()" [disabled]="loadingSolicitudes">
+      {{ loadingSolicitudes ? 'Cargando…' : 'Actualizar lista' }}
+    </button>
+  </div>
+
+  <p class="arm__lead">
+    Panel en tiempo real. Los cambios de estado se aplican automáticamente vía WebSocket
+    (<code>/ws/admin/feed</code>). La lista muestra solicitudes en estados activos del
+    flujo real <em>solicitudes_emergencia</em>.
+  </p>
+
+  <!-- Error WS -->
+  <div class="arm__alert arm__alert--warn" *ngIf="wsError">
+    {{ wsError }} — Reconectando automáticamente…
+  </div>
+
+  <!-- Error REST -->
+  <div class="arm__alert" *ngIf="solicitudesError">{{ solicitudesError }}</div>
+
+  <!-- Solicitudes activas -->
+  <section class="arm__section">
+    <h3 class="arm__section-title">
+      Solicitudes activas
+      <span class="arm__count">{{ solicitudes.length }}</span>
+    </h3>
+
+    <p class="arm__loading" *ngIf="loadingSolicitudes">Cargando solicitudes…</p>
+
+    <div class="arm__empty" *ngIf="!loadingSolicitudes && !solicitudesError && solicitudes.length === 0">
+      No hay solicitudes activas en este momento.
+    </div>
+
+    <div class="arm__table-wrap" *ngIf="!loadingSolicitudes && solicitudes.length > 0">
+      <table class="arm__table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Estado</th>
+            <th>Taller</th>
+            <th>Técnico</th>
+            <th>ETA (min)</th>
+            <th>Creada</th>
+            <th>Asignada</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let sol of solicitudes; trackBy: trackBySol">
+            <td><strong>#{{ sol.id }}</strong></td>
+            <td>
+              <span class="badge" [ngClass]="statusClass(sol.estado)">
+                {{ statusLabel(sol.estado) }}
+              </span>
+            </td>
+            <td>{{ sol.taller_id ? '#' + sol.taller_id : '—' }}</td>
+            <td>{{ sol.tecnico_id ? '#' + sol.tecnico_id : '—' }}</td>
+            <td>{{ sol.tiempo_estimado_min ?? '—' }}</td>
+            <td>{{ sol.created_at | date:'dd/MM HH:mm' }}</td>
+            <td>{{ sol.asignado_en ? (sol.asignado_en | date:'dd/MM HH:mm') : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Feed de eventos en tiempo real -->
+  <section class="arm__section">
+    <h3 class="arm__section-title">
+      Feed de eventos en tiempo real
+      <span class="arm__count">{{ recentEvents.length }}</span>
+    </h3>
+
+    <div class="arm__empty" *ngIf="recentEvents.length === 0">
+      <ng-container *ngIf="wsStatus === 'connected'">
+        Esperando eventos… El feed se actualizará automáticamente cuando lleguen cambios.
+      </ng-container>
+      <ng-container *ngIf="wsStatus !== 'connected'">
+        Sin conexión al canal WebSocket admin.
+      </ng-container>
+    </div>
+
+    <div class="arm__events" *ngIf="recentEvents.length > 0">
+      <div
+        class="arm__event"
+        *ngFor="let ev of recentEvents; trackBy: trackByEvent"
+        [ngClass]="statusClass(ev.status ?? '')"
+      >
+        <div class="arm__event-header">
+          <span class="arm__event-type">{{ ev.type }}</span>
+          <span class="arm__event-id" *ngIf="ev.incident_id">#{{ ev.incident_id }}</span>
+          <span class="arm__event-time">{{ ev.emitted_at | date:'HH:mm:ss' }}</span>
+        </div>
+        <div class="arm__event-body" *ngIf="ev.message">{{ ev.message }}</div>
+        <div class="arm__event-status" *ngIf="ev.status">
+          <span class="badge" [ngClass]="statusClass(ev.status)">
+            {{ statusLabel(ev.status) }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

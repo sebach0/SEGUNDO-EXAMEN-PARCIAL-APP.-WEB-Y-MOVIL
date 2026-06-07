@@ -10,7 +10,19 @@ from app.core.timeutil import utc_now_naive
 from app.modules.acceso_y_administracion.bitacora.models import AccionBitacoraEnum
 from app.modules.acceso_y_administracion.bitacora.service import registrar_accion
 from app.modules.incidentes.emergencias import repository as emergencias_repository
-from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum, SolicitudEmergencia
+from app.modules.incidentes.emergencias.solicitud_lifecycle import (
+    aplicar_timestamps_por_estado,
+    registrar_eta,
+)
+from app.modules.incidentes.emergencias.models import (
+    EstadoSolicitudSeguimientoEnum,
+    EtaOrigenEnum,
+    SolicitudEmergencia,
+)
+from app.modules.incidentes.emergencias.eta_service import (
+    emit_eta_actualizado_ws,
+    evaluar_y_notificar_retraso,
+)
 from app.modules.comunicacion_y_notificaciones.notificaciones import service as notificaciones_service
 from app.modules.comunicacion_y_notificaciones.notificaciones.models import TipoNotificacionEnum
 from app.modules.acceso_y_administracion.usuarios.models import Usuario
@@ -82,13 +94,21 @@ async def actualizar_estado_servicio(
     estado_anterior = se.estado
     se.estado = body.nuevo_estado
     se.updated_at = now
+    aplicar_timestamps_por_estado(se, body.nuevo_estado, now)
     if body.nuevo_estado == EstadoSolicitudSeguimientoEnum.EN_CAMINO and se.tiempo_estimado_min is None:
-        se.tiempo_estimado_min = 20
+        registrar_eta(se, 20, EtaOrigenEnum.FALLBACK, now)
+        await emit_eta_actualizado_ws(se)
     if body.nuevo_estado == EstadoSolicitudSeguimientoEnum.EN_ATENCION:
         se.presupuesto_bob = body.presupuesto_bob
         se.presupuesto_registrado_at = now
     if body.nuevo_estado == EstadoSolicitudSeguimientoEnum.FINALIZADA:
         se.finalizada_at = now
+        if se.tecnico_id is not None:
+            from app.modules.atencion.taller_emergencias.service.asignaciones import (
+                liberar_tecnico_si_sin_servicios,
+            )
+
+            await liberar_tecnico_si_sin_servicios(db, se.tecnico_id, now)
 
     await emergencias_repository.insert_historial_estado(
         db,
@@ -126,6 +146,7 @@ async def actualizar_estado_servicio(
         titulo="Estado de tu servicio",
         mensaje=mensaje_cliente,
     )
+    await evaluar_y_notificar_retraso(db, se)
 
     row = await repository.get_servicio_asignado_detalle(db, solicitud_id=solicitud_id, tecnico_id=t.id)
     if row is None:

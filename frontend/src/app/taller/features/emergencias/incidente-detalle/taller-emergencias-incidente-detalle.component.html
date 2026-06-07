@@ -10,6 +10,10 @@
 
   <div class="emg__alert" *ngIf="error" role="alert">{{ error }}</div>
   <div class="emg__ok" *ngIf="successMsg" role="status">{{ successMsg }}</div>
+  <div class="emg__info" *ngIf="!loading && detalle && puedeOperarBandeja()" role="status">
+    Para participar en esta emergencia, enviá una <strong>cotización</strong> con precio, servicios y tiempo de llegada.
+    El cliente comparará las ofertas y elegirá un taller (modelo marketplace).
+  </div>
   <p class="emg__muted" *ngIf="loading">Cargando…</p>
 
   <ng-container *ngIf="!loading && detalle">
@@ -17,15 +21,13 @@
       <span class="emg__pill">{{ detalle.estado_bandeja }}</span>
       <span class="emg__pill emg__pill--muted">{{ detalle.estado_solicitud }}</span>
       <div class="emg__spacer"></div>
-      <button
-        type="button"
-        class="emg__btn emg__btn--primary"
-        *ngIf="puedeOperarBandeja() && puedeAceptar()"
-        [disabled]="busy"
-        (click)="openAceptar()"
+      <a
+        class="emg__btn emg__btn--primary emg__mini--link"
+        *ngIf="puedeOperarBandeja()"
+        [routerLink]="['/taller/panel/cotizaciones/solicitud', detalle.solicitud_id]"
       >
-        Aceptar asistencia
-      </button>
+        Cotizar (precio y servicios)
+      </a>
       <button
         type="button"
         class="emg__btn emg__btn--danger"
@@ -124,6 +126,9 @@
 
       <section class="emg__card emg__card--wide" *ngIf="debeMostrarBloqueAsignacion(detalle)">
         <h3 class="emg__card-title">Asignación de técnico</h3>
+        <p class="emg__muted" *ngIf="detalle.estado_solicitud === 'TECNICO_ASIGNADO'">
+          El sistema asignó automáticamente al primer técnico disponible. Podés reasignar si hace falta.
+        </p>
         <p class="emg__muted" *ngIf="loadingAsignData">Cargando técnicos e historial…</p>
         <ng-container *ngIf="!loadingAsignData">
           <p class="emg__text" *ngIf="asignaciones.length">
@@ -146,13 +151,27 @@
               *ngIf="tecnicosActivos().length; else sinTecnicos"
             >
               <option [ngValue]="null">Seleccionar técnico</option>
-              <option *ngFor="let t of tecnicosActivos()" [ngValue]="t.id">
+              <option *ngFor="let t of tecnicosActivos()" [ngValue]="t.id" [disabled]="tecnicosDisponibles().indexOf(t) === -1">
                 {{ t.nombres }} {{ t.apellidos }}{{ t.especialidad_nombre ? ' — ' + t.especialidad_nombre : '' }}
+                · {{ tecnicoDisponibilidadLabel(t) }}
               </option>
             </select>
             <ng-template #sinTecnicos>
               <p class="emg__muted">No hay técnicos activos en el taller. Registrá uno en <a routerLink="/taller/panel/tecnicos" class="emg__link">Técnicos</a>.</p>
             </ng-template>
+            <p class="emg__muted" *ngIf="tecnicosActivos().length && !tecnicosDisponibles().length">
+              Todos los técnicos están ocupados. Cuando uno finalice un servicio volverá a estar disponible.
+            </p>
+            <div class="emg__row-actions" *ngIf="puedeAsignarTecnico() && detalle.estado_solicitud === 'TALLER_ASIGNADO'">
+              <button
+                type="button"
+                class="emg__btn"
+                [disabled]="busy || !tecnicosDisponibles().length"
+                (click)="intentarAsignacionAutomatica(detalle.solicitud_id)"
+              >
+                Asignar automáticamente
+              </button>
+            </div>
             <label class="emg__lbl" for="emg-eta-min">Tiempo estimado de llegada (minutos, opcional)</label>
             <input
               id="emg-eta-min"
@@ -219,19 +238,7 @@
   </ng-container>
 </div>
 
-<div class="emg__backdrop" *ngIf="modalAceptar || modalRechazar" (click)="closeModals()"></div>
-
-<div class="emg__modal" *ngIf="modalAceptar" role="dialog" aria-modal="true" aria-labelledby="emg-aceptar-title">
-  <h3 id="emg-aceptar-title">Confirmar aceptación</h3>
-  <p class="emg__muted">
-    Al aceptar, el taller confirma la asistencia. El backend puede marcar como expiradas otras entradas de bandeja
-    pendientes para la misma solicitud.
-  </p>
-  <div class="emg__modal-actions">
-    <button type="button" class="emg__btn" (click)="closeModals()" [disabled]="busy">Cancelar</button>
-    <button type="button" class="emg__btn emg__btn--primary" [disabled]="busy" (click)="confirmAceptar()">Confirmar</button>
-  </div>
-</div>
+<div class="emg__backdrop" *ngIf="modalRechazar" (click)="closeModals()"></div>
 
 <div class="emg__modal" *ngIf="modalRechazar" role="dialog" aria-modal="true" aria-labelledby="emg-rechazar-title">
   <h3 id="emg-rechazar-title">Rechazar solicitud</h3>

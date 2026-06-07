@@ -39,7 +39,7 @@ export class TallerEmergenciasBandejaComponent implements OnInit {
     this.route.queryParamMap.subscribe((q) => {
       const ok = q.get('ok');
       if (ok === 'aceptada') {
-        this.successFlash = 'Solicitud aceptada correctamente.';
+        this.successFlash = 'Cotización enviada. El cliente podrá elegir entre las ofertas.';
         void this.router.navigate([], { relativeTo: this.route, queryParams: {}, replaceUrl: true });
       } else if (ok === 'rechazada') {
         this.successFlash = 'Solicitud rechazada.';

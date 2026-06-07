@@ -1,0 +1,174 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.arm {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+
+    &-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+  }
+
+  &__h { @include ui.ev-page-title; margin-bottom: 0; }
+
+  &__ws-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__ws-label {
+    font-size: 0.75rem;
+    color: t.$ev-muted;
+  }
+
+  &__refresh { @include ui.ev-btn-ghost; }
+
+  &__lead {
+    color: t.$ev-muted;
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem;
+  }
+
+  &__alert {
+    @include ui.ev-alert-error;
+    &--warn { background: rgba(210,153,34,.08); border-color: rgba(210,153,34,.35); color: #e3b341; }
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+    &-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: t.$ev-text;
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid t.$ev-border;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4rem;
+    height: 1.4rem;
+    padding: 0 0.35rem;
+    background: t.$ev-surface-2;
+    border: 1px solid t.$ev-border;
+    border-radius: 9999px;
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: t.$ev-muted;
+  }
+
+  &__loading, &__empty {
+    color: t.$ev-muted;
+    font-size: 0.8125rem;
+    padding: 1rem 0;
+  }
+
+  &__table-wrap { overflow-x: auto; }
+  &__table { @include ui.ev-table; }
+
+  // ── Feed de eventos WS ─────────────────────────────────────────────────
+  &__events {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 0.25rem;
+  }
+
+  &__event {
+    padding: 0.625rem 0.875rem;
+    background: t.$ev-surface-2;
+    border: 1px solid t.$ev-border;
+    border-left: 3px solid t.$ev-border;
+    border-radius: 0.375rem;
+    font-size: 0.8rem;
+
+    &-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    &-type {
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: t.$ev-text;
+    }
+
+    &-id {
+      color: t.$ev-muted;
+      font-size: 0.7rem;
+    }
+
+    &-time {
+      margin-left: auto;
+      color: t.$ev-muted;
+      font-size: 0.68rem;
+      font-family: monospace;
+    }
+
+    &-body {
+      margin-top: 0.25rem;
+      color: t.$ev-muted;
+      font-size: 0.75rem;
+    }
+
+    &-status { margin-top: 0.25rem; }
+  }
+}
+
+// ── Indicador WS ──────────────────────────────────────────────────────────────
+.ws-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+
+  &--green  { background: #56d364; box-shadow: 0 0 4px #56d36480; }
+  &--amber  { background: #e3b341; animation: ws-pulse 1.2s ease-in-out infinite; }
+  &--red    { background: #f85149; }
+}
+
+@keyframes ws-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+// ── Badges ────────────────────────────────────────────────────────────────────
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &--info    { background: t.$ev-info-bg;    border: 1px solid t.$ev-info-border;    color: #79c0ff; }
+  &--success { background: t.$ev-success-bg; border: 1px solid t.$ev-success-border; color: #56d364; }
+  &--danger  { background: t.$ev-danger-bg;  border: 1px solid t.$ev-danger-border;  color: t.$ev-danger-text; }
+  &--warning { background: rgba(210,153,34,.12); border: 1px solid rgba(210,153,34,.35); color: #e3b341; }
+  &--cyan    { background: rgba(76,201,240,.1);  border: 1px solid rgba(76,201,240,.3);  color: t.$ev-cyan; }
+  &--muted   { background: t.$ev-surface-2; border: 1px solid t.$ev-border; color: t.$ev-muted; }
+}

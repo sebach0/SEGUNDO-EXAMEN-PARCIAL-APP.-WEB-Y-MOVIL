@@ -1,0 +1,454 @@
+.oferta {
+  max-width: 760px;
+  padding: 1.25rem 1.5rem 2rem;
+
+  &__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__kicker {
+    margin: 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.55;
+  }
+
+  &__title {
+    margin: 0.15rem 0 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+  }
+
+  &__cta {
+    flex-shrink: 0;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover:not(:disabled) { background: #1d4ed8; }
+    &:disabled { opacity: 0.55; cursor: not-allowed; }
+  }
+
+  &__alert {
+    padding: 0.65rem 0.85rem;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+
+    &--error {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+  }
+
+  &__resumen {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+    background: rgba(248, 250, 252, 0.03);
+  }
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+
+    &--wide {
+      grid-column: 1 / -1;
+    }
+  }
+
+  &__stat-label {
+    font-size: 0.68rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    opacity: 0.6;
+  }
+
+  &__stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  &__stat-hint {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.68rem;
+    font-weight: 500;
+    opacity: 0.65;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.15rem;
+  }
+
+  &__tag {
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    opacity: 0.9;
+  }
+
+  &__link {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: #60a5fa;
+    text-decoration: none;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  &__warn {
+    margin-bottom: 1rem;
+    padding: 0.65rem 0.85rem;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+
+    a {
+      color: inherit;
+      font-weight: 700;
+    }
+  }
+
+  &__mapa {
+    margin-bottom: 1rem;
+  }
+
+  &__info {
+    margin: 0 0 1rem;
+    font-size: 0.8125rem;
+    opacity: 0.75;
+  }
+
+  &__form {
+    margin-bottom: 1.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 10px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    opacity: 0.85;
+
+    &--full {
+      grid-column: 1 / -1;
+    }
+
+    input,
+    textarea {
+      padding: 0.5rem 0.65rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 7px;
+      font-size: 0.9rem;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: normal;
+      background: transparent;
+      color: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+      }
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 56px;
+    }
+  }
+
+  &__field-hint {
+    font-size: 0.75rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    opacity: 0.75;
+  }
+
+  &__total-estimado {
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.2);
+
+    strong { font-weight: 700; }
+  }
+
+  &__inline {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    input { flex: 1; min-width: 0; }
+  }
+
+  &__duracion {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__duracion-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+
+    input {
+      width: 72px;
+      padding: 0.5rem 0.65rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 7px;
+      font-size: 0.9rem;
+      background: transparent;
+      color: inherit;
+
+      &:focus {
+        outline: none;
+        border-color: #2563eb;
+      }
+    }
+
+    span {
+      opacity: 0.75;
+    }
+  }
+
+  &__ghost {
+    padding: 0.35rem 0.65rem;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover { border-color: #2563eb; }
+  }
+
+  &__check {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+    cursor: pointer;
+  }
+
+  &__items {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  &__items-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+  }
+
+  &__item {
+    display: grid;
+    grid-template-columns: 1fr 72px 88px auto auto;
+    gap: 0.4rem;
+    align-items: center;
+    margin-bottom: 0.4rem;
+
+    @media (max-width: 640px) {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    input {
+      padding: 0.4rem 0.55rem;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      background: transparent;
+      color: inherit;
+    }
+  }
+
+  &__item-sub {
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 4.5rem;
+    text-align: right;
+  }
+
+  &__item-del {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.15);
+    color: inherit;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+  }
+
+  &__items-total {
+    margin: 0.35rem 0 0;
+    font-size: 0.8125rem;
+    text-align: right;
+    opacity: 0.8;
+  }
+
+  &__footer {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  &__hint {
+    margin: 0;
+    width: 100%;
+    font-size: 0.8125rem;
+    opacity: 0.7;
+    text-align: right;
+  }
+
+  &__section-title {
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 1.5rem 0;
+    text-align: center;
+    font-size: 0.875rem;
+    opacity: 0.55;
+  }
+
+  &__card {
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.65rem;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+
+    &--ok {
+      border-color: rgba(34, 197, 94, 0.35);
+      background: rgba(34, 197, 94, 0.06);
+    }
+  }
+
+  &__card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.35rem;
+  }
+
+  &__estado {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+
+    &--enviada { background: rgba(37, 99, 235, 0.15); }
+    &--aceptada { background: rgba(34, 197, 94, 0.15); }
+    &--rechazada { background: rgba(239, 68, 68, 0.12); }
+    &--expirada { background: rgba(148, 163, 184, 0.15); }
+  }
+
+  &__monto {
+    font-size: 1rem;
+  }
+
+  &__card-text {
+    margin: 0 0 0.25rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  &__card-meta {
+    margin: 0;
+    font-size: 0.75rem;
+    opacity: 0.65;
+  }
+
+  &__card-items {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8125rem;
+
+    li {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.25rem 0;
+      border-top: 1px solid rgba(148, 163, 184, 0.12);
+
+      span:last-child {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+    }
+  }
+}

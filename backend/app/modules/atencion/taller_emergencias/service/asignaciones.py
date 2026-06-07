@@ -9,7 +9,16 @@ from app.core.timeutil import utc_now_naive
 from app.modules.acceso_y_administracion.bitacora.models import AccionBitacoraEnum
 from app.modules.acceso_y_administracion.bitacora.service import registrar_accion
 from app.modules.incidentes.emergencias import repository as emergencias_repository
-from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum, SolicitudEmergencia
+from app.modules.incidentes.emergencias.solicitud_lifecycle import (
+    aplicar_timestamps_por_estado,
+    registrar_eta,
+)
+from app.modules.incidentes.emergencias.eta_service import emit_eta_actualizado_ws
+from app.modules.incidentes.emergencias.models import (
+    EstadoSolicitudSeguimientoEnum,
+    EtaOrigenEnum,
+    SolicitudEmergencia,
+)
 from app.modules.comunicacion_y_notificaciones.notificaciones import service as notificaciones_service
 from app.modules.comunicacion_y_notificaciones.notificaciones.models import TipoNotificacionEnum
 from app.modules.atencion.taller_emergencias import repository
@@ -18,6 +27,81 @@ from app.modules.atencion.taller_emergencias.schemas import AsignacionTecnicoRea
 from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
 from . import helpers
+
+_DISPONIBLE = "DISPONIBLE"
+_OCUPADO = "OCUPADO"
+
+
+async def _marcar_tecnico_ocupado(db: AsyncSession, tecnico_id: int, now) -> None:
+    await repository.set_disponibilidad_tecnico(
+        db, tecnico_id=tecnico_id, disponibilidad=_OCUPADO, updated_at=now
+    )
+
+
+async def liberar_tecnico_si_sin_servicios(db: AsyncSession, tecnico_id: int, now) -> None:
+    """Vuelve a DISPONIBLE si el técnico no tiene emergencias activas."""
+    if await repository.tecnico_tiene_servicio_activo(db, tecnico_id=tecnico_id):
+        return
+    await repository.set_disponibilidad_tecnico(
+        db, tecnico_id=tecnico_id, disponibilidad=_DISPONIBLE, updated_at=now
+    )
+
+
+async def elegir_tecnico_disponible(db: AsyncSession, *, taller_id: int):
+    for tecnico in await repository.list_tecnicos_activos_taller(db, taller_id=taller_id):
+        if not helpers.tecnico_disponible_para_asignar(tecnico):
+            continue
+        if await repository.tecnico_tiene_servicio_activo(db, tecnico_id=tecnico.id):
+            continue
+        return tecnico
+    return None
+
+
+async def asignar_tecnico_automatico(
+    user: Usuario,
+    taller_id: int,
+    solicitud_id: int,
+    db: AsyncSession,
+    *,
+    observacion: str | None = None,
+    tiempo_estimado_min: int | None = None,
+) -> AsignarTecnicoOut | None:
+    """
+    Asigna el primer técnico ACTIVO y disponible del taller (FIFO por id).
+    Retorna None si no hay técnicos libres.
+    """
+    res = await db.execute(
+        select(SolicitudEmergencia).where(
+            SolicitudEmergencia.id == solicitud_id,
+            SolicitudEmergencia.taller_id == taller_id,
+        )
+    )
+    se = res.scalar_one_or_none()
+    if se is None:
+        return None
+    if se.tecnico_id is not None and se.estado == EstadoSolicitudSeguimientoEnum.TECNICO_ASIGNADO:
+        existente = await repository.find_asignacion_activa_mismo_tecnico(
+            db,
+            solicitud_id=solicitud_id,
+            taller_id=taller_id,
+            tecnico_id=se.tecnico_id,
+        )
+        if existente is not None:
+            return helpers.to_asignar_out(se, existente)
+    if se.estado not in helpers.ESTADOS_PERMITE_ASIGNAR_TECNICO:
+        return None
+
+    tecnico = await elegir_tecnico_disponible(db, taller_id=taller_id)
+    if tecnico is None:
+        return None
+
+    obs = observacion or "Asignación automática — técnico disponible"
+    body = AsignarTecnicoIn(
+        tecnico_id=tecnico.id,
+        observacion=obs,
+        tiempo_estimado_min=tiempo_estimado_min,
+    )
+    return await asignar_tecnico_a_solicitud(user, taller_id, solicitud_id, body, db)
 
 
 async def _get_solicitud_taller_o_none(
@@ -109,10 +193,12 @@ async def asignar_tecnico_a_solicitud(
     se.tecnico_asignado_at = now
     se.updated_at = now
     if body.tiempo_estimado_min is not None:
-        se.tiempo_estimado_min = body.tiempo_estimado_min
+        registrar_eta(se, body.tiempo_estimado_min, EtaOrigenEnum.MANUAL, now)
+        await emit_eta_actualizado_ws(se)
 
     if estado_antes == EstadoSolicitudSeguimientoEnum.TALLER_ASIGNADO:
         se.estado = EstadoSolicitudSeguimientoEnum.TECNICO_ASIGNADO
+        aplicar_timestamps_por_estado(se, EstadoSolicitudSeguimientoEnum.TECNICO_ASIGNADO, now)
         msg_hist = (
             "Asignación de técnico"
             if tecnico_previo is None
@@ -148,6 +234,10 @@ async def asignar_tecnico_a_solicitud(
         observacion=obs,
         created_at=now,
     )
+
+    await _marcar_tecnico_ocupado(db, body.tecnico_id, now)
+    if tecnico_previo is not None and tecnico_previo != body.tecnico_id:
+        await liberar_tecnico_si_sin_servicios(db, tecnico_previo, now)
 
     await registrar_accion(
         db,

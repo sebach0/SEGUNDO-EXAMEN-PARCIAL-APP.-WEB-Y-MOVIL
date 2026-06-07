@@ -53,6 +53,9 @@ async def ensure_baseline_rol_permisos(db: AsyncSession) -> None:
                     "tecnicos:asignar",
                     "historial_atenciones:leer",
                     "comisiones:leer",
+                    "cotizaciones:crear",
+                    "cotizaciones:leer",
+                    "servicios:gestionar",
                 )
             )
         )

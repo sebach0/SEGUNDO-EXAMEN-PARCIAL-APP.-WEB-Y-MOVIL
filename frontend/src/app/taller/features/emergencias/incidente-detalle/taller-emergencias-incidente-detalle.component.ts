@@ -43,7 +43,6 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
   /** ETA en minutos (opcional) al asignar técnico. */
   tiempoEstimadoMin: number | null = null;
 
-  modalAceptar = false;
   modalRechazar = false;
   motivoRechazo = '';
 
@@ -101,6 +100,13 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
         const ultimo = this.asignaciones.find((r) => r.estado === 'ASIGNADO');
         this.selectedTecnicoId = ultimo?.tecnico_id ?? null;
         this.loadingAsignData = false;
+        if (
+          d.estado_solicitud === 'TALLER_ASIGNADO' &&
+          !this.asignaciones.some((r) => r.estado === 'ASIGNADO') &&
+          this.puedeAsignarTecnicoPermiso()
+        ) {
+          this.intentarAsignacionAutomatica(d.solicitud_id);
+        }
       },
       error: (err) => {
         this.loadingAsignData = false;
@@ -109,7 +115,7 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
     });
   }
 
-  /** Tras aceptar la bandeja: asignar o reasignar técnico. */
+  /** Tras que el cliente elige la cotización del taller: asignar técnico. */
   debeMostrarBloqueAsignacion(d: SolicitudBandejaDetalleDto | null): boolean {
     if (!d || d.estado_bandeja !== 'ACEPTADA') return false;
     return d.estado_solicitud === 'TALLER_ASIGNADO' || d.estado_solicitud === 'TECNICO_ASIGNADO';
@@ -117,6 +123,18 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
 
   tecnicosActivos(): TecnicoPortalDto[] {
     return this.tecnicos.filter((t) => t.estado === 'ACTIVO');
+  }
+
+  tecnicosDisponibles(): TecnicoPortalDto[] {
+    return this.tecnicosActivos().filter((t) => {
+      const d = (t.disponibilidad ?? 'DISPONIBLE').trim().toLowerCase();
+      return d !== 'ocupado' && d !== 'no_disponible' && d !== 'ausente' && d !== 'no';
+    });
+  }
+
+  tecnicoDisponibilidadLabel(t: TecnicoPortalDto): string {
+    const d = (t.disponibilidad ?? 'DISPONIBLE').trim().toUpperCase();
+    return d === 'OCUPADO' ? 'Ocupado' : 'Disponible';
   }
 
   puedeAsignarTecnico(): boolean {
@@ -246,34 +264,19 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
     return url;
   }
 
-  openAceptar(): void {
-    this.modalAceptar = true;
-  }
-
   openRechazar(): void {
     this.motivoRechazo = '';
     this.modalRechazar = true;
   }
 
   closeModals(): void {
-    this.modalAceptar = this.modalRechazar = false;
+    this.modalRechazar = false;
   }
 
-  confirmAceptar(): void {
-    if (!this.bandejaId) return;
-    this.busy = true;
-    this.api.aceptarBandeja(this.bandejaId).subscribe({
-      next: () => {
-        this.busy = false;
-        this.closeModals();
-        this.successMsg = 'Solicitud aceptada. Podés asignar un técnico a continuación.';
-        this.load();
-      },
-      error: (err) => {
-        this.busy = false;
-        this.error = this.msg(err, 'No se pudo aceptar la solicitud.');
-      },
-    });
+  irACotizar(): void {
+    const sid = this.detalle?.solicitud_id;
+    if (!sid) return;
+    void this.router.navigate(['/taller/panel/cotizaciones/solicitud', sid]);
   }
 
   confirmRechazar(): void {
@@ -300,7 +303,7 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
   confirmarAsignarTecnico(): void {
     const d = this.detalle;
     if (!d || this.selectedTecnicoId == null || this.selectedTecnicoId < 1) {
-      this.error = 'Seleccioná un técnico.';
+      this.error = 'Seleccioná un técnico disponible.';
       return;
     }
     const obs = this.observacionAsignacion.trim();
@@ -335,16 +338,22 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
     return !!d && d.estado_bandeja === 'PENDIENTE';
   }
 
-  puedeAceptar(): boolean {
-    const p = this.auth.getMe()?.permisos;
-    if (!p?.length) return true;
-    return p.includes('solicitudes_taller:aceptar');
-  }
-
   puedeRechazar(): boolean {
     const p = this.auth.getMe()?.permisos;
     if (!p?.length) return true;
     return p.includes('solicitudes_taller:rechazar');
+  }
+
+  intentarAsignacionAutomatica(solicitudId: number): void {
+    this.api.asignarTecnicoAutomatico(solicitudId).subscribe({
+      next: () => {
+        this.successMsg = 'Técnico asignado automáticamente (primer disponible del taller).';
+        this.load();
+      },
+      error: () => {
+        /* Sin técnicos libres: el responsable puede asignar manualmente. */
+      },
+    });
   }
 
   private msg(err: { error?: { detail?: unknown } }, fallback: string): string {

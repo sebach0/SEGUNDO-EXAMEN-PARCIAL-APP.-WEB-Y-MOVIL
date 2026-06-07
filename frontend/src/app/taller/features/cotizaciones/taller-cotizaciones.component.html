@@ -1,0 +1,236 @@
+<div class="oferta">
+  <header class="oferta__head">
+    <div>
+      <p class="oferta__kicker">Solicitud #{{ solicitudId() }}</p>
+      <h2 class="oferta__title">Oferta al cliente</h2>
+    </div>
+    @if (!contexto()?.cotizacion_activa) {
+      <button type="button" class="oferta__cta" (click)="toggleFormulario()">
+        {{ mostrarFormulario() ? 'Cerrar' : 'Nueva oferta' }}
+      </button>
+    }
+  </header>
+
+  @if (msg(); as m) {
+    <div class="oferta__alert" [class.oferta__alert--error]="m.tipo === 'error'">{{ m.texto }}</div>
+  }
+
+  @if (contexto(); as ctx) {
+    <section class="oferta__resumen">
+      <div class="oferta__stat">
+        <span class="oferta__stat-label">Distancia</span>
+        <strong class="oferta__stat-value">
+          @if (ctx.distancia_km != null) {
+            {{ ctx.distancia_km | number:'1.1-1' }} km
+          } @else {
+            —
+          }
+        </strong>
+      </div>
+      <div class="oferta__stat">
+        <span class="oferta__stat-label">Traslado técnico</span>
+        <strong class="oferta__stat-value">
+          @if (ctx.costo_traslado_estimado != null) {
+            {{ ctx.costo_traslado_estimado | number:'1.2-2' }} BOB
+            <small class="oferta__stat-hint">({{ ctx.tarifa_traslado_bs_km | number:'1.0-0' }} BOB/km)</small>
+          } @else {
+            —
+          }
+        </strong>
+      </div>
+      <div class="oferta__stat">
+        <span class="oferta__stat-label">Llegada sugerida</span>
+        <strong class="oferta__stat-value">
+          @if (ctx.eta_sugerida_min != null) {
+            {{ etaLabel(ctx.eta_sugerida_min, true) }}
+          } @else {
+            —
+          }
+        </strong>
+      </div>
+      <div class="oferta__stat oferta__stat--wide">
+        <span class="oferta__stat-label">Servicios</span>
+        @if (ctx.servicios_disponibles.length) {
+          <div class="oferta__tags">
+            @for (s of ctx.servicios_disponibles; track s.id) {
+              <span class="oferta__tag">{{ s.nombre }}</span>
+            }
+          </div>
+        } @else {
+          <a routerLink="/taller/panel/servicios" class="oferta__link">Configurar servicios</a>
+        }
+      </div>
+    </section>
+
+    @if (!ctx.taller_tiene_ubicacion) {
+      <div class="oferta__warn">
+        Registrá la ubicación de tu taller en
+        <a routerLink="/taller/panel/mi-taller">Mi taller</a>
+        para calcular distancia y ETA.
+      </div>
+    }
+
+    @if (ctx.taller_lat != null && ctx.taller_lng != null && ctx.incidente_lat != null && ctx.incidente_lng != null) {
+      <section class="oferta__mapa">
+        <app-osm-map-picker
+          [latitude]="ctx.taller_lat"
+          [longitude]="ctx.taller_lng"
+          [secondaryLat]="ctx.incidente_lat"
+          [secondaryLng]="ctx.incidente_lng"
+          primaryLabel="Tu taller"
+          secondaryLabel="Incidente"
+          [readonly]="true"
+          [showGeolocate]="false"
+          height="220px"
+        />
+      </section>
+    }
+
+    @if (ctx.cotizacion_activa) {
+      <p class="oferta__info">Ya enviaste una cotización activa para esta solicitud.</p>
+    }
+  }
+
+  @if (mostrarFormulario()) {
+    <form class="oferta__form" [formGroup]="form" (ngSubmit)="enviar()">
+      <div class="oferta__grid">
+        <label class="oferta__field oferta__field--full">
+          <span>Descripción del daño *</span>
+          <textarea formControlName="descripcion_danio" rows="2" placeholder="Qué observás en el vehículo"></textarea>
+        </label>
+
+        <label class="oferta__field oferta__field--full">
+          <span>Detalle del servicio *</span>
+          <textarea formControlName="detalle_servicio" rows="2" placeholder="Qué vas a realizar"></textarea>
+        </label>
+
+        <label class="oferta__field">
+          <span>Monto del servicio (BOB) *</span>
+          <input type="number" formControlName="monto_total" min="1" step="0.01" placeholder="Ej: 350" />
+          @if (costoTraslado() > 0) {
+            <small class="oferta__field-hint">
+              + traslado {{ costoTraslado() | number:'1.2-2' }} BOB
+              ({{ tarifaTrasladoKm() | number:'1.0-0' }} BOB/km × {{ contexto()?.distancia_km | number:'1.1-1' }} km)
+            </small>
+          }
+        </label>
+
+        @if (costoTraslado() > 0 && (form.value.monto_total ?? 0) > 0) {
+          <p class="oferta__total-estimado oferta__field--full">
+            Total estimado al cliente:
+            <strong>{{ totalEstimado() | number:'1.2-2' }} BOB</strong>
+            (servicio + traslado del técnico)
+          </p>
+        }
+
+        <div class="oferta__field oferta__field--full">
+          <span>ETA de llegada (opcional)</span>
+          <div class="oferta__duracion">
+            <label class="oferta__duracion-item">
+              <input type="number" formControlName="llegada_horas" min="0" max="168" step="1" />
+              <span>horas</span>
+            </label>
+            <label class="oferta__duracion-item">
+              <input type="number" formControlName="llegada_minutos" min="0" max="59" step="1" />
+              <span>min</span>
+            </label>
+            @if (contexto()?.eta_sugerida_min) {
+              <button type="button" class="oferta__ghost" (click)="usarEtaSugerida()">
+                Usar {{ etaLabel(contexto()!.eta_sugerida_min, true) }}
+              </button>
+            }
+          </div>
+        </div>
+
+        <div class="oferta__field oferta__field--full">
+          <span>Tiempo de reparación (opcional)</span>
+          <div class="oferta__duracion">
+            <label class="oferta__duracion-item">
+              <input type="number" formControlName="reparacion_horas" min="0" step="1" />
+              <span>horas</span>
+            </label>
+            <label class="oferta__duracion-item">
+              <input type="number" formControlName="reparacion_minutos" min="0" max="59" step="1" />
+              <span>min</span>
+            </label>
+          </div>
+        </div>
+
+        <label class="oferta__field oferta__field--full">
+          <span>Comentarios</span>
+          <input type="text" formControlName="comentarios" placeholder="Beneficios o notas para el cliente (opcional)" />
+        </label>
+
+        <label class="oferta__check oferta__field--full">
+          <input type="checkbox" formControlName="incluye_grua" />
+          <span>Incluye grúa</span>
+        </label>
+      </div>
+
+      <div class="oferta__items" formArrayName="items">
+        <div class="oferta__items-head">
+          <span>Desglose (opcional)</span>
+          <button type="button" class="oferta__ghost" (click)="addItem()">+ Ítem</button>
+        </div>
+        @for (item of items.controls; track $index) {
+          <div class="oferta__item" [formGroupName]="$index">
+            <input type="text" formControlName="descripcion" placeholder="Descripción" />
+            <input type="number" formControlName="cantidad" placeholder="Cant." min="0.001" step="0.001" />
+            <input type="number" formControlName="precio_unitario" placeholder="P.U." min="0" step="0.01" />
+            <span class="oferta__item-sub">{{ subtotal($index) | number:'1.2-2' }}</span>
+            <button type="button" class="oferta__item-del" (click)="removeItem($index)" aria-label="Quitar">×</button>
+          </div>
+        }
+        @if (items.length > 0) {
+          <p class="oferta__items-total">Subtotal ítems: {{ itemsTotal() | number:'1.2-2' }} BOB</p>
+        }
+      </div>
+
+      <footer class="oferta__footer">
+        @if (hintFormulario(); as hint) {
+          <p class="oferta__hint">{{ hint }}</p>
+        }
+        <button type="submit" class="oferta__cta" [disabled]="saving()">
+          {{ saving() ? 'Enviando…' : 'Enviar oferta' }}
+        </button>
+      </footer>
+    </form>
+  }
+
+  <section class="oferta__historial">
+    <h3 class="oferta__section-title">Tus cotizaciones</h3>
+    @if (loading()) {
+      <p class="oferta__empty">Cargando…</p>
+    } @else if (cotizaciones().length === 0) {
+      <p class="oferta__empty">Aún no enviaste ofertas para esta solicitud.</p>
+    } @else {
+      @for (cot of cotizaciones(); track cot.id) {
+        <article class="oferta__card" [class.oferta__card--ok]="cot.estado === 'ACEPTADA'">
+          <div class="oferta__card-top">
+            <span class="oferta__estado oferta__estado--{{ cot.estado.toLowerCase() }}">
+              {{ labelEstado(cot.estado) }}
+            </span>
+            <strong class="oferta__monto">{{ cot.monto_total | number:'1.2-2' }} BOB</strong>
+          </div>
+          <p class="oferta__card-text">{{ cot.descripcion_danio }}</p>
+          <p class="oferta__card-meta">
+            @if (cot.distancia_km != null) { {{ cot.distancia_km | number:'1.1-1' }} km · }
+            @if (cot.tiempo_estimado_llegada_min) { {{ etaLabel(cot.tiempo_estimado_llegada_min) }} llegada · }
+            @if (cot.tiempo_estimado_reparacion_min) { {{ etaLabel(cot.tiempo_estimado_reparacion_min) }} reparación }
+            @if (cot.incluye_grua) { · Grúa }
+          </p>
+          @if (cot.items.length) {
+            <ul class="oferta__card-items">
+              @for (item of cot.items; track item.id) {
+                <li>
+                  <span>{{ item.descripcion }}</span>
+                  <span>{{ item.subtotal | number:'1.2-2' }} BOB</span>
+                </li>
+              }
+            </ul>
+          }
+        </article>
+      }
+    }
+  </section>
+</div>

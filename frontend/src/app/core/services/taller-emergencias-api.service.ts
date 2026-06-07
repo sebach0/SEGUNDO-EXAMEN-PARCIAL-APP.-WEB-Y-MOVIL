@@ -55,6 +55,14 @@ export class TallerEmergenciasApiService {
     );
   }
 
+  /** Primer técnico disponible del taller (asignación automática). */
+  asignarTecnicoAutomatico(solicitudId: number): Observable<AsignarTecnicoResultDto> {
+    return this.http.post<AsignarTecnicoResultDto>(
+      `${this.base}/solicitudes/${solicitudId}/asignar-tecnico-automatico`,
+      {},
+    );
+  }
+
   listarAsignacionesTecnico(solicitudId: number): Observable<AsignacionTecnicoDto[]> {
     return this.http.get<AsignacionTecnicoDto[]>(`${this.base}/solicitudes/${solicitudId}/asignaciones`);
   }

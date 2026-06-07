@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional
 from datetime import datetime
+from decimal import Decimal
 
 from app.modules.talleres_y_tecnicos.talleres.models import EstadoTallerEnum, EstadoTecnicoEnum
 
@@ -29,6 +30,8 @@ class MiTallerUpdate(BaseModel):
     direccion: Optional[str] = None
     ciudad: Optional[str] = Field(None, min_length=2, max_length=100)
     descripcion: Optional[str] = None
+    latitud: Optional[Decimal] = Field(None, ge=-90, le=90)
+    longitud: Optional[Decimal] = Field(None, ge=-180, le=180)
     usuario: Optional[MiTallerUsuarioUpdate] = None
 
 
@@ -49,6 +52,8 @@ class MiTallerRead(BaseModel):
     responsable_email: str
     responsable_telefono: str
     pendiente_verificacion_email: bool = False
+    latitud: Decimal | None = None
+    longitud: Decimal | None = None
 
 
 class TecnicoPortalCreate(BaseModel):

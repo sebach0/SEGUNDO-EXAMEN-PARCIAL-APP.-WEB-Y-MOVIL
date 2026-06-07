@@ -1,0 +1,36 @@
+<div class="osm-map-picker">
+  @if (!readonly && showGeolocate) {
+    <div class="osm-map-picker__toolbar">
+      <button type="button" class="osm-map-picker__geo" [disabled]="locating" (click)="useMyLocation()">
+        {{ locating ? 'Obteniendo ubicación…' : '⊕ Usar mi ubicación' }}
+      </button>
+      <span class="osm-map-picker__hint">o hacé clic directamente en el mapa</span>
+    </div>
+  }
+
+  @if (geoError) {
+    <p class="osm-map-picker__error" role="alert">{{ geoError }}</p>
+  }
+
+  <!--
+    __clip solo recorta visualmente (border-radius + overflow:hidden).
+    La altura la recibe #mapHost directamente para que Leaflet la mida bien.
+  -->
+  <div class="osm-map-picker__clip">
+    <div #mapHost class="osm-map-picker__map" [style.height]="height"></div>
+  </div>
+
+  @if (latitude != null && longitude != null) {
+    @if (!readonly) {
+      <p class="osm-map-picker__confirm">
+        <span class="osm-map-picker__check">✓</span>
+        Ubicación seleccionada
+        <span class="osm-map-picker__coords-inline">({{ latitude | number:'1.5-5' }}, {{ longitude | number:'1.5-5' }})</span>
+      </p>
+    } @else {
+      <p class="osm-map-picker__coords">{{ latitude | number:'1.5-5' }}, {{ longitude | number:'1.5-5' }}</p>
+    }
+  } @else if (!readonly) {
+    <p class="osm-map-picker__coords osm-map-picker__coords--empty">Sin ubicación — hacé clic en el mapa para marcar tu taller</p>
+  }
+</div>

@@ -2,6 +2,7 @@
 from .evidencias import agregar_evidencia, agregar_evidencia_archivo
 from .solicitudes import (
     actualizar_texto,
+    cancelar_solicitud,
     crear_solicitud,
     listar_solicitudes,
     obtener_detalle,
@@ -15,6 +16,7 @@ __all__ = [
     "agregar_evidencia",
     "agregar_evidencia_archivo",
     "agregar_ubicacion",
+    "cancelar_solicitud",
     "crear_solicitud",
     "listar_solicitudes",
     "obtener_detalle",

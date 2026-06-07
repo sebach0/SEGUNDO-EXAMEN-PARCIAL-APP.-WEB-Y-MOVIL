@@ -60,9 +60,18 @@ final class TecnicoAuthNotifier extends Notifier<TecnicoAuthState> {
   }
 
   Future<void> logout() async {
-    await ref.read(fcmRegistrationProvider).beforeTecnicoLogout();
     final repo = ref.read(tecnicoAuthRepositoryProvider);
-    await repo.logout();
+    try {
+      await ref
+          .read(fcmRegistrationProvider)
+          .beforeTecnicoLogout()
+          .timeout(const Duration(seconds: 4));
+    } catch (_) {}
+    try {
+      await repo.logout();
+    } catch (_) {
+      await repo.logoutLocal();
+    }
     state = const TecnicoAuthState(status: TecnicoAuthStatus.guest);
   }
 

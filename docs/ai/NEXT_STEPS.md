@@ -1,8 +1,35 @@
 # NEXT_STEPS.md
 # =========================================================
 # Próximos pasos ordenados por prioridad
-# Actualizado: 2026-04-26 — Incluye `comunicacion_y_notificaciones`, `atencion`, `talleres_y_tecnicos`, `incidentes`, `clientes_y_vehiculos`, `acceso_y_administracion` (imports Python; API igual)
+# Actualizado: 2026-06-07 — Mapa taller + oferta minimalista
 # =========================================================
+
+## ALTA — Validar mapa taller y cotización (2026-06-07)
+
+1. Login taller demo → `/taller/panel/mi-taller` → marcar mapa → Guardar.
+2. Abrir cotización de solicitud con GPS de incidente → ver distancia, ETA sugerida y mapa.
+3. Enviar oferta usando «Usar ~X min» y confirmar que el cliente ve distancia en marketplace.
+
+## ALTA — Validar audio→texto (2026-06-06)
+
+1. Levantar stack con IA: `docker compose --profile ai up -d --build` y `AI_ENABLED=true` en `.env`.
+2. Mobile: paso 1 del wizard → grabar descripción → confirmar texto transcrito en el campo.
+3. Paso 4 → grabar audio → confirmar tarjeta de transcripción + evidencia en detalle solicitud.
+4. Modo avión en paso 1: debe avisar que la transcripción requiere conexión (audio offline sigue en cola en paso 4).
+
+## ALTA — Validar unificación (2026-06-06)
+
+1. **Migración ya aplicada** en Docker: `0009_unificacion_operativa`. Si otra máquina tiene BD antigua: `docker compose exec backend alembic upgrade head`.
+2. **Probar KPIs admin:** `/admin/panel/ciclo4/kpis` con solicitudes demo `[DEMO-SC]` — deben aparecer conteos > 0 tras migración.
+3. **Probar offline móvil:** modo avión al crear solicitud → SnackBar “guardada localmente”; al reconectar → sync + notificación.
+4. **Probar retraso:** asignar técnico con ETA corto, esperar umbral → push “Auxilio demorado” y tarjeta ETA en seguimiento cliente.
+
+## MEDIA — Pendiente fase 2
+
+- [ ] Reportes operacionales PDF/Excel (export KPIs / historial).
+- [ ] Unificar cola offline Angular PWA con `solicitudes_emergencia` (hoy Ciclo 4 usa tabla `incidentes` en paralelo).
+- [ ] Monitor realtime admin: documentar que WS usa `solicitud_id` como canal tras unificación.
+- [ ] ETA dinámico recalculado por distancia GPS técnico→cliente (opcional).
 
 ## ALTA — Entorno listo en 5 min
 

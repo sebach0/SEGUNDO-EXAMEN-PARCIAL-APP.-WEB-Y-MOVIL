@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <rect width="192" height="192" rx="28" fill="#1e293b"/>
+  <circle cx="96" cy="96" r="64" fill="#0f172a"/>
+  <!-- Cuerpo del auto -->
+  <rect x="44" y="90" width="104" height="38" rx="8" fill="#f97316"/>
+  <!-- Techo del auto -->
+  <path d="M62 90 L74 66 L118 66 L130 90 Z" fill="#fb923c"/>
+  <!-- Ventanas -->
+  <path d="M78 90 L85 72 L107 72 L114 90 Z" fill="#0ea5e9" opacity="0.8"/>
+  <!-- Ruedas -->
+  <circle cx="70" cy="128" r="14" fill="#334155"/>
+  <circle cx="70" cy="128" r="8" fill="#94a3b8"/>
+  <circle cx="122" cy="128" r="14" fill="#334155"/>
+  <circle cx="122" cy="128" r="8" fill="#94a3b8"/>
+  <!-- Faros -->
+  <rect x="44" y="98" width="14" height="8" rx="3" fill="#fde047"/>
+  <rect x="134" y="98" width="14" height="8" rx="3" fill="#ef4444"/>
+</svg>

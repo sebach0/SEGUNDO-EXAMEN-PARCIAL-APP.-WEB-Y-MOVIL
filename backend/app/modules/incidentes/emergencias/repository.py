@@ -37,6 +37,7 @@ async def insert_solicitud(
     estado: EstadoSolicitudSeguimientoEnum,
     created_at,
     updated_at,
+    tenant_id: int | None = None,
 ) -> SolicitudEmergencia:
     row = SolicitudEmergencia(
         cliente_id=cliente_id,
@@ -45,6 +46,8 @@ async def insert_solicitud(
         estado=estado,
         created_at=created_at,
         updated_at=updated_at,
+        reportado_en=created_at,
+        tenant_id=tenant_id,
     )
     db.add(row)
     await db.flush()

@@ -82,6 +82,7 @@ final class EmergenciasRepository {
       if (m == null) throw Exception('Respuesta vacía');
       return SolicitudEmergenciaDetail.fromJson(m);
     } on DioException catch (e) {
+      if (isNetworkFailure(e)) rethrow;
       throw Exception(messageFromDio(e));
     }
   }
@@ -96,6 +97,7 @@ final class EmergenciasRepository {
       if (m == null) throw Exception('Respuesta vacía');
       return SolicitudEmergenciaDetail.fromJson(m);
     } on DioException catch (e) {
+      if (isNetworkFailure(e)) rethrow;
       throw Exception(messageFromDio(e));
     }
   }
@@ -123,6 +125,7 @@ final class EmergenciasRepository {
       if (m == null) throw Exception('Respuesta vacía');
       return SolicitudEmergenciaDetail.fromJson(m);
     } on DioException catch (e) {
+      if (isNetworkFailure(e)) rethrow;
       throw Exception(messageFromDio(e));
     }
   }
@@ -149,11 +152,16 @@ final class EmergenciasRepository {
       final res = await _dio.post<Map<String, dynamic>>(
         ApiConstants.appClienteEmergenciaEvidenciasArchivo(solicitudId),
         data: form,
+        options: Options(
+          sendTimeout: ApiConstants.uploadTimeout,
+          receiveTimeout: ApiConstants.uploadTimeout,
+        ),
       );
       final m = res.data;
       if (m == null) throw Exception('Respuesta vacía');
       return SolicitudEmergenciaDetail.fromJson(m);
     } on DioException catch (e) {
+      if (isNetworkFailure(e)) rethrow;
       throw Exception(messageFromDio(e));
     }
   }
@@ -176,6 +184,25 @@ final class EmergenciasRepository {
           if (nombreArchivo != null) 'nombre_archivo': nombreArchivo,
           if (tamanoBytes != null) 'tamano_bytes': tamanoBytes,
         },
+      );
+      final m = res.data;
+      if (m == null) throw Exception('Respuesta vacía');
+      return SolicitudEmergenciaDetail.fromJson(m);
+    } on DioException catch (e) {
+      if (isNetworkFailure(e)) rethrow;
+      throw Exception(messageFromDio(e));
+    }
+  }
+
+  /// Cancela una solicitud con un motivo. El backend cambia estado a CANCELADA.
+  Future<SolicitudEmergenciaDetail> cancelarSolicitud(
+    int solicitudId, {
+    required String motivo,
+  }) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.appClienteEmergenciaCancelar(solicitudId),
+        data: {'motivo': motivo},
       );
       final m = res.data;
       if (m == null) throw Exception('Respuesta vacía');

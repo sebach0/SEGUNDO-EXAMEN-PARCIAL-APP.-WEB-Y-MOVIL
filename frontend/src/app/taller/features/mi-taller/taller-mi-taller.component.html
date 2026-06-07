@@ -19,12 +19,49 @@
       <label class="mt__lbl mt__full">Descripción<textarea class="mt__inp mt__ta" rows="3" [(ngModel)]="descripcion"></textarea></label>
     </div>
 
+    <h3 class="mt__sub">Ubicación en mapa</h3>
+    <p class="mt__map-lead">
+      Marcá dónde está tu taller. Se usa para calcular distancia y tiempo estimado de llegada al cliente.
+    </p>
+    <app-osm-map-picker
+      [latitude]="latitud"
+      [longitude]="longitud"
+      (locationChange)="onMapLocation($event)"
+    />
+
     <h3 class="mt__sub">Responsable</h3>
     <div class="mt__grid2">
       <label class="mt__lbl">Nombres<input class="mt__inp" [(ngModel)]="resp_nombres" /></label>
       <label class="mt__lbl">Apellidos<input class="mt__inp" [(ngModel)]="resp_apellidos" /></label>
       <label class="mt__lbl">Teléfono<input class="mt__inp" [(ngModel)]="resp_telefono" /></label>
     </div>
+
+    <h3 class="mt__sub">Servicios disponibles</h3>
+    <p class="mt__servicios-lead">
+      Estos son los servicios que tu taller ofrece actualmente. El sistema los usa para recomendarte en emergencias compatibles.
+    </p>
+
+    @if (servicios.length > 0) {
+      <div class="mt__servicios">
+        @for (s of servicios; track s.id) {
+          <span
+            class="mt__chip"
+            [class.mt__chip--grua]="esGrua(s.codigo)"
+            [title]="s.descripcion ?? s.nombre"
+          >
+            {{ s.nombre }}
+          </span>
+        }
+      </div>
+      <p class="mt__servicios-count">{{ servicios.length }} servicio(s) activo(s)</p>
+    } @else {
+      <div class="mt__servicios-empty">
+        <p>Aún no registraste servicios para tu taller.</p>
+        <p class="mt__servicios-empty-hint">Configúralos para aparecer en búsquedas inteligentes de clientes.</p>
+      </div>
+    }
+
+    <a routerLink="/taller/panel/servicios" class="mt__link">Gestionar servicios →</a>
 
     <div class="mt__actions">
       <button type="button" class="mt__btn mt__btn--primary" [disabled]="busy" (click)="save()">
