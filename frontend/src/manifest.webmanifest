@@ -1,0 +1,41 @@
+{
+  "name": "Emergencias Vehiculares",
+  "short_name": "Emergencias",
+  "description": "Plataforma inteligente de atención de emergencias vehiculares",
+  "theme_color": "#1e293b",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Mis solicitudes",
+      "short_name": "Solicitudes",
+      "description": "Ver solicitudes de emergencia",
+      "url": "/cliente/app/emergencias/solicitudes",
+      "icons": [{ "src": "assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    },
+    {
+      "name": "Portal Taller",
+      "short_name": "Taller",
+      "description": "Portal de gestión del taller",
+      "url": "/taller/panel",
+      "icons": [{ "src": "assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }]
+    }
+  ]
+}

@@ -44,6 +44,12 @@ final class AppEnv {
     return Duration(seconds: (s ?? 30).clamp(5, 300));
   }
 
+  /// Timeouts para subida multipart (foto/audio). Más largos que el resto del API.
+  static Duration get apiUploadTimeout {
+    final s = int.tryParse(dotenv.env['API_UPLOAD_TIMEOUT_SECONDS']?.trim() ?? '');
+    return Duration(seconds: (s ?? 120).clamp(30, 600));
+  }
+
   /// Opcional — subida previa a un CDN propio (JSON `{"url":"https://..."}`). El flujo normal
   /// sube foto/audio al propio API (`POST .../evidencias/archivo`); esto solo sirve si integrás otro bucket.
   static String? get fileUploadUrl {

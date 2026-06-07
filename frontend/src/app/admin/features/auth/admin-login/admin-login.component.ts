@@ -1,11 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AdminAuthService, AdminAuthError } from '../../../../core/services/admin-auth.service';
 
@@ -16,10 +16,11 @@ import { AdminAuthService, AdminAuthError } from '../../../../core/services/admi
   templateUrl: './admin-login.component.html',
   styleUrl: './admin-login.component.scss',
 })
-export class AdminLoginComponent {
+export class AdminLoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly auth = inject(AdminAuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -30,6 +31,12 @@ export class AdminLoginComponent {
   showPassword = false;
   submitting = false;
   errorMsg: string | null = null;
+
+  ngOnInit(): void {
+    if (this.route.snapshot.queryParamMap.get('reason') === 'session_expired') {
+      this.errorMsg = 'Tu sesión expiró o no estás autenticado. Inicia sesión de nuevo.';
+    }
+  }
 
   togglePassword(): void {
     this.showPassword = !this.showPassword;

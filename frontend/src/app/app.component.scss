@@ -1,0 +1,56 @@
+// Banner global de conectividad (Ciclo 4)
+// Posición fija en la parte superior, sobre el layout.
+
+.app-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.25rem;
+  font-size: 0.8125rem;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+
+  &__msg {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.65;
+    font-size: 0.875rem;
+    padding: 0 0.25rem;
+    color: inherit;
+    flex-shrink: 0;
+
+    &:hover { opacity: 1; }
+  }
+
+  // Variantes
+  &.banner--offline {
+    background: rgba(248, 81, 73, 0.92);
+    color: #fff;
+  }
+
+  &.banner--info {
+    background: rgba(56, 139, 253, 0.92);
+    color: #fff;
+  }
+
+  &.banner--success {
+    background: rgba(46, 160, 67, 0.92);
+    color: #fff;
+  }
+
+  &.banner--warning {
+    background: rgba(210, 153, 34, 0.92);
+    color: #fff;
+  }
+}

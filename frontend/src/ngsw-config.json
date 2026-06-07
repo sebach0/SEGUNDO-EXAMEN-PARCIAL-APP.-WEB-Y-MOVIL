@@ -1,0 +1,64 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-auth",
+      "urls": ["/api/auth/**"],
+      "cacheConfig": {
+        "maxSize": 5,
+        "maxAge": "1h",
+        "strategy": "freshness"
+      }
+    },
+    {
+      "name": "api-kpis",
+      "urls": ["/api/kpis/**"],
+      "cacheConfig": {
+        "maxSize": 10,
+        "maxAge": "5m",
+        "strategy": "freshness"
+      }
+    },
+    {
+      "name": "api-catalogo",
+      "urls": [
+        "/api/vehiculos/**",
+        "/api/talleres/**",
+        "/api/tecnicos/**"
+      ],
+      "cacheConfig": {
+        "maxSize": 50,
+        "maxAge": "1h",
+        "timeout": "5s",
+        "strategy": "performance"
+      }
+    }
+  ]
+}

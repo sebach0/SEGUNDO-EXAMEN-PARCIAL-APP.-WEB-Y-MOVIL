@@ -109,6 +109,43 @@ export const TALLER_ROUTES: Routes = [
             (m) => m.TallerEmergenciasDisponibilidadComponent,
           ),
       },
+      // ── Ciclo 4: tiempo real + offline + sync ──────────────────────────────
+      {
+        path: 'ciclo4/incidentes/:id/tracking',
+        loadComponent: () =>
+          import('./features/ciclo4/incident-tracking/incident-realtime-tracking.component').then(
+            (m) => m.IncidentRealtimeTrackingComponent,
+          ),
+      },
+      {
+        path: 'ciclo4/offline-incidents',
+        loadComponent: () =>
+          import('./features/ciclo4/offline-incidents/workshop-incident-offline.component').then(
+            (m) => m.WorkshopIncidentOfflineComponent,
+          ),
+      },
+      {
+        path: 'ciclo4/sync/status',
+        loadComponent: () =>
+          import('./features/ciclo4/sync-status/sync-status.component').then(
+            (m) => m.SyncStatusComponent,
+          ),
+      },
+      // ── Ciclo 4 Segunda Fase: servicios y cotizaciones ─────────────────────
+      {
+        path: 'servicios',
+        loadComponent: () =>
+          import('./features/servicios/taller-servicios.component').then(
+            (m) => m.TallerServiciosComponent,
+          ),
+      },
+      {
+        path: 'cotizaciones/solicitud/:solicitudId',
+        loadComponent: () =>
+          import('./features/cotizaciones/taller-cotizaciones.component').then(
+            (m) => m.TallerCotizacionesComponent,
+          ),
+      },
     ],
   },
   {

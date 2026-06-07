@@ -51,6 +51,21 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./features/finanzas/admin-finanzas.component').then((m) => m.AdminFinanzasComponent),
       },
+      // ── Ciclo 4: monitor en tiempo real + KPIs ─────────────────────────────
+      {
+        path: 'ciclo4/realtime-monitor',
+        loadComponent: () =>
+          import('./features/ciclo4/realtime-monitor/admin-realtime-monitor.component').then(
+            (m) => m.AdminRealtimeMonitorComponent,
+          ),
+      },
+      {
+        path: 'ciclo4/kpis',
+        loadComponent: () =>
+          import('./features/ciclo4/kpis/operational-dashboard.component').then(
+            (m) => m.OperationalDashboardComponent,
+          ),
+      },
     ],
   },
   {

@@ -1,14 +1,21 @@
 # API portal taller — emergencias (ciclo 3 fase 1: bandeja + disponibilidad)
 from __future__ import annotations
 
+import logging
 from datetime import date
+from typing import Any
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import require_permission
-from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum
+from app.core.timeutil import utc_now_naive
+from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum, SolicitudEmergencia
+from app.modules.incidentes.emergencias.solicitud_lifecycle import aplicar_timestamps_por_estado
+from app.modules.ciclo4.websocket.manager import manager as ws_manager
 from app.modules.talleres_y_tecnicos.taller_responsable.router import require_taller_responsable
 from app.modules.talleres_y_tecnicos.talleres.models import Taller
 from app.modules.acceso_y_administracion.usuarios.models import Usuario
@@ -123,6 +130,29 @@ async def put_disponibilidad(
 
 
 @router.post(
+    "/solicitudes/{solicitud_id}/asignar-tecnico-automatico",
+    response_model=AsignarTecnicoOut,
+    dependencies=[Depends(require_permission("tecnicos:asignar"))],
+)
+async def asignar_tecnico_automatico_route(
+    solicitud_id: int,
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+):
+    """Asigna el primer técnico disponible del taller (FIFO)."""
+    user, taller = ctx
+    result = await service.asignar_tecnico_automatico(
+        user, taller.id, solicitud_id, db
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="No hay técnicos disponibles en el taller en este momento.",
+        )
+    return result
+
+
+@router.post(
     "/solicitudes/{solicitud_id}/asignar-tecnico",
     response_model=AsignarTecnicoOut,
     dependencies=[Depends(require_permission("tecnicos:asignar"))],
@@ -199,6 +229,138 @@ async def listar_comisiones(
     """CU31 — listado de comisiones con datos del pago asociado si existe."""
     _, taller = ctx
     return await service.listar_comisiones_taller(taller.id, db)
+
+
+# ── Schemas inline para sync-web (offline → solicitudes_emergencia) ───────────
+
+class _OfflineEvWebIn(BaseModel):
+    client_uuid: str
+    solicitud_id: int
+    tipo_evento: str
+    payload: dict[str, Any] = {}
+    registrado_local_en: str
+
+
+class _SyncWebIn(BaseModel):
+    eventos: list[_OfflineEvWebIn]
+
+
+class _OfflineEvWebOut(BaseModel):
+    client_uuid: str
+    solicitud_id: int
+    tipo_evento: str
+    sincronizado: bool
+    error: str | None = None
+
+
+class _SyncWebOut(BaseModel):
+    total: int
+    sincronizados: int
+    con_error: int
+    detalle: list[_OfflineEvWebOut]
+
+
+_log = logging.getLogger(__name__)
+
+_ESTADOS_VALIDOS: set[str] = {e.value for e in EstadoSolicitudSeguimientoEnum}
+
+
+@router.post(
+    "/sync-web",
+    response_model=_SyncWebOut,
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_permission("solicitudes_taller:leer"))],
+)
+async def sync_offline_web_events(
+    body: _SyncWebIn,
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+) -> _SyncWebOut:
+    """
+    Ciclo 4 — Unificación offline web (Opción A).
+
+    Procesa eventos capturados sin conexión por el portal web del taller y los
+    aplica sobre las solicitudes_emergencia del flujo real.
+
+    Tipos de evento soportados:
+    - ESTADO_CAMBIADO : aplica el nuevo_estado sobre la solicitud.
+    - TALLER_ACEPTO   : informa al frontend (la aceptación formal se hace
+                        por cotizaciones; aquí solo se reconoce).
+    - TALLER_RECHAZO  : igual que TALLER_ACEPTO — reconocimiento.
+    - OBSERVACION     : sin cambio de BD; retorna ok (es un log local).
+    """
+    _, taller = ctx
+    detalle: list[_OfflineEvWebOut] = []
+
+    for ev in body.eventos:
+        try:
+            tipo = ev.tipo_evento.upper()
+
+            if tipo == "ESTADO_CAMBIADO":
+                nuevo_raw = ev.payload.get("estado_nuevo") or ev.payload.get("nuevo_estado")
+                if not nuevo_raw or str(nuevo_raw).upper() not in _ESTADOS_VALIDOS:
+                    raise ValueError(f"estado_nuevo inválido: {nuevo_raw!r}")
+
+                res = await db.execute(
+                    select(SolicitudEmergencia).where(
+                        SolicitudEmergencia.id == ev.solicitud_id,
+                        SolicitudEmergencia.taller_id == taller.id,
+                    )
+                )
+                sol = res.scalar_one_or_none()
+                if sol is None:
+                    raise ValueError(f"Solicitud {ev.solicitud_id} no pertenece a este taller")
+
+                nuevo_estado = EstadoSolicitudSeguimientoEnum(str(nuevo_raw).upper())
+                sol.estado = nuevo_estado
+                aplicar_timestamps_por_estado(sol, nuevo_estado, utc_now_naive())
+                db.add(sol)
+                await db.flush()
+
+                # Notificar WS a suscriptores del canal de la solicitud
+                await ws_manager.broadcast_to_incident(
+                    ev.solicitud_id,
+                    "ESTADO_CAMBIADO",
+                    status=nuevo_estado.value,
+                    message=f"Estado actualizado offline: {nuevo_estado.value}",
+                    payload={"solicitud_id": ev.solicitud_id, "origen": "OFFLINE_WEB"},
+                )
+
+            # Para estos tipos solo reconocemos — la acción real se hace por cotizaciones
+            elif tipo in {"TALLER_ACEPTO", "TALLER_RECHAZO", "OBSERVACION"}:
+                _log.info("sync-web: evento %s reconocido (sin cambio BD) sol=%s", tipo, ev.solicitud_id)
+
+            else:
+                raise ValueError(f"tipo_evento desconocido: {tipo!r}")
+
+            detalle.append(
+                _OfflineEvWebOut(
+                    client_uuid=ev.client_uuid,
+                    solicitud_id=ev.solicitud_id,
+                    tipo_evento=ev.tipo_evento,
+                    sincronizado=True,
+                    error=None,
+                )
+            )
+        except Exception as exc:
+            detalle.append(
+                _OfflineEvWebOut(
+                    client_uuid=ev.client_uuid,
+                    solicitud_id=ev.solicitud_id,
+                    tipo_evento=ev.tipo_evento,
+                    sincronizado=False,
+                    error=str(exc),
+                )
+            )
+
+    await db.commit()
+    ok = sum(1 for d in detalle if d.sincronizado)
+    return _SyncWebOut(
+        total=len(detalle),
+        sincronizados=ok,
+        con_error=len(detalle) - ok,
+        detalle=detalle,
+    )
 
 
 @router.get(

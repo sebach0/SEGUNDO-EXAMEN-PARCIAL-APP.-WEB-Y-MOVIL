@@ -44,13 +44,19 @@ final class AuthRepository {
     }
   }
 
+  Future<void> logoutLocal() async {
+    await _storage.deleteAll();
+  }
+
   Future<void> logout() async {
     try {
-      await _dio.post<void>(ApiConstants.logout);
+      await _dio
+          .post<void>(ApiConstants.logout)
+          .timeout(const Duration(seconds: 4));
     } catch (_) {
       // Aunque falle el backend, limpiamos sesión local.
     } finally {
-      await _storage.deleteAll();
+      await logoutLocal();
     }
   }
 

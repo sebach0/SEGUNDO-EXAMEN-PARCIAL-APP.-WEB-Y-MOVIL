@@ -98,9 +98,18 @@ final class ClientAuthNotifier extends Notifier<ClientAuthState> {
   }
 
   Future<void> logout() async {
-    await ref.read(fcmRegistrationProvider).beforeClienteLogout();
     final auth = ref.read(authRepositoryProvider);
-    await auth.logout();
+    try {
+      await ref
+          .read(fcmRegistrationProvider)
+          .beforeClienteLogout()
+          .timeout(const Duration(seconds: 4));
+    } catch (_) {}
+    try {
+      await auth.logout();
+    } catch (_) {
+      await auth.logoutLocal();
+    }
     ref.invalidate(vehiculosMineProvider);
     state = const ClientAuthState(status: ClientAuthStatus.guest, infoMessage: null);
   }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
+import '../../../core/widgets/offline_emergencia_pending_banner.dart';
 import '../../application/client_auth_provider.dart';
 import '../../application/vehiculos_providers.dart';
 
@@ -19,6 +20,8 @@ class ClienteHomeScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
+          const OfflineEmergenciaPendingBanner(),
+          const SizedBox(height: 8),
           Text(
             'Hola, ${profile?.nombres ?? 'cliente'}',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),

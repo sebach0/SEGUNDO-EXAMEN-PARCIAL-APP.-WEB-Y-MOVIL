@@ -1,0 +1,108 @@
+<div class="ss">
+  <div class="ss__header">
+    <h2 class="ss__h">Estado de sincronización</h2>
+    <button
+      type="button"
+      class="ss__btn-retry"
+      (click)="retry()"
+      [disabled]="syncing || pendingCount() === 0"
+    >
+      {{ syncing ? 'Sincronizando…' : 'Reintentar pendientes' }}
+    </button>
+  </div>
+
+  <p class="ss__lead">
+    Muestra los registros offline guardados localmente y su estado de sincronización con el backend.
+  </p>
+
+  <!-- Mensajes de sincronización -->
+  <div class="ss__msg ss__msg--ok" *ngIf="syncMsg">{{ syncMsg }}</div>
+  <div class="ss__msg ss__msg--err" *ngIf="syncError">{{ syncError }}</div>
+
+  <!-- ── SECCIÓN LOCAL (IndexedDB) ───────────────────────────────────────── -->
+  <section class="ss__section">
+    <h3 class="ss__section-title">Cola local (IndexedDB)</h3>
+
+    <p class="ss__loading" *ngIf="loadingLocal">Cargando cola local…</p>
+
+    <div class="ss__empty" *ngIf="!loadingLocal && localEvents.length === 0">
+      No hay eventos locales registrados.
+    </div>
+
+    <div class="ss__table-wrap" *ngIf="!loadingLocal && localEvents.length > 0">
+      <table class="ss__table">
+        <thead>
+          <tr>
+            <th>UUID</th>
+            <th>Incidente</th>
+            <th>Tipo</th>
+            <th>Estado</th>
+            <th>Intentos</th>
+            <th>Último error</th>
+            <th>Fecha local</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ev of localEvents">
+            <td class="ss__uuid" [title]="ev.client_uuid">{{ ev.client_uuid | slice:0:8 }}…</td>
+            <td>#{{ ev.incidente_id }}</td>
+            <td>{{ ev.tipo_evento }}</td>
+            <td>
+              <span class="badge" [ngClass]="statusClass(ev._estado_local)">
+                {{ statusLabels[ev._estado_local] || ev._estado_local }}
+              </span>
+            </td>
+            <td>{{ ev._intentos }}</td>
+            <td class="ss__error-cell">{{ ev._ultimo_error ?? '—' }}</td>
+            <td>{{ ev.registrado_local_en | date:'dd/MM HH:mm' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── SECCIÓN REMOTA (backend) ───────────────────────────────────────── -->
+  <section class="ss__section">
+    <h3 class="ss__section-title">Estado remoto (backend)</h3>
+
+    <p class="ss__loading" *ngIf="loadingRemote">Consultando backend…</p>
+
+    <div class="ss__alert" *ngIf="errorRemote">{{ errorRemote }}</div>
+
+    <div class="ss__empty" *ngIf="!loadingRemote && !errorRemote && remoteItems.length === 0">
+      No hay registros de sincronización en el backend.
+    </div>
+
+    <div class="ss__table-wrap" *ngIf="!loadingRemote && !errorRemote && remoteItems.length > 0">
+      <table class="ss__table">
+        <thead>
+          <tr>
+            <th>UUID</th>
+            <th>Entidad</th>
+            <th>Incidente</th>
+            <th>Estado</th>
+            <th>Intentos</th>
+            <th>Último error</th>
+            <th>Sincronizado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of remoteItems">
+            <td class="ss__uuid" [title]="item.client_uuid">{{ item.client_uuid | slice:0:8 }}…</td>
+            <td>{{ item.entidad }}</td>
+            <td>{{ item.incidente_id != null ? '#' + item.incidente_id : '—' }}</td>
+            <td>
+              <span class="badge" [ngClass]="statusClass(item.estado_local)">
+                {{ statusLabels[item.estado_local] || item.estado_local }}
+              </span>
+            </td>
+            <td>{{ item.intentos }}</td>
+            <td class="ss__error-cell">{{ item.ultimo_error ?? '—' }}</td>
+            <td>{{ item.sincronizado_en ? (item.sincronizado_en | date:'dd/MM HH:mm') : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>

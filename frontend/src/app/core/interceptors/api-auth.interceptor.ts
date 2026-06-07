@@ -34,13 +34,30 @@ export const apiAuthInterceptor: HttpInterceptorFn = (req, next) => {
     return next(req);
   }
 
-  const token = isTallerApp
-    ? inject(TallerAuthService).getAccessToken()
-    : inject(AdminAuthService).getAccessToken();
+  // Endpoints compartidos fuera de /app/taller que usa el portal responsable (marketplace, KPIs).
+  const isTallerSharedApi =
+    req.url.includes(`${api}/cotizaciones`) || req.url.includes(`${api}/kpis/`);
 
-  if (!token) {
-    return next(req);
+  // Ciclo 4 legacy (incidents/sync/tenants).
+  const isCiclo4 =
+    req.url.includes(`${api}/incidents`) ||
+    req.url.includes(`${api}/sync`) ||
+    req.url.includes(`${api}/tenants`);
+
+  let token: string | null;
+  if (isTallerApp) {
+    token = inject(TallerAuthService).getAccessToken();
+  } else if (isTallerSharedApi || isCiclo4) {
+    // Portal taller o admin: preferir sesión taller, luego admin.
+    token =
+      inject(TallerAuthService).getAccessToken() ??
+      inject(AdminAuthService).getAccessToken();
+  } else {
+    token = inject(AdminAuthService).getAccessToken();
   }
+
+  if (!token) return next(req);
+
   return next(
     req.clone({
       setHeaders: { Authorization: `Bearer ${token}` },

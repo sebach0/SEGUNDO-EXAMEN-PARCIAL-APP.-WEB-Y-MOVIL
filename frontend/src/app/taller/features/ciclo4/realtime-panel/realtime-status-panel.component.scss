@@ -1,0 +1,114 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.rsp {
+  @include ui.ev-card;
+  margin-top: 1.25rem;
+
+  &__title {
+    @include ui.ev-page-title;
+    font-size: 0.9rem;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: t.$ev-muted;
+    font-size: 0.8125rem;
+
+    &-icon {
+      display: block;
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid t.$ev-border;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__msg {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: t.$ev-text;
+  }
+
+  &__time {
+    font-size: 0.7rem;
+    color: t.$ev-muted;
+  }
+}
+
+// ── Badges ────────────────────────────────────────────────────────────────────
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  &--info {
+    background: t.$ev-info-bg;
+    border: 1px solid t.$ev-info-border;
+    color: #79c0ff;
+  }
+
+  &--success {
+    background: t.$ev-success-bg;
+    border: 1px solid t.$ev-success-border;
+    color: #56d364;
+  }
+
+  &--danger {
+    background: t.$ev-danger-bg;
+    border: 1px solid t.$ev-danger-border;
+    color: t.$ev-danger-text;
+  }
+
+  &--warning {
+    background: rgba(210, 153, 34, 0.12);
+    border: 1px solid rgba(210, 153, 34, 0.35);
+    color: #e3b341;
+  }
+
+  &--cyan {
+    background: rgba(76, 201, 240, 0.1);
+    border: 1px solid rgba(76, 201, 240, 0.3);
+    color: t.$ev-cyan;
+  }
+
+  &--muted {
+    background: t.$ev-surface-2;
+    border: 1px solid t.$ev-border;
+    color: t.$ev-muted;
+  }
+}

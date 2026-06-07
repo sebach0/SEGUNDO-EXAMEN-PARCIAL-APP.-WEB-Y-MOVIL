@@ -120,6 +120,8 @@ async def build_mi_taller_read(taller: Taller, responsable: Usuario) -> MiTaller
         responsable_email=responsable.email,
         responsable_telefono=responsable.telefono,
         pendiente_verificacion_email=(responsable.estado == EstadoUsuarioEnum.PENDIENTE),
+        latitud=taller.latitud,
+        longitud=taller.longitud,
     )
 
 
@@ -243,7 +245,7 @@ async def create_tecnico_portal(
         taller_id=taller_id,
         especialidad_id=body.especialidad_id,
         documento_identidad=body.documento,
-        disponibilidad=body.disponibilidad,
+        disponibilidad=body.disponibilidad or "DISPONIBLE",
         estado=body.estado,
         created_at=utc_now_naive(),
         updated_at=utc_now_naive(),

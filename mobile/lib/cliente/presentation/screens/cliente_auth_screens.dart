@@ -62,10 +62,15 @@ class _ClienteLoginScreenState extends ConsumerState<ClienteLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(clientAuthNotifierProvider);
+    // Solo observar lo necesario: evita rebuilds pesados al teclear (teclado anima viewInsets).
+    final isLoggingIn = ref.watch(
+      clientAuthNotifierProvider.select((s) => s.isLoggingIn),
+    );
+    final authError = ref.watch(
+      clientAuthNotifierProvider.select((s) => s.authError),
+    );
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     ref.listen<ClientAuthState>(clientAuthNotifierProvider, (p, n) {
       if (n.isAuthenticated) context.go('/cliente/app/home');
@@ -109,7 +114,9 @@ class _ClienteLoginScreenState extends ConsumerState<ClienteLoginScreen> {
                   behavior: HitTestBehavior.opaque,
                   child: ListView(
                     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + bottomInset),
+                    // resizeToAvoidBottomInset ya ajusta el alto; sumar bottomInset duplica el
+                    // desplazamiento y reconstruye sombras/gradiente en cada frame del teclado.
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                     children: [
                       _LoginBrandHeader(theme: theme),
                       const SizedBox(height: 28),
@@ -220,18 +227,18 @@ class _ClienteLoginScreenState extends ConsumerState<ClienteLoginScreen> {
                                   ),
                                   onSubmitted: (_) => _submit(),
                                 ),
-                                if (auth.authError != null) ...[
+                                if (authError != null) ...[
                                   const SizedBox(height: 16),
-                                  _LoginErrorBanner(message: auth.authError!),
+                                  _LoginErrorBanner(message: authError),
                                 ],
                                 const SizedBox(height: 22),
                                 ShadButton(
                                   width: double.infinity,
                                   size: ShadButtonSize.lg,
-                                  onPressed: auth.isLoggingIn
+                                  onPressed: isLoggingIn
                                       ? null
                                       : _submit,
-                                  child: auth.isLoggingIn
+                                  child: isLoggingIn
                                       ? SizedBox(
                                           height: 22,
                                           width: 22,
@@ -410,6 +417,21 @@ class _ClienteRegisterScreenState extends ConsumerState<ClienteRegisterScreen> {
 
   String? _localError;
 
+  void _goBack() {
+    FocusScope.of(context).unfocus();
+    context.go('/cliente/login');
+  }
+
+  InputDecoration _fieldDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint,
+      filled: true,
+      isDense: true,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+    );
+  }
+
   @override
   void dispose() {
     _nombres.dispose();
@@ -423,7 +445,15 @@ class _ClienteRegisterScreenState extends ConsumerState<ClienteRegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(clientAuthNotifierProvider);
+    final isLoggingIn = ref.watch(
+      clientAuthNotifierProvider.select((s) => s.isLoggingIn),
+    );
+    final authError = ref.watch(
+      clientAuthNotifierProvider.select((s) => s.authError),
+    );
+    final infoMessage = ref.watch(
+      clientAuthNotifierProvider.select((s) => s.infoMessage),
+    );
     ref.listen<ClientAuthState>(clientAuthNotifierProvider, (p, n) {
       if (n.isAuthenticated) {
         context.go('/cliente/app/home');
@@ -444,39 +474,89 @@ class _ClienteRegisterScreenState extends ConsumerState<ClienteRegisterScreen> {
       }
     });
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Registro cliente')),
-      body: ListView(
-        padding: const EdgeInsets.all(24),
-        children: [
-          Text('Completa tus datos.', style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 20),
-          _label(context, 'Nombres'),
-          ShadInput(controller: _nombres, placeholder: const Text('Nombres')),
-          const SizedBox(height: 12),
-          _label(context, 'Apellidos'),
-          ShadInput(controller: _apellidos, placeholder: const Text('Apellidos')),
-          const SizedBox(height: 12),
-          _label(context, 'Correo'),
-          ShadInput(
-            controller: _email,
-            placeholder: const Text('correo@ejemplo.com'),
-            keyboardType: TextInputType.emailAddress,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _goBack();
+      },
+      child: Scaffold(
+        resizeToAvoidBottomInset: true,
+        appBar: AppBar(
+          title: const Text('Registro cliente'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: 'Volver',
+            onPressed: _goBack,
           ),
-          const SizedBox(height: 12),
-          _label(context, 'Teléfono'),
-          ShadInput(controller: _telefono, placeholder: const Text('+591...'), keyboardType: TextInputType.phone),
-          const SizedBox(height: 12),
-          _label(context, 'Contraseña'),
-          ShadInput(controller: _pass, obscureText: true, placeholder: const Text('Mínimo 6 caracteres')),
-          const SizedBox(height: 12),
-          _label(context, 'Confirmar contraseña'),
-          ShadInput(controller: _pass2, obscureText: true, placeholder: const Text('Repite la contraseña')),
+        ),
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          behavior: HitTestBehavior.opaque,
+          child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+            padding: const EdgeInsets.all(24),
+            children: [
+              Text('Completa tus datos.', style: Theme.of(context).textTheme.bodyMedium),
+              const SizedBox(height: 20),
+              _label(context, 'Nombres'),
+              TextField(
+                controller: _nombres,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                decoration: _fieldDecoration('Nombres'),
+              ),
+              const SizedBox(height: 12),
+              _label(context, 'Apellidos'),
+              TextField(
+                controller: _apellidos,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                decoration: _fieldDecoration('Apellidos'),
+              ),
+              const SizedBox(height: 12),
+              _label(context, 'Correo'),
+              TextField(
+                controller: _email,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                decoration: _fieldDecoration('correo@ejemplo.com'),
+              ),
+              const SizedBox(height: 12),
+              _label(context, 'Teléfono'),
+              TextField(
+                controller: _telefono,
+                keyboardType: TextInputType.phone,
+                textInputAction: TextInputAction.next,
+                decoration: _fieldDecoration('+591...'),
+              ),
+              const SizedBox(height: 12),
+              _label(context, 'Contraseña'),
+              TextField(
+                controller: _pass,
+                obscureText: true,
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                enableSuggestions: false,
+                decoration: _fieldDecoration('Mínimo 6 caracteres'),
+              ),
+              const SizedBox(height: 12),
+              _label(context, 'Confirmar contraseña'),
+              TextField(
+                controller: _pass2,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autocorrect: false,
+                enableSuggestions: false,
+                onSubmitted: (_) => _submit(),
+                decoration: _fieldDecoration('Repite la contraseña'),
+              ),
           if (_localError != null) ...[
             const SizedBox(height: 12),
             Text(_localError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ],
-          if (auth.infoMessage != null) ...[
+          if (infoMessage != null) ...[
             const SizedBox(height: 12),
             DecoratedBox(
               decoration: BoxDecoration(
@@ -487,26 +567,28 @@ class _ClienteRegisterScreenState extends ConsumerState<ClienteRegisterScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Text(
-                  auth.infoMessage!,
+                  infoMessage,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.35),
                 ),
               ),
             ),
           ],
-          if (auth.authError != null) ...[
+          if (authError != null) ...[
             const SizedBox(height: 8),
-            Text(auth.authError!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(authError, style: TextStyle(color: Theme.of(context).colorScheme.error)),
           ],
           const SizedBox(height: 24),
           ShadButton(
-            onPressed: auth.isLoggingIn ? null : _submit,
-            child: auth.isLoggingIn
+            onPressed: isLoggingIn ? null : _submit,
+            child: isLoggingIn
                 ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
                 : const Text('Registrarse'),
           ),
           const SizedBox(height: 12),
-          TextButton(onPressed: () => context.go('/cliente/login'), child: const Text('Ya tengo cuenta')),
-        ],
+          TextButton(onPressed: _goBack, child: const Text('Ya tengo cuenta')),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -592,11 +674,24 @@ class _ClienteRecoverScreenState extends ConsumerState<ClienteRecoverScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Restablecer contraseña')),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: _sent
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        context.go('/cliente/login');
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Restablecer contraseña'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_rounded),
+            tooltip: 'Volver',
+            onPressed: () => context.go('/cliente/login'),
+          ),
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(24),
+          child: _sent
             ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -642,6 +737,7 @@ class _ClienteRecoverScreenState extends ConsumerState<ClienteRecoverScreen> {
                   TextButton(onPressed: () => context.go('/cliente/login'), child: const Text('Volver')),
                 ],
               ),
+        ),
       ),
     );
   }

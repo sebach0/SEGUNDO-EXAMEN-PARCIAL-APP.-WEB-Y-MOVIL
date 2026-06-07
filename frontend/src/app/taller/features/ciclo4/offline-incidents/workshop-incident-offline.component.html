@@ -1,0 +1,87 @@
+<div class="wio">
+  <h2 class="wio__h">Registrar evento de solicitud</h2>
+  <p class="wio__lead">
+    Registra acciones sobre solicitudes de emergencia aunque la web esté sin conexión.
+    Los datos se guardarán localmente y se sincronizarán automáticamente con el
+    <strong>flujo real</strong> de solicitudes (Opción A — unificación offline).
+  </p>
+
+  <!-- Banner de conectividad -->
+  <div class="wio__banner wio__banner--offline" *ngIf="!isOnline">
+    <strong>Sin conexión.</strong>
+    El registro se guardará localmente y se sincronizará al recuperar conexión.
+  </div>
+  <div class="wio__banner wio__banner--online" *ngIf="isOnline">
+    <strong>En línea.</strong>
+    El evento se enviará directamente al flujo real de solicitudes.
+  </div>
+
+  <!-- Mensajes de éxito / error -->
+  <div class="wio__success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="wio__alert" *ngIf="error">{{ error }}</div>
+
+  <!-- Formulario -->
+  <form class="wio__form" (ngSubmit)="onSubmit()" #f="ngForm" novalidate>
+
+    <div class="wio__field">
+      <label class="wio__label" for="solicitudId">ID de la solicitud *</label>
+      <input
+        id="solicitudId"
+        type="number"
+        class="wio__input"
+        [(ngModel)]="solicitudId"
+        name="solicitudId"
+        min="1"
+        placeholder="Ej: 42"
+        required
+      />
+    </div>
+
+    <div class="wio__field">
+      <label class="wio__label" for="accion">Acción *</label>
+      <select id="accion" class="wio__select" [(ngModel)]="accion" name="accion" required>
+        <option *ngFor="let a of acciones" [value]="a.value">{{ a.label }}</option>
+      </select>
+    </div>
+
+    <div class="wio__field" *ngIf="requiereEstadoNuevo()">
+      <label class="wio__label" for="estadoNuevo">Nuevo estado *</label>
+      <select id="estadoNuevo" class="wio__select" [(ngModel)]="estadoNuevo" name="estadoNuevo">
+        <option value="">-- Seleccionar --</option>
+        <option *ngFor="let e of estados" [value]="e.value">{{ e.label }}</option>
+      </select>
+    </div>
+
+    <div class="wio__field">
+      <label class="wio__label" for="comentario">
+        Comentario / Motivo{{ requiereComentario() ? ' *' : '' }}
+      </label>
+      <textarea
+        id="comentario"
+        class="wio__textarea"
+        [(ngModel)]="comentario"
+        name="comentario"
+        rows="3"
+        placeholder="Observación, motivo de rechazo, etc."
+      ></textarea>
+    </div>
+
+    <div class="wio__field">
+      <label class="wio__label" for="fechaLocal">Fecha / hora local</label>
+      <input
+        id="fechaLocal"
+        type="datetime-local"
+        class="wio__input"
+        [(ngModel)]="fechaLocal"
+        name="fechaLocal"
+      />
+    </div>
+
+    <div class="wio__actions">
+      <button type="submit" class="wio__btn-primary" [disabled]="busy">
+        {{ busy ? 'Guardando…' : (isOnline ? 'Enviar al backend (solicitudes)' : 'Guardar localmente') }}
+      </button>
+    </div>
+
+  </form>
+</div>

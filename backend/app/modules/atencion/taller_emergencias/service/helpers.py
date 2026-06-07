@@ -14,7 +14,10 @@ from app.modules.atencion.taller_emergencias.schemas import (
     SolicitudBandejaDetalleRead,
     SolicitudEvidenciaTallerRead,
 )
-from app.modules.talleres_y_tecnicos.talleres.models import Tecnico
+from app.modules.talleres_y_tecnicos.talleres.models import EstadoTecnicoEnum, Tecnico
+
+_DISPONIBILIDAD_DISPONIBLE = "DISPONIBLE"
+_DISPONIBILIDAD_OCUPADO = "OCUPADO"
 
 _BASE_KEYS = frozenset(BandejaIncidenteBaseRead.model_fields.keys())
 
@@ -77,12 +80,20 @@ def estado_terminal_solicitud(estado: EstadoSolicitudSeguimientoEnum) -> bool:
 
 
 def tecnico_disponible_para_asignar(t: Tecnico) -> bool:
+    if t.estado != EstadoTecnicoEnum.ACTIVO:
+        return False
     if t.disponibilidad is None:
         return True
     d = t.disponibilidad.strip().lower()
-    if d in ("no", "no_disponible", "ausente", "ocupado"):
+    if d in ("no", "no_disponible", "ausente", "ocupado", _DISPONIBILIDAD_OCUPADO.lower()):
         return False
     return True
+
+
+def etiqueta_disponibilidad_tecnico(t: Tecnico) -> str:
+    if not tecnico_disponible_para_asignar(t):
+        return _DISPONIBILIDAD_OCUPADO
+    return _DISPONIBILIDAD_DISPONIBLE
 
 
 def to_asignacion_read(row: SolicitudAsignacionTecnico) -> AsignacionTecnicoRead:

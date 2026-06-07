@@ -1,10 +1,12 @@
 # app/modules/talleres/service.py
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from fastapi import HTTPException
 
 from app.core.timeutil import utc_now_naive
-from app.modules.talleres_y_tecnicos.talleres.models import Taller, Tecnico, EspecialidadTecnico
+from app.modules.talleres_y_tecnicos.talleres.models import (
+    Taller, Tecnico, EspecialidadTecnico, ServicioCatalogo, TallerServicio,
+)
 from app.modules.acceso_y_administracion.bitacora.service import registrar_accion
 from app.modules.acceso_y_administracion.bitacora.models import AccionBitacoraEnum
 
@@ -72,4 +74,65 @@ async def update_tecnico(tecnico_id: int, data: dict, db: AsyncSession, ejecutor
         if v is not None:
             setattr(t, k, v)
     t.updated_at = utc_now_naive()
+    return t
+
+
+# ── Catálogo de servicios ──────────────────────────────────────────────────────
+
+async def get_servicios_catalogo(db: AsyncSession) -> list[ServicioCatalogo]:
+    result = await db.execute(select(ServicioCatalogo).order_by(ServicioCatalogo.nombre))
+    return list(result.scalars().all())
+
+
+async def get_servicios_taller(taller_id: int, db: AsyncSession) -> list[ServicioCatalogo]:
+    result = await db.execute(
+        select(ServicioCatalogo)
+        .join(TallerServicio, TallerServicio.servicio_id == ServicioCatalogo.id)
+        .where(TallerServicio.taller_id == taller_id)
+        .order_by(ServicioCatalogo.nombre)
+    )
+    return list(result.scalars().all())
+
+
+async def actualizar_servicios_taller(
+    taller_id: int,
+    servicio_ids: list[int],
+    db: AsyncSession,
+    ejecutor_id: int | None = None,
+) -> list[ServicioCatalogo]:
+    """Reemplaza los servicios del taller con la lista provista (full-replace)."""
+    await get_taller_by_id(taller_id, db)
+
+    # Eliminar asociaciones anteriores
+    await db.execute(
+        delete(TallerServicio).where(TallerServicio.taller_id == taller_id)
+    )
+
+    # Insertar las nuevas
+    for sid in set(servicio_ids):
+        db.add(TallerServicio(taller_id=taller_id, servicio_id=sid))
+
+    await db.flush()
+    await registrar_accion(
+        db=db, usuario_id=ejecutor_id, modulo="talleres", entidad="taller_servicios",
+        entidad_id=taller_id, accion=AccionBitacoraEnum.ACTUALIZAR,
+        descripcion=f"Servicios taller_id={taller_id} actualizados",
+    )
+    return await get_servicios_taller(taller_id, db)
+
+
+async def actualizar_grua(
+    taller_id: int,
+    tiene_grua: bool,
+    db: AsyncSession,
+    ejecutor_id: int | None = None,
+) -> Taller:
+    t = await get_taller_by_id(taller_id, db)
+    t.tiene_grua = tiene_grua
+    t.updated_at = utc_now_naive()
+    await registrar_accion(
+        db=db, usuario_id=ejecutor_id, modulo="talleres", entidad="talleres",
+        entidad_id=taller_id, accion=AccionBitacoraEnum.ACTUALIZAR,
+        descripcion=f"tiene_grua={tiene_grua} taller_id={taller_id}",
+    )
     return t

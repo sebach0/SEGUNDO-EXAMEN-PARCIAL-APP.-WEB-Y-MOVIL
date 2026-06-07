@@ -1,7 +1,44 @@
 # HANDOFF_LATEST.md
 # =========================================================
 # Handoff para el próximo agente/sesión
-# Fecha: 2026-04-26
+# Fecha: 2026-06-07
+
+## Cambios recientes (2026-06-07) — Fix admin 403 usuarios/talleres ✅
+
+- **Causa:** redirect 307 sin trailing slash pierde `Authorization`.
+- **Fix:** `admin-api.service.ts` usa `/usuarios/`, `/roles/`, `/permisos/`, `/bitacora/`, `/talleres/`.
+- Sesión: `docs/ai/sessions/2026-06-07-fix-admin-panel-403-trailing-slash.md`.
+
+## Cambios recientes (2026-06-07) — Traslado técnico en cotizaciones ✅
+
+- **Backend:** ítem automático traslado 5 Bs/km; `monto_total` = servicio + traslado; contexto con `costo_traslado_estimado`.
+- **Frontend taller:** preview traslado + total estimado; desglose en historial.
+- **Mobile cliente:** filas Traslado/Servicio y desglose destacado.
+- Sesión: `docs/ai/sessions/2026-06-07-cotizacion-traslado-tecnico-automatico.md`.
+
+## Cambios recientes (2026-06-07) — Mapa ubicación taller + oferta minimalista ✅
+
+- **Backend:** `MiTallerRead/Update` con `latitud`/`longitud`; `CotizacionContextoRead` con coords y `eta_sugerida_min`.
+- **Frontend:** `OsmMapPickerComponent` (Leaflet/OSM), integrado en Mi taller y cotizaciones.
+- **Cotizaciones:** UI rediseñada (resumen distancia/ETA, mapa taller↔incidente, formulario compacto).
+- **Build:** `ng build --configuration=development` OK.
+- Sesión: `docs/ai/sessions/2026-06-07-taller-mapa-ubicacion-oferta-minimalista.md`.
+
+## Cambios recientes (2026-06-07) — Bugs Ciclo 4 + auth admin ✅
+
+- Wizard cliente: paso 1 «Grabar descripción por voz» y paso 4 «Grabar audio» llaman a `POST /api/ai/audio/transcribe`.
+- Nuevos archivos: `ai_transcribe_repository.dart`, `audio_transcribe_models.dart`, `ApiConstants.aiAudioTranscribe`.
+- Rol CLIENTE ya tiene `ai:inferir`; requiere IA activa (`AI_ENABLED` + perfil Docker `ai`) o stub.
+- Sesión: `docs/ai/sessions/2026-06-06-mobile-audio-transcribe-emergencia-wizard.md`.
+
+## Cambios recientes (2026-06-06) — Unificación operativa fase 2 ✅
+
+- **Migración `0009_unificacion_operativa`** aplicada en Docker (`alembic upgrade head`): columnas KPI/SLA/tenant/offline en `solicitudes_emergencia`.
+- **KPIs** (`/api/kpis/summary`) calculan desde `solicitudes_emergencia`, no desde tabla paralela `incidentes`.
+- **ETA/retraso:** push al cliente + eventos WS `ETA_ACTUALIZADO` / `SERVICIO_RETRASADO` (canal WS = `solicitud_id`).
+- **Offline móvil:** cola SharedPreferences, `POST .../emergencias/sync`, wizard encola si no hay red, auto-sync al resume en `OfflineEmergenciaSyncListener`.
+- **Tests:** `backend/tests/test_eta_service.py`.
+- Sesión: `docs/ai/sessions/2026-06-06-unificacion-operativa-fase2-implementacion.md`.
 
 ## Cambios recientes (2026-04-26) — Word `pruebas_api_servicio` + Prueba 2 mapeo ✅
 

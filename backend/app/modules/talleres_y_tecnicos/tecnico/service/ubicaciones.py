@@ -8,7 +8,11 @@ from app.core.timeutil import utc_now_naive
 from app.modules.acceso_y_administracion.bitacora.models import AccionBitacoraEnum
 from app.modules.acceso_y_administracion.bitacora.service import registrar_accion
 from app.modules.incidentes.emergencias import repository as emergencias_repository
-from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum, SolicitudEmergencia
+from app.modules.incidentes.emergencias.models import (
+    EstadoSolicitudSeguimientoEnum,
+    SolicitudEmergencia,
+)
+from app.modules.incidentes.emergencias.eta_service import evaluar_y_notificar_retraso
 from app.modules.incidentes.emergencias.schemas import UbicacionCreateIn, UbicacionTecnicoCompartidaRead
 from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
@@ -65,6 +69,7 @@ async def compartir_ubicacion_tecnico(
         precision_metros=body.precision_metros,
         ubicacion_at=now,
     )
+    await evaluar_y_notificar_retraso(db, se)
 
     await registrar_accion(
         db,
