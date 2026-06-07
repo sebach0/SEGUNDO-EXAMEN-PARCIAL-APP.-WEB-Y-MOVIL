@@ -1,0 +1,134 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.ss {
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &__h {
+    @include ui.ev-page-title;
+    margin-bottom: 0;
+  }
+
+  &__btn-retry {
+    @include ui.ev-btn-primary;
+  }
+
+  &__lead {
+    color: t.$ev-muted;
+    font-size: 0.875rem;
+    margin: 0 0 1.5rem;
+  }
+
+  &__msg {
+    padding: 0.65rem 1rem;
+    border-radius: t.$ev-radius-sm;
+    font-size: 0.8125rem;
+    margin-bottom: 1rem;
+
+    &--ok {
+      background: t.$ev-success-bg;
+      border: 1px solid t.$ev-success-border;
+      color: #56d364;
+    }
+
+    &--err {
+      @include ui.ev-alert-error;
+      margin-bottom: 1rem;
+    }
+  }
+
+  &__alert {
+    @include ui.ev-alert-error;
+  }
+
+  &__section {
+    margin-bottom: 2rem;
+
+    &-title {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: t.$ev-text;
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid t.$ev-border;
+    }
+  }
+
+  &__loading,
+  &__empty {
+    color: t.$ev-muted;
+    font-size: 0.8125rem;
+    padding: 1rem 0;
+  }
+
+  &__table-wrap {
+    overflow-x: auto;
+  }
+
+  &__table {
+    @include ui.ev-table;
+  }
+
+  &__uuid {
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: t.$ev-muted;
+  }
+
+  &__error-cell {
+    font-size: 0.75rem;
+    color: t.$ev-danger-text;
+    max-width: 220px;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+// Badges (reutilizables)
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  &--info {
+    background: t.$ev-info-bg;
+    border: 1px solid t.$ev-info-border;
+    color: #79c0ff;
+  }
+
+  &--success {
+    background: t.$ev-success-bg;
+    border: 1px solid t.$ev-success-border;
+    color: #56d364;
+  }
+
+  &--danger {
+    background: t.$ev-danger-bg;
+    border: 1px solid t.$ev-danger-border;
+    color: t.$ev-danger-text;
+  }
+
+  &--warning {
+    background: rgba(210, 153, 34, 0.12);
+    border: 1px solid rgba(210, 153, 34, 0.35);
+    color: #e3b341;
+  }
+
+  &--muted {
+    background: t.$ev-surface-2;
+    border: 1px solid t.$ev-border;
+    color: t.$ev-muted;
+  }
+}

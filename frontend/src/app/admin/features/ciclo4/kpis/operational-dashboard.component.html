@@ -1,0 +1,118 @@
+<div class="od">
+  <h2 class="od__h">Dashboard operacional — KPIs</h2>
+  <p class="od__lead">Métricas de la plataforma obtenidas en tiempo real desde la base de datos.</p>
+
+  <!-- Filtros de fecha -->
+  <div class="od__filters">
+    <label class="od__filter-label">
+      Desde:
+      <input type="date" [(ngModel)]="desde" class="od__filter-input" />
+    </label>
+    <label class="od__filter-label">
+      Hasta:
+      <input type="date" [(ngModel)]="hasta" class="od__filter-input" />
+    </label>
+    <button type="button" class="od__btn-refresh" (click)="loadKpis()">
+      Actualizar KPIs
+    </button>
+  </div>
+
+  <!-- Loading -->
+  <div class="od__loading-wrap" *ngIf="loading">
+    <div class="od__spinner"></div>
+    <p>Cargando KPIs…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="od__alert" *ngIf="!loading && error">
+    {{ error }}
+    <button type="button" class="od__btn-refresh" (click)="loadKpis()">Reintentar</button>
+  </div>
+
+  <!-- KPIs cargados -->
+  <ng-container *ngIf="!loading && !error && kpis != null">
+
+    <!-- Fila 1: métricas de tiempo -->
+    <div class="od__grid od__grid--4">
+      <div class="od__card">
+        <span class="od__card-label">⏱ Tiempo prom. asignación</span>
+        <span class="od__card-value">{{ formatMin(kpis.tiempo_promedio_asignacion_min) }}</span>
+      </div>
+      <div class="od__card">
+        <span class="od__card-label">🚗 Tiempo prom. llegada</span>
+        <span class="od__card-value">{{ formatMin(kpis.tiempo_promedio_llegada_min) }}</span>
+      </div>
+      <div class="od__card">
+        <span class="od__card-label">🔧 Tiempo prom. atención</span>
+        <span class="od__card-value">{{ formatMin(kpis.tiempo_promedio_atencion_min) }}</span>
+      </div>
+      <div class="od__card">
+        <span class="od__card-label">✅ Cumplimiento SLA</span>
+        <span class="od__card-value od__card-value--success">{{ formatPct(kpis.cumplimiento_sla_pct) }}</span>
+      </div>
+    </div>
+
+    <!-- Fila 2: conteos -->
+    <div class="od__grid od__grid--3">
+      <div class="od__card">
+        <span class="od__card-label">📋 Solicitudes activas</span>
+        <span class="od__card-value">{{ kpis.incidentes_activos }}</span>
+      </div>
+      <div class="od__card">
+        <span class="od__card-label">🏁 Finalizados</span>
+        <span class="od__card-value od__card-value--success">{{ kpis.incidentes_finalizados }}</span>
+      </div>
+      <div class="od__card">
+        <span class="od__card-label">❌ Cancelados</span>
+        <span class="od__card-value od__card-value--danger">{{ kpis.incidentes_cancelados }}</span>
+      </div>
+    </div>
+
+    <!-- Incidentes por tipo -->
+    <section class="od__section" *ngIf="incidentesPorTipoEntries().length > 0">
+      <h3 class="od__section-title">Incidentes por tipo</h3>
+      <div class="od__bar-list">
+        <div *ngFor="let item of incidentesPorTipoEntries()" class="od__bar-item">
+          <span class="od__bar-label">{{ item.tipo }}</span>
+          <span class="od__bar-count">{{ item.total }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Zonas con más incidentes -->
+    <section class="od__section" *ngIf="kpis.zonas_con_mas_incidentes?.length">
+      <h3 class="od__section-title">🗺 Zonas con más incidentes</h3>
+      <table class="od__table">
+        <thead><tr><th>Zona</th><th>Total</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let z of kpis.zonas_con_mas_incidentes">
+            <td>{{ z.zona }}</td><td>{{ z.total }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Talleres más eficientes -->
+    <section class="od__section" *ngIf="kpis.talleres_mas_eficientes?.length">
+      <h3 class="od__section-title">🏆 Talleres más eficientes</h3>
+      <table class="od__table">
+        <thead><tr><th>Taller</th><th>Tiempo prom.</th><th>Total atendidos</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let t of kpis.talleres_mas_eficientes">
+            <td>{{ t.nombre_comercial }}</td>
+            <td>{{ formatMin(t.tiempo_promedio_min) }}</td>
+            <td>{{ t.total_atendidos }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </ng-container>
+
+  <!-- Sin incidentes registrados -->
+  <div class="od__empty" *ngIf="!loading && !error && kpis != null && kpis.incidentes_activos === 0 && kpis.incidentes_finalizados === 0">
+    <div class="od__empty-icon">📊</div>
+    <p class="od__empty-title">Sin datos en el rango seleccionado.</p>
+    <p class="od__empty-hint">Ajusta las fechas o espera a que se registren incidentes.</p>
+  </div>
+</div>

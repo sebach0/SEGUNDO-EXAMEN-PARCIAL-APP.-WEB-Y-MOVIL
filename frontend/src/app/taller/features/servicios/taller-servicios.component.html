@@ -1,0 +1,135 @@
+<div class="srv">
+  <header class="srv__hero">
+    <div class="srv__hero-text">
+      <p class="srv__eyebrow">Configuración del taller</p>
+      <h2 class="srv__title">Mis servicios</h2>
+      <p class="srv__lead">
+        Define qué servicios ofrece
+        @if (tallerNombre()) {
+          <strong>{{ tallerNombre() }}</strong>.
+        } @else {
+          tu taller.
+        }
+        El sistema usará esta información para recomendarte cuando un cliente reporte una emergencia compatible.
+      </p>
+    </div>
+
+    @if (!loading()) {
+      <div class="srv__stats">
+        <article class="srv__stat">
+          <span class="srv__stat-label">Activos</span>
+          <span class="srv__stat-value">{{ totalActivos() }}</span>
+        </article>
+        <article class="srv__stat">
+          <span class="srv__stat-label">Catálogo</span>
+          <span class="srv__stat-value">{{ totalCatalogo() }}</span>
+        </article>
+        <article class="srv__stat" [class.srv__stat--accent]="tieneGrua()">
+          <span class="srv__stat-label">Grúa</span>
+          <span class="srv__stat-value">{{ tieneGrua() ? 'Sí' : 'No' }}</span>
+        </article>
+      </div>
+    }
+  </header>
+
+  @if (msg(); as m) {
+    <div
+      class="srv__alert"
+      [class.srv__alert--ok]="m.tipo === 'ok'"
+      [class.srv__alert--error]="m.tipo === 'error'"
+      role="status"
+    >
+      {{ m.texto }}
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="srv__loading">
+      <span class="srv__spinner" aria-hidden="true"></span>
+      <p>Cargando catálogo de servicios…</p>
+    </div>
+  } @else {
+    <section class="srv__panel">
+      <div class="srv__toolbar">
+        <label class="srv__search">
+          <span class="srv__search-label">Buscar servicio</span>
+          <input
+            type="search"
+            class="srv__search-input"
+            placeholder="Ej: llantería, grúa, motor…"
+            [ngModel]="busqueda()"
+            (ngModelChange)="busqueda.set($event)"
+          />
+        </label>
+
+        <div class="srv__toolbar-actions">
+          <button type="button" class="srv__btn srv__btn--ghost" (click)="seleccionarTodos()">
+            Seleccionar todos
+          </button>
+          <button type="button" class="srv__btn srv__btn--ghost" (click)="limpiarTodos()">
+            Limpiar
+          </button>
+        </div>
+      </div>
+
+      @if (tieneGrua()) {
+        <div class="srv__banner" role="note">
+          <span class="srv__banner-badge">Grúa activa</span>
+          <span>Tu taller aparecerá cuando el cliente necesite remolque o traslado del vehículo.</span>
+        </div>
+      }
+
+      @if (catalogoFiltrado().length === 0) {
+        <div class="srv__empty">
+          No hay servicios que coincidan con «{{ busqueda() }}».
+        </div>
+      } @else {
+        <div class="srv__grid">
+          @for (s of catalogoFiltrado(); track s.id) {
+            <button
+              type="button"
+              class="srv__card"
+              [class.srv__card--selected]="isSelected(s.id)"
+              [class.srv__card--grua]="esGrua(s.codigo)"
+              (click)="toggleServicio(s.id)"
+            >
+              <span class="srv__card-top">
+                <span class="srv__icon" [class.srv__icon--grua]="esGrua(s.codigo)">
+                  {{ icono(s.codigo) }}
+                </span>
+                <span class="srv__check" [class.srv__check--on]="isSelected(s.id)" aria-hidden="true">
+                  @if (isSelected(s.id)) { ✓ }
+                </span>
+              </span>
+
+              <span class="srv__nombre">{{ s.nombre }}</span>
+              <span class="srv__codigo">{{ s.codigo.replace('_', ' ') }}</span>
+
+              @if (s.descripcion) {
+                <span class="srv__desc">{{ s.descripcion }}</span>
+              }
+
+              <span class="srv__card-footer">
+                {{ isSelected(s.id) ? 'Ofrecido por tu taller' : 'Tocar para activar' }}
+              </span>
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <footer class="srv__footer">
+      <p class="srv__footer-hint">
+        {{ totalActivos() }} de {{ totalCatalogo() }} servicios seleccionados
+      </p>
+      <button
+        type="button"
+        class="srv__btn srv__btn--primary"
+        [disabled]="saving()"
+        (click)="guardar()"
+      >
+        {{ saving() ? 'Guardando…' : 'Guardar cambios' }}
+      </button>
+    </footer>
+  }
+</div>

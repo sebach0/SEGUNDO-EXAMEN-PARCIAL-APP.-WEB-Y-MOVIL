@@ -96,6 +96,32 @@ async def notificar_tecnico_solicitud_emergencia(
     )
 
 
+async def notificar_taller_responsable_solicitud(
+    db: AsyncSession,
+    *,
+    solicitud: SolicitudEmergencia,
+    tipo: TipoNotificacionEnum,
+    titulo: str,
+    mensaje: str,
+) -> None:
+    if solicitud.taller_id is None:
+        return
+    from app.modules.talleres_y_tecnicos.talleres.models import Taller
+
+    res = await db.execute(select(Taller).where(Taller.id == solicitud.taller_id))
+    taller = res.scalar_one_or_none()
+    if taller is None:
+        return
+    await crear_notificacion_y_push(
+        db,
+        usuario_destino_id=taller.usuario_responsable_id,
+        solicitud_id=solicitud.id,
+        tipo=tipo,
+        titulo=titulo,
+        mensaje=mensaje,
+    )
+
+
 async def listar_notificaciones(
     user, db: AsyncSession, *, solo_no_leidas: bool, limit: int
 ) -> list[NotificacionRead]:

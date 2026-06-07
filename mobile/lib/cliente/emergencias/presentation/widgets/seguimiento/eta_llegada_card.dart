@@ -2,18 +2,31 @@ import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../../../core/utils/bolivia_time.dart';
+import '../../../../../core/utils/eta_format.dart';
 
-/// CU18 — tiempo estimado de llegada (minutos).
+/// CU18 — tiempo estimado de llegada (minutos) y aviso de retraso.
 class EtaLlegadaCard extends StatelessWidget {
-  const EtaLlegadaCard({super.key, required this.minutos, this.actualizadoEn});
+  const EtaLlegadaCard({
+    super.key,
+    required this.minutos,
+    this.actualizadoEn,
+    this.minutosRetraso,
+    this.servicioRetrasado = false,
+    this.etaOrigen,
+  });
 
   final int? minutos;
   final DateTime? actualizadoEn;
+  final int? minutosRetraso;
+  final bool servicioRetrasado;
+  final String? etaOrigen;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tiene = minutos != null && minutos! >= 0;
+    final retraso = servicioRetrasado || (minutosRetraso != null && minutosRetraso! >= 5);
+
     return ShadCard(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -23,11 +36,14 @@ class EtaLlegadaCard extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.schedule_outlined, color: scheme.primary),
+                Icon(
+                  retraso ? Icons.warning_amber_rounded : Icons.schedule_outlined,
+                  color: retraso ? scheme.error : scheme.primary,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Tiempo estimado de llegada',
+                    retraso ? 'Auxilio con demora' : 'Tiempo estimado de llegada',
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
@@ -41,13 +57,22 @@ class EtaLlegadaCard extends StatelessWidget {
               )
             else ...[
               Text(
-                '$minutos min',
+                formatEtaMinutos(minutos),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
+              if (retraso) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'El técnico lleva aproximadamente ${minutosRetraso ?? 'varios'} min de retraso '
+                  'respecto al tiempo estimado. Te avisaremos cuando se acerque.',
+                  style: TextStyle(color: scheme.error, height: 1.35),
+                ),
+              ],
               if (actualizadoEn != null) ...[
                 const SizedBox(height: 6),
                 Text(
-                  'Última actualización del servidor: ${_fmt(actualizadoEn!)}',
+                  'Última actualización: ${_fmt(actualizadoEn!)}'
+                  '${etaOrigen != null ? ' · origen: $etaOrigen' : ''}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
                 ),
               ],
@@ -58,7 +83,5 @@ class EtaLlegadaCard extends StatelessWidget {
     );
   }
 
-  String _fmt(DateTime d) {
-    return BoliviaTime.formatWithZone(d);
-  }
+  String _fmt(DateTime d) => BoliviaTime.formatWithZone(d);
 }

@@ -63,6 +63,11 @@ export class TallerShellComponent implements OnInit {
     },
     { path: '/taller/panel/mi-taller', label: 'Mi taller', exact: false },
     { path: '/taller/panel/tecnicos', label: 'Técnicos', exact: false },
+    // Ciclo 4
+    { path: '/taller/panel/ciclo4/offline-incidents', label: 'Incidentes offline', exact: false },
+    { path: '/taller/panel/ciclo4/sync/status', label: 'Estado de sync', exact: false },
+    // Ciclo 4 Segunda Fase
+    { path: '/taller/panel/servicios', label: 'Mis servicios', exact: false },
   ];
 
   /** Oculta entradas de emergencias si el JWT no trae el permiso (backend FastAPI). */

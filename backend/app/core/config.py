@@ -180,6 +180,9 @@ class Settings(BaseSettings):
     API_PUBLIC_URL: str | None = None
     APP_PUBLIC_URL: str | None = None
 
+    # ── Cotizaciones — traslado del técnico al incidente (Bs por km) ──
+    COTIZACION_TARIFA_TRASLADO_BS_KM: float = 5.0
+
     # ── Servicio de inferencia IA (contenedor Docker ai-inference) ──
     AI_ENABLED: bool = False
     AI_INFERENCE_BASE_URL: str | None = None

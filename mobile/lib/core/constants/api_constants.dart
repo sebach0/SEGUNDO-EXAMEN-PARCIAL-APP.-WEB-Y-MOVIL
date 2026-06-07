@@ -45,6 +45,7 @@ class ApiConstants {
 
   /// Solicitudes de emergencia (cliente autenticado).
   static String get appClienteEmergencias => '${AppEnv.apiBaseUrl}/app/cliente/emergencias';
+  static String get appClienteEmergenciasSync => '${AppEnv.apiBaseUrl}/app/cliente/emergencias/sync';
 
   static String appClienteEmergencia(int id) =>
       '${AppEnv.apiBaseUrl}/app/cliente/emergencias/$id';
@@ -85,9 +86,23 @@ class ApiConstants {
   static String appClienteEmergenciaPagoConfirmarStripe(int solicitudId, int pagoId) =>
       '${AppEnv.apiBaseUrl}/app/cliente/emergencias/$solicitudId/pagos/$pagoId/confirmar-stripe';
 
+  /// Transcripción de audio (Whisper / IA). Requiere permiso `ai:inferir`.
+  static String get aiAudioTranscribe => '${AppEnv.apiBaseUrl}/ai/audio/transcribe';
+
   static String get appClienteFcm => '${AppEnv.apiBaseUrl}/app/cliente/dispositivos/fcm';
 
   static String get appTecnicoFcm => '${AppEnv.apiBaseUrl}/app/tecnico/dispositivos/fcm';
+
+  // ── Cancelación de solicitud (cliente) ───────────────────────────────────────
+  static String appClienteEmergenciaCancelar(int id) =>
+      '${AppEnv.apiBaseUrl}/app/cliente/emergencias/$id/cancelar';
+
+  // ── Cotizaciones (cliente consulta y selecciona) ──────────────────────────────
+  static String cotizacionesDeSolicitud(int solicitudId) =>
+      '${AppEnv.apiBaseUrl}/cotizaciones/solicitudes/$solicitudId';
+
+  static String seleccionarCotizacion(int solicitudId, int cotizacionId) =>
+      '${AppEnv.apiBaseUrl}/cotizaciones/solicitudes/$solicitudId/cotizacion/$cotizacionId/seleccionar';
 
   static String get usuarios => '${AppEnv.apiBaseUrl}/usuarios';
   static String get vehiculos => '${AppEnv.apiBaseUrl}/vehiculos';
@@ -104,4 +119,5 @@ class ApiConstants {
 
   static Duration get connectTimeout => AppEnv.apiConnectTimeout;
   static Duration get receiveTimeout => AppEnv.apiReceiveTimeout;
+  static Duration get uploadTimeout => AppEnv.apiUploadTimeout;
 }

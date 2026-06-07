@@ -8,7 +8,7 @@ from sqlalchemy import and_, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import aliased
 
-from app.modules.talleres_y_tecnicos.talleres.models import Taller
+from app.modules.talleres_y_tecnicos.talleres.models import Taller, EstadoTallerEnum
 from app.modules.incidentes.emergencias.models import (
     EstadoSolicitudSeguimientoEnum,
     SolicitudEmergencia,
@@ -73,12 +73,15 @@ def _incidente_select():
     )
 
 
-async def insert_bandeja_pendiente_por_cada_taller(
-    db: AsyncSession, *, solicitud_id: int, creado_at: datetime
+async def insert_bandeja_pendiente_por_talleres(
+    db: AsyncSession,
+    *,
+    solicitud_id: int,
+    taller_ids: list[int],
+    creado_at: datetime,
 ) -> None:
-    """Al crear una solicitud, una fila PENDIENTE por taller (CU25)."""
-    res = await db.execute(select(Taller.id))
-    for (tid,) in res.fetchall():
+    """Al crear una solicitud, una fila PENDIENTE por taller elegible (CU25)."""
+    for tid in taller_ids:
         db.add(
             SolicitudTallerBandeja(
                 solicitud_id=solicitud_id,
@@ -88,6 +91,17 @@ async def insert_bandeja_pendiente_por_cada_taller(
             )
         )
     await db.flush()
+
+
+async def insert_bandeja_pendiente_por_cada_taller(
+    db: AsyncSession, *, solicitud_id: int, creado_at: datetime
+) -> None:
+    """Retrocompat: todos los talleres activos (preferir insert_bandeja_pendiente_por_talleres)."""
+    res = await db.execute(select(Taller.id).where(Taller.estado == EstadoTallerEnum.ACTIVO))
+    taller_ids = [row[0] for row in res.all()]
+    await insert_bandeja_pendiente_por_talleres(
+        db, solicitud_id=solicitud_id, taller_ids=taller_ids, creado_at=creado_at
+    )
 
 
 async def list_bandeja_pendiente_por_taller(
@@ -246,6 +260,51 @@ async def get_tecnico_del_taller_activo(
         )
     )
     return res.scalar_one_or_none()
+
+
+async def list_tecnicos_activos_taller(
+    db: AsyncSession, *, taller_id: int
+) -> list[Tecnico]:
+    res = await db.execute(
+        select(Tecnico)
+        .where(
+            Tecnico.taller_id == taller_id,
+            Tecnico.estado == EstadoTecnicoEnum.ACTIVO,
+        )
+        .order_by(Tecnico.id.asc())
+    )
+    return list(res.scalars().all())
+
+
+async def tecnico_tiene_servicio_activo(db: AsyncSession, *, tecnico_id: int) -> bool:
+    res = await db.execute(
+        select(SolicitudEmergencia.id)
+        .where(
+            SolicitudEmergencia.tecnico_id == tecnico_id,
+            SolicitudEmergencia.estado.notin_(
+                (
+                    EstadoSolicitudSeguimientoEnum.FINALIZADA,
+                    EstadoSolicitudSeguimientoEnum.CANCELADA,
+                )
+            ),
+        )
+        .limit(1)
+    )
+    return res.scalar_one_or_none() is not None
+
+
+async def set_disponibilidad_tecnico(
+    db: AsyncSession,
+    *,
+    tecnico_id: int,
+    disponibilidad: str,
+    updated_at: datetime,
+) -> None:
+    await db.execute(
+        update(Tecnico)
+        .where(Tecnico.id == tecnico_id)
+        .values(disponibilidad=disponibilidad, updated_at=updated_at)
+    )
 
 
 async def list_asignaciones_tecnico_por_solicitud_taller(

@@ -21,5 +21,8 @@ export class AdminShellComponent {
     { path: '/admin/panel/permisos', label: 'Permisos', exact: false },
     { path: '/admin/panel/talleres', label: 'Talleres', exact: false },
     { path: '/admin/panel/bitacora', label: 'Bitácora', exact: false },
-  ] as const;
+    // Ciclo 4
+    { path: '/admin/panel/ciclo4/realtime-monitor', label: 'Monitor RT', exact: false },
+    { path: '/admin/panel/ciclo4/kpis', label: 'KPIs', exact: false },
+  ];
 }

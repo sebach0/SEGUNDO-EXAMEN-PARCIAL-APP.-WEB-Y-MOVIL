@@ -1,8 +1,96 @@
 # CURRENT_STATE.md
 # =========================================================
 # Estado actual del proyecto
-# Última actualización: 2026-04-26 — TESTING_STRATEGY: mapeo Word (Prueba 2 `POST /servicios`) al dominio real ✅
+# Última actualización: 2026-06-07 — Asignación automática técnico disponible ✅
 # =========================================================
+
+## Asignación automática de técnico (2026-06-07) ✅
+
+- Al **aceptar cotización** (cliente elige taller): asigna al primer técnico ACTIVO y disponible; lo marca **OCUPADO**.
+- Segunda emergencia del mismo taller → siguiente técnico libre (FIFO por id).
+- Al **finalizar** o **cancelar** servicio: técnico vuelve a **DISPONIBLE** si no tiene otras emergencias activas.
+- Endpoint: `POST /api/app/taller/emergencias/solicitudes/{id}/asignar-tecnico-automatico`.
+- Sesión: `docs/ai/sessions/2026-06-07-asignacion-automatica-tecnico-disponible.md`.
+
+## Cotizaciones — Traslado del técnico automático (2026-06-07) ✅
+
+- Al **proponer cotización**, el backend suma ítem de traslado: **5 Bs/km** (`COTIZACION_TARIFA_TRASLADO_BS_KM`).
+- `monto_total` incluye servicio + traslado; visible en portal taller y app mobile cliente.
+- Sesión: `docs/ai/sessions/2026-06-07-cotizacion-traslado-tecnico-automatico.md`.
+
+## Taller web — Ubicación en mapa + oferta al cliente (2026-06-07) ✅
+
+- **Mi taller:** picker OSM (Leaflet) para guardar `latitud`/`longitud` del taller vía `PATCH /api/app/taller/mi-taller`.
+- **Cotizaciones:** contexto incluye distancia, coords taller/incidente y `eta_sugerida_min`; mapa de ruta y UI minimalista.
+- **Componente reutilizable:** `frontend/src/app/shared/components/osm-map-picker/`.
+- Sesión: `docs/ai/sessions/2026-06-07-taller-mapa-ubicacion-oferta-minimalista.md`.
+
+## Ciclo 4 — Bugs de alta prioridad CORREGIDOS (2026-06-07) ✅
+
+### Correcciones aplicadas
+
+| # | Bug | Archivo | Estado |
+|---|-----|---------|--------|
+| b1 | Clase duplicada `ConnectionManager` en manager.py | `backend/.../ciclo4/websocket/manager.py` | ✅ |
+| b2 | Clase duplicada `WorkshopIncidentOfflineComponent` | `frontend/.../offline-incidents/...component.ts` | ✅ |
+| b3 | Enum inválido en admin solicitudes-activas (`PENDIENTE`/`BUSCANDO_TALLER` no existen) | `backend/.../ciclo4/incidentes/router.py` | ✅ |
+| b4 | WS URLs faltaban prefijo `/api` en mobile y Angular | `mobile/emergencia_ws_service.dart`, `realtime.service.ts`, `admin-realtime-monitor.component.ts`, `proxy.conf.js` | ✅ |
+| b5 | WS handler validaba solo tabla `incidentes`, rechazando `solicitud_id` real | `backend/.../ciclo4/incidentes/router.py` | ✅ |
+| b6 | `syncPendingAutomatically()` siempre llamaba flujo viejo `/sync/web/events` | `frontend/.../services/sync.service.ts` | ✅ |
+| b7 | Manifest.webmanifest referenciaba iconos PNG inexistentes | `frontend/src/manifest.webmanifest` + nuevo `assets/icons/icon.svg` | ✅ |
+
+
+
+### 1. Unificación offline web — Opción A ✅
+- [x] Backend: `POST /api/app/taller/emergencias/sync-web` procesa eventos offline sobre `solicitudes_emergencia`.
+- [x] Frontend: `OfflineEvent.solicitud_id` + `SyncService.syncSolicitudWebEvents()`.
+- [x] Componente `WorkshopIncidentOfflineComponent` usa `solicitud_id` (flujo real).
+- Sesión: `docs/ai/sessions/2026-06-07-ciclo4-completar-offline-ws-pwa-admin.md`
+
+### 2. WebSocket en mobile Flutter ✅
+- [x] Dependencia `web_socket_channel: ^3.0.1` instalada.
+- [x] `EmergenciaWsService` + `emergenciaWsProvider` (StreamProvider.autoDispose.family).
+- [x] `EmergenciaSeguimientoScreen` se auto-actualiza vía WS → elimina necesidad de refresh manual.
+- [x] Punto indicador verde/ámbar/rojo + banner de último evento.
+
+### 3. PWA formal Angular ✅
+- [x] `@angular/service-worker@^17.3.0` instalado.
+- [x] `manifest.webmanifest` con name, icons, shortcuts (solicitudes + portal taller).
+- [x] `ngsw-config.json` con estrategias de caché por grupo (app shell, assets, APIs).
+- [x] `provideServiceWorker` registrado en `app.config.ts` (solo en producción).
+- [x] `index.html` con meta tags PWA (theme-color, apple-mobile-web-app-*).
+
+### 4. Monitor admin completo ✅
+- [x] `ConnectionManager`: `ADMIN_CHANNEL_ID=0` + `broadcast_to_admin()` + retransmisión a admin desde todos los eventos.
+- [x] Backend: `WS /ws/admin/feed` + `GET /incidents/admin/solicitudes-activas`.
+- [x] Frontend: `AdminRealtimeMonitorComponent` completamente reescrito.
+  - Tabla de solicitudes activas del flujo real.
+  - Feed de eventos en tiempo real (últimos 50) con actualización automática.
+  - Indicador de estado WS animado.
+
+---
+
+## Marketplace cotizaciones — Uber/InDrive (2026-06-06) ✅
+- [x] Talleres compiten con cotización (precio, servicios, distancia km); cliente selecciona ganador.
+- [x] Aceptación directa de bandeja deshabilitada → flujo vía `POST /cotizaciones/...`.
+- [x] Migración `0010_marketplace_cotizaciones` + UI taller (Angular) y cliente (Flutter).
+- Sesión: `docs/ai/sessions/2026-06-06-marketplace-cotizaciones-uber-indrive.md`.
+
+## Audio → texto en creación de emergencia (2026-06-06) ✅
+- [x] Mobile wizard: grabación por voz en paso 1 (descripción) y paso 4 (evidencia audio).
+- [x] Transcripción vía `POST /api/ai/audio/transcribe` (`AiTranscribeRepository`); texto editable + tarjeta de confianza.
+- [x] Offline: audio en cola local; transcripción solo con conexión (backend sigue enriqueciendo `ai_payload` al subir evidencia).
+- Sesión: `docs/ai/sessions/2026-06-06-mobile-audio-transcribe-emergencia-wizard.md`.
+
+## Unificación operativa — solicitudes_emergencia (2026-06-06) ✅
+- [x] Migración Alembic `0009_unificacion_operativa` + SQL `0017_unificacion_operativa.sql` (timestamps KPI, `tenant_id`, SLA, cancelación enriquecida, `client_uuid`, sync offline).
+- [x] KPIs operacionales (`app/modules/kpis/service.py`) leen **`SolicitudEmergencia`** (flujo móvil/taller real).
+- [x] ETA con origen (`MANUAL`, `FALLBACK`, `COTIZACION`); detección retraso ≥ 5 min → push cliente + WS `SERVICIO_RETRASADO`.
+- [x] WS `ETA_ACTUALIZADO` al cambiar ETA (asignación técnico, EN_CAMINO, cotización aceptada).
+- [x] Offline móvil: `POST /api/app/cliente/emergencias/sync`, cola `OfflineEmergenciaQueue`, wizard + auto-sync en `app.dart`.
+- [x] Fix cancelación: notifica al **taller** responsable (no al cliente).
+- [x] Tests unitarios ETA: `backend/tests/test_eta_service.py`.
+- [ ] Pendiente: reportes PDF/Excel; PWA Angular offline unificada; ETA dinámico por GPS.
 
 ## Estado: CICLO 1 base + dominio emergencias (Ciclo 2) + módulo IA completo ✅
 
@@ -222,3 +310,16 @@ Todos los endpoints del módulo `ai/` probados en Swagger (`http://localhost:800
 - [x] Canal Android de alta prioridad: `emergencias_high_importance`.
 - [x] Backend ahora deja trazas de entrega FCM (`success_count`/`failure_count`) en `backend/app/modules/comunicacion_y_notificaciones/dispositivos_push/fcm_client.py`.
 - [x] Dependencia agregada en mobile: `flutter_local_notifications`.
+
+### Ciclo 4 Mobile — Cotizaciones y Cancelación (2026-06-06) ✅
+- [x] **Modelos Dart** (`cotizacion_models.dart`): `EstadoCotizacion`, `CotizacionItem`, `Cotizacion` con `fromJson` completo.
+- [x] **`CotizacionRepository`** (`cotizacion_repository.dart`): `listBySolicitud()` y `seleccionar()` con manejo de errores Dio.
+- [x] **`CotizacionProviders`** (`cotizacion_providers.dart`): `cotizacionesBySolicitudProvider` (FutureProvider.family) + `SeleccionarCotizacionNotifier` (AsyncNotifier).
+- [x] **`CotizacionesListScreen`**: comparación de cotizaciones con tarjetas, desglose de ítems, botón de selección con confirmación, banners de estado, `ShadToast` de éxito/error.
+- [x] **`EmergenciaDetalleScreen`** actualizada: botón "Ver cotizaciones" + botón "Cancelar solicitud" (solo en estados activos) con diálogo de motivo obligatorio.
+- [x] **`EmergenciasRepository`**: nuevo método `cancelarSolicitud(id, motivo)`.
+- [x] **`emergencias_providers.dart`**: nuevo `CancelarSolicitudNotifier` y `cancelarSolicitudProvider`.
+- [x] **`ApiConstants`**: `appClienteEmergenciaCancelar`, `cotizacionesDeSolicitud`, `seleccionarCotizacion`.
+- [x] **`cliente_go_router.dart`**: nueva ruta `/cliente/app/emergencias/solicitudes/:sid/cotizaciones`.
+- [x] `flutter analyze` — 0 issues.
+- [x] **Wizard ubicación (paso 2):** `obtainDevicePosition()` con timeout + fallback GPS; overlay con mensaje de progreso (evita cuelgue en emulador). Sesión: `docs/ai/sessions/2026-06-06-mobile-wizard-ubicacion-gps-timeout.md`.

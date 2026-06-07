@@ -126,19 +126,17 @@ export class AdminAuthService {
     s.setItem(ME, JSON.stringify(me));
   }
 
-  /** Si hay token pero no `me` en storage, rehidrata (p. ej. pestaña nueva). */
-  hydrateMeIfNeeded(): Observable<boolean> {
+  /** Valida token + rol ADMIN contra /auth/me (no confía solo en storage local). */
+  ensureAdminSession(): Observable<boolean> {
     const token = this.getAccessToken();
     if (!token) {
+      this.clearSession();
       return of(false);
-    }
-    if (this.getMe()) {
-      return of(this.isAdminSession());
     }
     return this.fetchMe(token).pipe(
       tap((me) => {
-        const s = this.activeStorage();
-        if (s) s.setItem(ME, JSON.stringify(me));
+        const s = this.activeStorage() ?? localStorage;
+        s.setItem(ME, JSON.stringify(me));
       }),
       map((me) => me.roles?.includes('ADMIN') ?? false),
       catchError(() => {
@@ -146,6 +144,18 @@ export class AdminAuthService {
         return of(false);
       }),
     );
+  }
+
+  /** Si hay token pero no `me` en storage, rehidrata (p. ej. pestaña nueva). */
+  hydrateMeIfNeeded(): Observable<boolean> {
+    const token = this.getAccessToken();
+    if (!token) {
+      return of(false);
+    }
+    if (this.getMe()) {
+      return this.ensureAdminSession();
+    }
+    return this.ensureAdminSession();
   }
 }
 

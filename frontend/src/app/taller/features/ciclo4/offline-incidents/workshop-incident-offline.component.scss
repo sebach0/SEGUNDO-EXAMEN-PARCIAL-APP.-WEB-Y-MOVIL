@@ -1,0 +1,93 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.wio {
+  max-width: 560px;
+
+  &__h {
+    @include ui.ev-page-title;
+  }
+
+  &__lead {
+    color: t.$ev-muted;
+    font-size: 0.875rem;
+    margin: -0.5rem 0 1.25rem;
+  }
+
+  &__banner {
+    padding: 0.65rem 1rem;
+    border-radius: t.$ev-radius-sm;
+    font-size: 0.8125rem;
+    margin-bottom: 1rem;
+
+    &--offline {
+      background: t.$ev-danger-bg;
+      border: 1px solid t.$ev-danger-border;
+      color: t.$ev-danger-text;
+    }
+
+    &--online {
+      background: t.$ev-success-bg;
+      border: 1px solid t.$ev-success-border;
+      color: #56d364;
+    }
+  }
+
+  &__success {
+    @include ui.ev-card;
+    margin-bottom: 1rem;
+    color: #56d364;
+    border-color: t.$ev-success-border;
+    font-size: 0.875rem;
+  }
+
+  &__alert {
+    @include ui.ev-alert-error;
+  }
+
+  &__form {
+    @include ui.ev-card;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: t.$ev-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__input,
+  &__select,
+  &__textarea {
+    @include ui.ev-input;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  &__textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.5;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.5rem;
+    border-top: 1px solid t.$ev-border;
+  }
+
+  &__btn-primary {
+    @include ui.ev-btn-primary;
+  }
+}

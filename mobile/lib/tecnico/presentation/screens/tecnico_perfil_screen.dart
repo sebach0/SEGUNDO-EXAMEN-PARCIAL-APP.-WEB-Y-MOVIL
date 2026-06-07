@@ -11,19 +11,26 @@ class TecnicoPerfilScreen extends ConsumerWidget {
   Future<void> _confirmLogout(BuildContext context, WidgetRef ref) async {
     final ok = await showDialog<bool>(
       context: context,
+      useRootNavigator: true,
+      barrierDismissible: true,
       builder: (ctx) => AlertDialog(
         title: const Text('Cerrar sesión'),
         content: const Text('¿Querés salir de la app técnico?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Salir')),
+          TextButton(
+            onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx, rootNavigator: true).pop(true),
+            child: const Text('Salir'),
+          ),
         ],
       ),
     );
-    if (ok == true && context.mounted) {
-      await ref.read(tecnicoAuthNotifierProvider.notifier).logout();
-      if (context.mounted) context.go('/modo');
-    }
+    if (ok != true || !context.mounted) return;
+    await ref.read(tecnicoAuthNotifierProvider.notifier).logout();
+    if (context.mounted) context.go('/tecnico/login');
   }
 
   @override

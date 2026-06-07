@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import '../../../../core/utils/bolivia_time.dart';
+import '../../../../core/utils/eta_format.dart';
+import '../../../../core/widgets/offline_emergencia_pending_banner.dart';
 import '../../application/emergencias_providers.dart';
 import '../../domain/solicitud_emergencia_models.dart';
 import '../widgets/seguimiento/estado_solicitud_badge.dart';
@@ -24,7 +26,12 @@ class EmergenciasMisSolicitudesScreen extends ConsumerWidget {
           onPressed: () => context.canPop() ? context.pop() : context.go('/cliente/app/home'),
         ),
       ),
-      body: async.when(
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const OfflineEmergenciaPendingBanner(),
+          Expanded(
+            child: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => _ErrorBody(
           message: e.toString(),
@@ -49,6 +56,9 @@ class EmergenciasMisSolicitudesScreen extends ConsumerWidget {
             ),
           );
         },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -97,7 +107,7 @@ class _SolicitudTile extends StatelessWidget {
                     if (solicitud.tiempoEstimadoMin != null) ...[
                       const SizedBox(height: 4),
                       Text(
-                        'ETA: ${solicitud.tiempoEstimadoMin} min',
+                        'ETA: ${formatEtaMinutos(solicitud.tiempoEstimadoMin)}',
                         style: TextStyle(fontSize: 12, color: scheme.primary, fontWeight: FontWeight.w600),
                       ),
                     ],

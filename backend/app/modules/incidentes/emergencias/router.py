@@ -1,7 +1,7 @@
 # API REST — actor Cliente (JWT + perfil cliente + permisos incidentes/ubicación/evidencias)
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -11,6 +11,7 @@ from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
 from . import service
 from .models import TipoEvidenciaSolicitudEnum
+from .sync_offline import SyncSolicitudOfflineIn, SyncSolicitudOfflineOut, sincronizar_solicitud_offline
 from .schemas import (
     EvidenciaCreateIn,
     SolicitudEmergenciaCreateIn,
@@ -21,6 +22,11 @@ from .schemas import (
     UbicacionCreateIn,
     UbicacionTecnicoCompartidaRead,
 )
+
+from pydantic import BaseModel, Field
+
+class CancelarSolicitudIn(BaseModel):
+    motivo: str = Field(min_length=5, max_length=2000, description="Motivo de la cancelación")
 
 router = APIRouter(
     prefix="/app/cliente/emergencias",
@@ -148,6 +154,7 @@ async def enviar_ubicacion(
 async def adjuntar_evidencia_archivo(
     solicitud_id: int,
     request: Request,
+    background_tasks: BackgroundTasks,
     tipo: str = Form(..., description="FOTO o AUDIO"),
     file: UploadFile = File(...),
     current_user: Usuario = Depends(get_current_user),
@@ -163,7 +170,14 @@ async def adjuntar_evidencia_archivo(
         ) from None
     cid = await _cliente_id(current_user, db)
     return await service.agregar_evidencia_archivo(
-        current_user, cid, solicitud_id, request, tipo_e, file, db
+        current_user,
+        cid,
+        solicitud_id,
+        request,
+        tipo_e,
+        file,
+        db,
+        background_tasks=background_tasks,
     )
 
 
@@ -175,9 +189,48 @@ async def adjuntar_evidencia_archivo(
 async def adjuntar_evidencia(
     solicitud_id: int,
     body: EvidenciaCreateIn,
+    background_tasks: BackgroundTasks,
     current_user: Usuario = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """CU13 (FOTO) / CU14 (AUDIO) — URL HTTPS al archivo ya subido a almacenamiento externo."""
     cid = await _cliente_id(current_user, db)
-    return await service.agregar_evidencia(current_user, cid, solicitud_id, body, db)
+    return await service.agregar_evidencia(
+        current_user,
+        cid,
+        solicitud_id,
+        body,
+        db,
+        background_tasks=background_tasks,
+    )
+
+
+@router.post(
+    "/sync",
+    response_model=SyncSolicitudOfflineOut,
+    dependencies=[Depends(require_permission("incidentes:crear"))],
+)
+async def sincronizar_solicitud_offline_route(
+    body: SyncSolicitudOfflineIn,
+    current_user: Usuario = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """CU39 — Sincroniza una solicitud creada offline (anti-duplicado por client_uuid)."""
+    cid = await _cliente_id(current_user, db)
+    return await sincronizar_solicitud_offline(current_user, cid, body, db)
+
+
+@router.post(
+    "/{solicitud_id}/cancelar",
+    response_model=SolicitudEmergenciaDetailRead,
+    dependencies=[Depends(require_permission("incidentes:actualizar"))],
+)
+async def cancelar_solicitud(
+    solicitud_id: int,
+    body: CancelarSolicitudIn,
+    current_user: Usuario = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """CU — El cliente cancela su solicitud de emergencia. Notifica al taller/técnico asignado."""
+    cid = await _cliente_id(current_user, db)
+    return await service.cancelar_solicitud(current_user, cid, solicitud_id, body.motivo, db)

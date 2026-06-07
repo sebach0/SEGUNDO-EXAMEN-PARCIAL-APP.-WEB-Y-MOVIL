@@ -40,5 +40,6 @@ module.exports = {
     target,
     secure: false,
     changeOrigin: true,
+    ws: true,   // permite upgrade WebSocket para /api/ws/...
   },
 };

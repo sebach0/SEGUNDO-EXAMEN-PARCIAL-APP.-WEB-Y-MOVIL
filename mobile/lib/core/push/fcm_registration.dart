@@ -47,6 +47,16 @@ String _androidOrIos() {
   return 'unknown';
 }
 
+Future<String?> _fcmTokenOrNull() async {
+  try {
+    return await FirebaseMessaging.instance
+        .getToken()
+        .timeout(const Duration(seconds: 3));
+  } catch (_) {
+    return null;
+  }
+}
+
 class FcmRegistration {
   FcmRegistration(this._ref);
 
@@ -73,11 +83,13 @@ class FcmRegistration {
     if (kIsWeb) {
       return;
     }
-    final t = _lastClienteToken['t'] ?? await FirebaseMessaging.instance.getToken();
+    final t = _lastClienteToken['t'] ?? await _fcmTokenOrNull();
     if (t == null) return;
     final repo = _ref.read(comunicacionRepositoryProvider);
     try {
-      await repo.eliminarTokenFcm(token: t, platform: _androidOrIos());
+      await repo
+          .eliminarTokenFcm(token: t, platform: _androidOrIos())
+          .timeout(const Duration(seconds: 3));
     } catch (_) {}
     _lastClienteToken['t'] = null;
   }
@@ -104,11 +116,13 @@ class FcmRegistration {
     if (kIsWeb) {
       return;
     }
-    final t = _lastTecnicoToken['t'] ?? await FirebaseMessaging.instance.getToken();
+    final t = _lastTecnicoToken['t'] ?? await _fcmTokenOrNull();
     if (t == null) return;
     final dio = _ref.read(tecnicoDioProvider);
     try {
-      await dio.delete<void>(ApiConstants.appTecnicoFcm, data: {'token': t, 'platform': _androidOrIos()});
+      await dio
+          .delete<void>(ApiConstants.appTecnicoFcm, data: {'token': t, 'platform': _androidOrIos()})
+          .timeout(const Duration(seconds: 3));
     } catch (_) {}
     _lastTecnicoToken['t'] = null;
   }

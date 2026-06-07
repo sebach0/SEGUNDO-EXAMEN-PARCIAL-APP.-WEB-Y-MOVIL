@@ -51,10 +51,14 @@ class _TecnicoLoginScreenState extends ConsumerState<TecnicoLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = ref.watch(tecnicoAuthNotifierProvider);
+    final isLoggingIn = ref.watch(
+      tecnicoAuthNotifierProvider.select((s) => s.isLoggingIn),
+    );
+    final authError = ref.watch(
+      tecnicoAuthNotifierProvider.select((s) => s.authError),
+    );
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     ref.listen<TecnicoAuthState>(tecnicoAuthNotifierProvider, (p, n) {
       if (n.isAuthenticated) context.go('/tecnico/app/inicio');
@@ -98,7 +102,7 @@ class _TecnicoLoginScreenState extends ConsumerState<TecnicoLoginScreen> {
                   behavior: HitTestBehavior.opaque,
                   child: ListView(
                     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: EdgeInsets.fromLTRB(24, 8, 24, 24 + bottomInset),
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
                     children: [
                       _TecnicoLoginBrandHeader(theme: theme),
                       const SizedBox(height: 28),
@@ -192,16 +196,16 @@ class _TecnicoLoginScreenState extends ConsumerState<TecnicoLoginScreen> {
                                   ),
                                   onSubmitted: (_) => _submit(),
                                 ),
-                                if (auth.authError != null) ...[
+                                if (authError != null) ...[
                                   const SizedBox(height: 16),
-                                  _TecnicoLoginErrorBanner(message: auth.authError!),
+                                  _TecnicoLoginErrorBanner(message: authError),
                                 ],
                                 const SizedBox(height: 22),
                                 ShadButton(
                                   width: double.infinity,
                                   size: ShadButtonSize.lg,
-                                  onPressed: auth.isLoggingIn ? null : _submit,
-                                  child: auth.isLoggingIn
+                                  onPressed: isLoggingIn ? null : _submit,
+                                  child: isLoggingIn
                                       ? SizedBox(
                                           height: 22,
                                           width: 22,

@@ -12,6 +12,7 @@ import type {
   TecnicoPortalDto,
   TecnicoPortalUpdatePayload,
 } from '../models/taller-api.models';
+import type { ServicioCatalogo } from '../models/cotizacion.models';
 
 @Injectable({ providedIn: 'root' })
 export class TallerApiService {
@@ -52,5 +53,22 @@ export class TallerApiService {
 
   listEspecialidades(): Observable<EspecialidadDto[]> {
     return this.http.get<EspecialidadDto[]>(`${environment.apiUrl}/especialidades`);
+  }
+
+  /** Servicios ofrecidos por el taller autenticado (portal responsable). */
+  getMisServicios(): Observable<ServicioCatalogo[]> {
+    return this.http.get<ServicioCatalogo[]>(`${this.base}/servicios`);
+  }
+
+  /** Actualiza servicios del taller autenticado (full-replace). */
+  actualizarMisServicios(servicioIds: number[]): Observable<ServicioCatalogo[]> {
+    return this.http.put<ServicioCatalogo[]>(`${this.base}/servicios`, {
+      servicio_ids: servicioIds,
+    });
+  }
+
+  /** Activa/desactiva grúa del taller autenticado. */
+  actualizarMiGrua(tieneGrua: boolean): Observable<MiTallerDto> {
+    return this.http.patch<MiTallerDto>(`${this.base}/grua`, { tiene_grua: tieneGrua });
   }
 }

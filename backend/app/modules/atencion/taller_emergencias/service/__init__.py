@@ -1,5 +1,10 @@
 # Paquete de servicio: bandeja, asignaciones técnicas, reportes (mismo contrato público que antes).
-from .asignaciones import asignar_tecnico_a_solicitud, listar_asignaciones_tecnico
+from .asignaciones import (
+    asignar_tecnico_a_solicitud,
+    asignar_tecnico_automatico,
+    liberar_tecnico_si_sin_servicios,
+    listar_asignaciones_tecnico,
+)
 from .bandeja import (
     aceptar_solicitud,
     actualizar_disponibilidad,
@@ -19,6 +24,8 @@ __all__ = [
     "aceptar_solicitud",
     "actualizar_disponibilidad",
     "asignar_tecnico_a_solicitud",
+    "asignar_tecnico_automatico",
+    "liberar_tecnico_si_sin_servicios",
     "listar_asignaciones_tecnico",
     "listar_comisiones_taller",
     "listar_disponibles",

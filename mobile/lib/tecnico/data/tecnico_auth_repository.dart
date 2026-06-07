@@ -101,7 +101,9 @@ final class TecnicoAuthRepository {
 
   Future<void> logout() async {
     try {
-      await _dio.post<void>(ApiConstants.logout);
+      await _dio
+          .post<void>(ApiConstants.logout)
+          .timeout(const Duration(seconds: 4));
     } catch (_) {
       // Limpia sesión local aunque falle el backend.
     } finally {

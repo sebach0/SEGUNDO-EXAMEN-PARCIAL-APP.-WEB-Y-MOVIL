@@ -1,0 +1,86 @@
+<div class="irt">
+
+  <!-- Indicador WebSocket -->
+  <div class="irt__ws-bar" [ngClass]="wsStatusClass()">
+    <span class="irt__ws-dot"></span>
+    <span>{{ wsStatusLabel() }}</span>
+  </div>
+
+  <!-- Loading -->
+  <p class="irt__loading" *ngIf="loading">Cargando incidente…</p>
+
+  <!-- Error -->
+  <div class="irt__alert" *ngIf="error && !loading">{{ error }}</div>
+
+  <!-- Contenido principal -->
+  <ng-container *ngIf="!loading && !error && incident">
+
+    <!-- Cabecera -->
+    <div class="irt__header">
+      <div>
+        <h2 class="irt__title">Incidente #{{ incident.id }}</h2>
+        <p class="irt__desc">{{ incident.descripcion ?? 'Sin descripción.' }}</p>
+      </div>
+      <a routerLink=".." class="irt__back">← Volver</a>
+    </div>
+
+    <!-- Estado CANCELADO -->
+    <div class="irt__cancelled" *ngIf="isCancelled()">
+      <strong>Incidente cancelado.</strong>
+      <span *ngIf="incident.motivo_cancelacion"> Motivo: {{ incident.motivo_cancelacion }}</span>
+    </div>
+
+    <!-- Línea de progreso de estados -->
+    <div class="irt__stepper" *ngIf="!isCancelled()">
+      <div
+        *ngFor="let step of statusSteps; let i = index"
+        class="irt__step"
+        [class.irt__step--done]="i < currentStepIndex()"
+        [class.irt__step--active]="i === currentStepIndex()"
+      >
+        <div class="irt__step-dot"></div>
+        <span class="irt__step-label">{{ statusLabels[step] }}</span>
+      </div>
+    </div>
+
+    <!-- Datos clave -->
+    <div class="irt__grid">
+      <div class="irt__card">
+        <span class="irt__card-label">Estado actual</span>
+        <span class="irt__card-value">{{ statusLabels[incident.estado] || incident.estado }}</span>
+      </div>
+      <div class="irt__card">
+        <span class="irt__card-label">Origen</span>
+        <span class="irt__card-value">{{ incident.origen }}</span>
+      </div>
+      <div class="irt__card">
+        <span class="irt__card-label">Prioridad</span>
+        <span class="irt__card-value">{{ incident.prioridad }}</span>
+      </div>
+      <div class="irt__card">
+        <span class="irt__card-label">Reportado</span>
+        <span class="irt__card-value">{{ incident.reportado_en | date:'dd/MM/yyyy HH:mm' }}</span>
+      </div>
+    </div>
+
+    <!-- Última ubicación GPS -->
+    <div class="irt__tracking" *ngIf="lastTracking">
+      <h3 class="irt__section-title">Última ubicación</h3>
+      <p class="irt__coords">
+        Lat: {{ lastTracking.latitud | number:'1.5-5' }} &nbsp;|&nbsp;
+        Lng: {{ lastTracking.longitud | number:'1.5-5' }}
+        <span *ngIf="lastTracking.velocidad_kmh != null">
+          &nbsp;| {{ lastTracking.velocidad_kmh }} km/h
+        </span>
+      </p>
+      <a *ngIf="mapLink()" [href]="mapLink()!" target="_blank" rel="noopener" class="irt__map-link">
+        Ver en mapa →
+      </a>
+    </div>
+
+    <!-- Panel de eventos WebSocket -->
+    <app-realtime-status-panel [incidentId]="incident.id" />
+
+  </ng-container>
+
+</div>

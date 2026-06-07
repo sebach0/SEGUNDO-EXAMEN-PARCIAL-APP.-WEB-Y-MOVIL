@@ -4,6 +4,7 @@ from __future__ import annotations
 import enum
 from datetime import datetime
 from decimal import Decimal
+import uuid
 
 from sqlalchemy import (
     BigInteger,
@@ -18,7 +19,7 @@ from sqlalchemy import (
     Index,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
@@ -40,6 +41,27 @@ class EstadoSolicitudSeguimientoEnum(str, enum.Enum):
 class TipoEvidenciaSolicitudEnum(str, enum.Enum):
     FOTO = "FOTO"
     AUDIO = "AUDIO"
+
+
+class CancelacionFaseEnum(str, enum.Enum):
+    PRE_ASIGNACION = "PRE_ASIGNACION"
+    POST_ASIGNACION = "POST_ASIGNACION"
+    EN_CAMINO = "EN_CAMINO"
+    EN_ATENCION = "EN_ATENCION"
+
+
+class EtaOrigenEnum(str, enum.Enum):
+    MANUAL = "MANUAL"
+    FALLBACK = "FALLBACK"
+    COTIZACION = "COTIZACION"
+    GPS = "GPS"
+
+
+class SyncEstadoSolicitudEnum(str, enum.Enum):
+    PENDIENTE = "PENDIENTE"
+    ENVIADO = "ENVIADO"
+    SINCRONIZADO = "SINCRONIZADO"
+    ERROR = "ERROR"
 
 
 _estado_seguimiento_sa = SAEnum(
@@ -79,6 +101,31 @@ class SolicitudEmergencia(Base):
 
     presupuesto_bob: Mapped[Decimal | None] = mapped_column(Numeric(12, 2), nullable=True)
     presupuesto_registrado_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    motivo_cancelacion: Mapped[str | None] = mapped_column(Text, nullable=True)
+    cancelado_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancelado_por_usuario_id: Mapped[int | None] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="SET NULL"), nullable=True
+    )
+    cancelacion_fase: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    taller_habia_llegado: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+    tenant_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+    )
+    reportado_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    asignado_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    en_camino_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    en_atencion_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    llegada_real_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    sla_minutos: Mapped[int] = mapped_column(Integer, nullable=False, default=60)
+    eta_actualizado_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    eta_origen: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    retraso_notificado_en: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    client_uuid: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    sync_estado: Mapped[str] = mapped_column(String(20), nullable=False, default="SINCRONIZADO")
+    zona_id: Mapped[int | None] = mapped_column(
+        ForeignKey("zonas.id", ondelete="SET NULL"), nullable=True
+    )
 
     ubicaciones: Mapped[list["SolicitudUbicacion"]] = relationship(
         back_populates="solicitud",

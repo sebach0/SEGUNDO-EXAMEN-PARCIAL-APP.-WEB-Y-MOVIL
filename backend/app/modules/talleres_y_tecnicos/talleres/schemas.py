@@ -16,6 +16,22 @@ class EspecialidadCreate(BaseModel):
     descripcion: Optional[str] = None
 
 
+class ServicioCatalogoRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    nombre: str
+    descripcion: Optional[str]
+    codigo: str
+
+
+class ActualizarServiciosTallerIn(BaseModel):
+    servicio_ids: list[int]
+
+
+class ActualizarGruaIn(BaseModel):
+    tiene_grua: bool
+
+
 class TallerCreate(BaseModel):
     usuario_responsable_id: int
     nombre_comercial: str
@@ -37,6 +53,7 @@ class TallerRead(BaseModel):
     ciudad: str
     descripcion: Optional[str]
     estado: EstadoTallerEnum
+    tiene_grua: bool = False
     created_at: Optional[datetime]
 
 class TallerUpdate(BaseModel):

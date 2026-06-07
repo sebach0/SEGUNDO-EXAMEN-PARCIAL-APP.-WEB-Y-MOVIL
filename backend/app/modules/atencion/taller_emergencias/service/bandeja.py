@@ -8,7 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.timeutil import utc_now_naive
 from app.modules.acceso_y_administracion.bitacora.models import AccionBitacoraEnum
 from app.modules.acceso_y_administracion.bitacora.service import registrar_accion
-from app.modules.incidentes.emergencias.models import SolicitudEmergencia
+from app.modules.incidentes.emergencias.models import (
+    EstadoSolicitudSeguimientoEnum,
+    SolicitudEmergencia,
+)
+from app.modules.incidentes.emergencias.solicitud_lifecycle import aplicar_timestamps_por_estado
 from app.modules.comunicacion_y_notificaciones.notificaciones import service as notificaciones_service
 from app.modules.comunicacion_y_notificaciones.notificaciones.models import TipoNotificacionEnum
 from app.modules.atencion.taller_emergencias import repository
@@ -139,115 +143,10 @@ async def aceptar_solicitud(
     bandeja_id: int,
     db: AsyncSession,
 ) -> SolicitudBandejaDetalleRead:
-    from app.modules.incidentes.emergencias import repository as emergencias_repository
-    from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum
-
-    now = utc_now_naive()
-    bandeja = await repository.get_bandeja_row(db, bandeja_id=bandeja_id, taller_id=taller_id)
-    if bandeja is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Entrada de bandeja no encontrada"
-        )
-
-    if bandeja.estado == EstadoBandejaTallerEnum.ACEPTADA:
-        return await obtener_detalle_bandeja(taller_id, bandeja_id, db)
-    if bandeja.estado != EstadoBandejaTallerEnum.PENDIENTE:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="La solicitud ya no está pendiente de respuesta.",
-        )
-
-    res_se = await db.execute(
-        select(SolicitudEmergencia)
-        .where(SolicitudEmergencia.id == bandeja.solicitud_id)
-        .with_for_update()
+    raise HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail=(
+            "La aceptación directa fue reemplazada por el marketplace de cotizaciones. "
+            "Enviá una cotización con precio, servicios y ETA desde el módulo Cotizaciones."
+        ),
     )
-    se = res_se.scalar_one_or_none()
-    if se is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada"
-        )
-    if helpers.estado_terminal_solicitud(se.estado):
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="La solicitud ya no admite asignación de taller.",
-        )
-    if se.taller_id is not None and se.taller_id != taller_id:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="La solicitud ya fue asignada a otro taller.",
-        )
-
-    disp = await helpers.ensure_disponibilidad(db, taller_id)
-    if not disp.acepta_nuevas_solicitudes:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="El taller no acepta nuevas solicitudes en este momento.",
-        )
-    if disp.servicios_activos >= disp.capacidad_maxima_diaria:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Capacidad máxima alcanzada; no se pueden aceptar más servicios.",
-        )
-
-    affected = await repository.marcar_bandeja(
-        db,
-        bandeja_id=bandeja_id,
-        taller_id=taller_id,
-        estado=EstadoBandejaTallerEnum.ACEPTADA,
-        respondido_at=now,
-    )
-    if affected == 0:
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="La solicitud ya no está pendiente de respuesta.",
-        )
-
-    await repository.expirar_otras_bandeja_pendientes(
-        db,
-        solicitud_id=bandeja.solicitud_id,
-        bandeja_ganadora_id=bandeja_id,
-        respondido_at=now,
-    )
-
-    estado_anterior = se.estado
-    se.taller_id = taller_id
-    if estado_anterior in (
-        EstadoSolicitudSeguimientoEnum.REGISTRADA,
-        EstadoSolicitudSeguimientoEnum.EN_REVISION,
-    ):
-        se.estado = EstadoSolicitudSeguimientoEnum.TALLER_ASIGNADO
-        await emergencias_repository.insert_historial_estado(
-            db,
-            solicitud_id=se.id,
-            estado_anterior=estado_anterior,
-            estado_nuevo=EstadoSolicitudSeguimientoEnum.TALLER_ASIGNADO,
-            usuario_id=user.id,
-            observacion="Taller acepta asistencia",
-            created_at=now,
-        )
-    se.updated_at = now
-
-    disp.servicios_activos = int(disp.servicios_activos) + 1
-    disp.updated_by_usuario_id = user.id
-    disp.updated_at = now
-
-    await registrar_accion(
-        db,
-        "taller_emergencias",
-        "solicitud_taller_bandeja",
-        AccionBitacoraEnum.ACTUALIZAR,
-        descripcion=f"Aceptación bandeja_id={bandeja_id} solicitud_id={bandeja.solicitud_id}",
-        usuario_id=user.id,
-        entidad_id=bandeja_id,
-    )
-
-    await notificaciones_service.notificar_cliente_solicitud_emergencia(
-        db,
-        solicitud=se,
-        tipo=TipoNotificacionEnum.TALLER_ASIGNADO,
-        titulo="Taller asignado",
-        mensaje="Un taller aceptó atender tu emergencia. Puedes ver el detalle en la app.",
-    )
-
-    return await obtener_detalle_bandeja(taller_id, bandeja_id, db)

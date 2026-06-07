@@ -10,6 +10,20 @@ from app.modules.acceso_y_administracion.roles.models import Rol, UsuarioRol
 from app.modules.talleres_y_tecnicos.talleres.models import Taller
 
 from . import service
+from app.modules.talleres_y_tecnicos.talleres import service as talleres_service
+from app.modules.talleres_y_tecnicos.talleres.schemas import (
+    ActualizarGruaIn,
+    ActualizarServiciosTallerIn,
+    ServicioCatalogoRead,
+)
+
+from app.modules.cotizaciones import service as cotizaciones_service
+from app.modules.cotizaciones.schemas import (
+    CotizacionContextoRead,
+    CotizacionCreateIn,
+    CotizacionRead,
+)
+
 from .schemas import (
     RegistroTallerIn,
     MiTallerRead,
@@ -121,3 +135,91 @@ async def actualizar_tecnico(
 ):
     user, taller = ctx
     return await service.update_tecnico_portal(tecnico_id, taller.id, body, user.id, db)
+
+
+@router.get("/servicios", response_model=list[ServicioCatalogoRead])
+async def listar_mis_servicios(
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+):
+    """Servicios que ofrece el taller del responsable autenticado."""
+    _, taller = ctx
+    return await talleres_service.get_servicios_taller(taller.id, db)
+
+
+@router.put("/servicios", response_model=list[ServicioCatalogoRead])
+async def actualizar_mis_servicios(
+    body: ActualizarServiciosTallerIn,
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+):
+    """Actualiza el catálogo de servicios del taller autenticado (full-replace)."""
+    user, taller = ctx
+    return await talleres_service.actualizar_servicios_taller(
+        taller.id, body.servicio_ids, db, user.id
+    )
+
+
+@router.patch("/grua", response_model=MiTallerRead)
+async def actualizar_mi_grua(
+    body: ActualizarGruaIn,
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+):
+    """Activa o desactiva el servicio de grúa del taller autenticado."""
+    user, taller = ctx
+    await talleres_service.actualizar_grua(taller.id, body.tiene_grua, db, user.id)
+    return await service.get_mi_taller(user.id, db)
+
+
+@router.get(
+    "/cotizaciones/solicitudes/{solicitud_id}",
+    response_model=list[CotizacionRead],
+)
+async def listar_cotizaciones_solicitud(
+    solicitud_id: int,
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+):
+    """Cotizaciones de una solicitud (portal taller; usa token /app/taller)."""
+    _ = ctx
+    return await cotizaciones_service.listar_cotizaciones(solicitud_id=solicitud_id, db=db)
+
+
+@router.get(
+    "/cotizaciones/solicitudes/{solicitud_id}/contexto-oferta",
+    response_model=CotizacionContextoRead,
+)
+async def contexto_oferta_cotizacion(
+    solicitud_id: int,
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+):
+    """Distancia y servicios del taller autenticado para armar la oferta."""
+    _, taller = ctx
+    return await cotizaciones_service.contexto_oferta_taller(
+        solicitud_id=solicitud_id,
+        taller_id=taller.id,
+        db=db,
+    )
+
+
+@router.post(
+    "/cotizaciones/solicitudes/{solicitud_id}",
+    response_model=CotizacionRead,
+    status_code=status.HTTP_201_CREATED,
+)
+async def proponer_cotizacion_solicitud(
+    solicitud_id: int,
+    body: CotizacionCreateIn,
+    ctx: tuple[Usuario, Taller] = Depends(require_taller_responsable),
+    db: AsyncSession = Depends(get_db),
+):
+    """Envía cotización al marketplace para la solicitud indicada."""
+    _, taller = ctx
+    return await cotizaciones_service.proponer_cotizacion(
+        solicitud_id=solicitud_id,
+        taller_id=taller.id,
+        body=body,
+        db=db,
+    )

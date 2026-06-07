@@ -24,7 +24,7 @@ export class AdminApiService {
   private readonly base = environment.apiUrl;
 
   listUsuarios(): Observable<UsuarioListDto[]> {
-    return this.http.get<UsuarioListDto[]>(`${this.base}/usuarios`);
+    return this.http.get<UsuarioListDto[]>(`${this.base}/usuarios/`);
   }
 
   getUsuario(id: number): Observable<UsuarioListDto> {
@@ -32,7 +32,7 @@ export class AdminApiService {
   }
 
   createUsuario(body: UsuarioCreatePayload): Observable<UsuarioListDto> {
-    return this.http.post<UsuarioListDto>(`${this.base}/usuarios`, body);
+    return this.http.post<UsuarioListDto>(`${this.base}/usuarios/`, body);
   }
 
   updateUsuario(id: number, body: UsuarioUpdatePayload): Observable<UsuarioListDto> {
@@ -51,11 +51,11 @@ export class AdminApiService {
   }
 
   listRoles(): Observable<RolDto[]> {
-    return this.http.get<RolDto[]>(`${this.base}/roles`);
+    return this.http.get<RolDto[]>(`${this.base}/roles/`);
   }
 
   createRol(nombre: string, descripcion: string | null): Observable<RolDto> {
-    return this.http.post<RolDto>(`${this.base}/roles`, { nombre, descripcion });
+    return this.http.post<RolDto>(`${this.base}/roles/`, { nombre, descripcion });
   }
 
   getRolPermisoIds(rolId: number): Observable<RolPermisosDto> {
@@ -69,7 +69,7 @@ export class AdminApiService {
   }
 
   listPermisos(): Observable<PermisoDto[]> {
-    return this.http.get<PermisoDto[]>(`${this.base}/permisos`);
+    return this.http.get<PermisoDto[]>(`${this.base}/permisos/`);
   }
 
   listBitacora(filters: {
@@ -91,11 +91,11 @@ export class AdminApiService {
     if (filters.hasta) params = params.set('hasta', filters.hasta);
     if (filters.limit != null) params = params.set('limit', String(filters.limit));
     if (filters.offset != null) params = params.set('offset', String(filters.offset));
-    return this.http.get<BitacoraDto[]>(`${this.base}/bitacora`, { params });
+    return this.http.get<BitacoraDto[]>(`${this.base}/bitacora/`, { params });
   }
 
   listTalleres(): Observable<TallerDto[]> {
-    return this.http.get<TallerDto[]>(`${this.base}/talleres`);
+    return this.http.get<TallerDto[]>(`${this.base}/talleres/`);
   }
 
   getTaller(id: number): Observable<TallerDto> {
@@ -103,7 +103,7 @@ export class AdminApiService {
   }
 
   createTaller(body: TallerCreatePayload): Observable<TallerDto> {
-    return this.http.post<TallerDto>(`${this.base}/talleres`, body);
+    return this.http.post<TallerDto>(`${this.base}/talleres/`, body);
   }
 
   updateTaller(id: number, body: TallerUpdatePayload): Observable<TallerDto> {

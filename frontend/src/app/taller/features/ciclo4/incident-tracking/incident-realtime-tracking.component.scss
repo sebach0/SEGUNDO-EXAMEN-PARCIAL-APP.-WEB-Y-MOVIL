@@ -1,0 +1,238 @@
+@use '../../../../admin/admin-theme' as t;
+@use '../../../../admin/admin-ui' as ui;
+
+.irt {
+  padding: calc(t.$ev-space * 2);
+
+  // ── WebSocket status bar ─────────────────────────────────────────────────
+
+  &__ws-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.45rem 0.85rem;
+    border-radius: t.$ev-radius-sm;
+    font-size: 0.775rem;
+    font-weight: 600;
+    margin-bottom: 1.25rem;
+    width: fit-content;
+
+    &.ws--connected {
+      background: t.$ev-success-bg;
+      border: 1px solid t.$ev-success-border;
+      color: #56d364;
+    }
+
+    &.ws--reconnecting {
+      background: rgba(210, 153, 34, 0.12);
+      border: 1px solid rgba(210, 153, 34, 0.35);
+      color: #e3b341;
+    }
+
+    &.ws--disconnected {
+      background: t.$ev-danger-bg;
+      border: 1px solid t.$ev-danger-border;
+      color: t.$ev-danger-text;
+    }
+  }
+
+  &__ws-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+
+    .ws--connected & {
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+  }
+
+  // ── Header ───────────────────────────────────────────────────────────────
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+    gap: 1rem;
+  }
+
+  &__title {
+    margin: 0 0 0.25rem;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: t.$ev-text;
+  }
+
+  &__desc {
+    margin: 0;
+    color: t.$ev-muted;
+    font-size: 0.875rem;
+  }
+
+  &__back {
+    color: t.$ev-link;
+    font-size: 0.8125rem;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__loading,
+  &__alert {
+    font-size: 0.875rem;
+    padding: 0.75rem 1rem;
+    border-radius: t.$ev-radius-sm;
+    margin-bottom: 1rem;
+  }
+
+  &__loading {
+    color: t.$ev-muted;
+  }
+
+  &__alert {
+    @include ui.ev-alert-error;
+  }
+
+  &__cancelled {
+    @include ui.ev-alert-info;
+    font-size: 0.875rem;
+  }
+
+  // ── Stepper ───────────────────────────────────────────────────────────────
+
+  &__stepper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+  }
+
+  &__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    min-width: 80px;
+    position: relative;
+
+    &:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 9px;
+      left: calc(50% + 9px);
+      right: calc(-50% + 9px);
+      height: 2px;
+      background: t.$ev-border;
+    }
+
+    &--done::after {
+      background: t.$ev-cyan !important;
+    }
+
+    &--done &-dot {
+      background: t.$ev-cyan;
+      border-color: t.$ev-cyan;
+    }
+
+    &--active &-dot {
+      background: t.$ev-focus;
+      border-color: t.$ev-focus;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+    }
+
+    &-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid t.$ev-border;
+      background: t.$ev-surface-2;
+      margin-bottom: 0.4rem;
+      z-index: 1;
+      flex-shrink: 0;
+    }
+
+    &-label {
+      font-size: 0.65rem;
+      color: t.$ev-muted;
+      text-align: center;
+      line-height: 1.2;
+
+      .irt__step--active & {
+        color: t.$ev-text;
+        font-weight: 700;
+      }
+    }
+  }
+
+  // ── Cards de datos ────────────────────────────────────────────────────────
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  &__card {
+    @include ui.ev-card;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__card-label {
+    font-size: 0.65rem;
+    color: t.$ev-muted;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+
+  &__card-value {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: t.$ev-text;
+  }
+
+  // ── Tracking GPS ──────────────────────────────────────────────────────────
+
+  &__tracking {
+    @include ui.ev-card;
+    margin-bottom: 1.25rem;
+  }
+
+  &__section-title {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: t.$ev-text;
+  }
+
+  &__coords {
+    margin: 0 0 0.5rem;
+    font-size: 0.8125rem;
+    color: t.$ev-muted;
+    font-family: monospace;
+  }
+
+  &__map-link {
+    font-size: 0.8rem;
+    color: t.$ev-link;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}

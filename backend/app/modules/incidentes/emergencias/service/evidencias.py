@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
 
-from fastapi import HTTPException, Request, UploadFile, status
+from fastapi import BackgroundTasks, HTTPException, Request, UploadFile, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.core.database import AsyncSessionLocal
 from app.core.timeutil import utc_now_naive
 from app.modules.ai.services.post_create import enrich_solicitud_ai_after_create
 from app.modules.acceso_y_administracion.bitacora.models import AccionBitacoraEnum
@@ -19,6 +21,35 @@ from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
 from . import helpers
 
+_log = logging.getLogger(__name__)
+
+
+async def _enrich_solicitud_ai_background(solicitud_id: int, cliente_id: int) -> None:
+    """Enriquecimiento IA fuera del request HTTP (evita timeouts en subida de evidencias)."""
+    async with AsyncSessionLocal() as db:
+        try:
+            await enrich_solicitud_ai_after_create(
+                db, solicitud_id=solicitud_id, cliente_id=cliente_id
+            )
+            await db.commit()
+        except Exception:
+            await db.rollback()
+            _log.exception(
+                "Enriquecimiento IA en background falló para solicitud_id=%s", solicitud_id
+            )
+
+
+def _schedule_ai_enrich(
+    background_tasks: BackgroundTasks | None,
+    *,
+    solicitud_id: int,
+    cliente_id: int,
+) -> None:
+    if background_tasks is not None:
+        background_tasks.add_task(_enrich_solicitud_ai_background, solicitud_id, cliente_id)
+    else:
+        asyncio.create_task(_enrich_solicitud_ai_background(solicitud_id, cliente_id))
+
 
 async def agregar_evidencia(
     user: Usuario,
@@ -26,6 +57,8 @@ async def agregar_evidencia(
     solicitud_id: int,
     body: EvidenciaCreateIn,
     db: AsyncSession,
+    *,
+    background_tasks: BackgroundTasks | None = None,
 ) -> SolicitudEmergenciaDetailRead:
     s = await repository.get_solicitud_for_cliente(db, solicitud_id=solicitud_id, cliente_id=cliente_id)
     if s is None:
@@ -55,12 +88,12 @@ async def agregar_evidencia(
         entidad_id=solicitud_id,
     )
 
-    await enrich_solicitud_ai_after_create(db, solicitud_id=solicitud_id, cliente_id=cliente_id)
-
     s2 = await repository.get_solicitud_for_cliente(
         db, solicitud_id=solicitud_id, cliente_id=cliente_id, with_children=True
     )
     assert s2 is not None
+
+    _schedule_ai_enrich(background_tasks, solicitud_id=solicitud_id, cliente_id=cliente_id)
     return helpers.to_detail(s2)
 
 
@@ -72,6 +105,8 @@ async def agregar_evidencia_archivo(
     tipo: TipoEvidenciaSolicitudEnum,
     file: UploadFile,
     db: AsyncSession,
+    *,
+    background_tasks: BackgroundTasks | None = None,
 ) -> SolicitudEmergenciaDetailRead:
     """CU13/CU14 — sube el binario al servidor y guarda URL pública bajo /api/media/evidencias/."""
     s = await repository.get_solicitud_for_cliente(db, solicitud_id=solicitud_id, cliente_id=cliente_id)
@@ -144,10 +179,10 @@ async def agregar_evidencia_archivo(
         entidad_id=solicitud_id,
     )
 
-    await enrich_solicitud_ai_after_create(db, solicitud_id=solicitud_id, cliente_id=cliente_id)
-
     s2 = await repository.get_solicitud_for_cliente(
         db, solicitud_id=solicitud_id, cliente_id=cliente_id, with_children=True
     )
     assert s2 is not None
+
+    _schedule_ai_enrich(background_tasks, solicitud_id=solicitud_id, cliente_id=cliente_id)
     return helpers.to_detail(s2)

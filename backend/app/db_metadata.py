@@ -13,3 +13,9 @@ from app.modules.comunicacion_y_notificaciones.notificaciones import models as _
 from app.modules.comunicacion_y_notificaciones.mensajes_solicitud import models as _mensajes_solicitud_models  # noqa: F401
 from app.modules.comunicacion_y_notificaciones.dispositivos_push import models as _dispositivos_push_models  # noqa: F401
 from app.modules.pagos_y_comisiones.pagos import models as _pagos_models  # noqa: F401
+# ── Ciclo 4 — orden: tenants primero (referenciado por el resto) ──────────────
+from app.modules.ciclo4.tenants import models as _tenants_models          # noqa: F401
+from app.modules.ciclo4.incidentes import models as _ciclo4_inc_models    # noqa: F401
+from app.modules.ciclo4.sync import models as _ciclo4_sync_models         # noqa: F401
+# ── Ciclo 4 Segunda Fase ───────────────────────────────────────────────────────
+from app.modules.cotizaciones import models as _cotizaciones_models        # noqa: F401

@@ -7,7 +7,7 @@ from __future__ import annotations
 # =========================================================
 import enum
 from datetime import datetime
-from sqlalchemy import Integer, String, DateTime, Enum as SAEnum
+from sqlalchemy import ForeignKey, Integer, String, DateTime, Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 
@@ -33,6 +33,10 @@ class Usuario(Base):
     __tablename__ = "usuarios"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    # tenant_id: NULL para usuarios Ciclo 1-3; la migración 0015 lo rellena con el tenant principal.
+    tenant_id: Mapped[int | None] = mapped_column(
+        ForeignKey("tenants.id", ondelete="SET NULL"), nullable=True
+    )
     nombres: Mapped[str] = mapped_column(String(100), nullable=False)
     apellidos: Mapped[str] = mapped_column(String(100), nullable=False)
     username: Mapped[str | None] = mapped_column(String(50), unique=True)

@@ -7,11 +7,7 @@ export const adminAuthGuard: CanActivateFn = () => {
   const auth = inject(AdminAuthService);
   const router = inject(Router);
 
-  if (auth.isAdminSession()) {
-    return true;
-  }
-
-  return auth.hydrateMeIfNeeded().pipe(
+  return auth.ensureAdminSession().pipe(
     take(1),
     map((ok) => {
       if (ok) return true;
