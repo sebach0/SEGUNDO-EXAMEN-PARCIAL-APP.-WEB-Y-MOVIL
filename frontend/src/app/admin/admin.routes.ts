@@ -102,6 +102,13 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.AdminSlaComponent,
           ),
       },
+      {
+        path: 'emergencias',
+        loadComponent: () =>
+          import('./features/emergencias/admin-emergencias.component').then(
+            (m) => m.AdminEmergenciasComponent,
+          ),
+      },
     ],
   },
   {

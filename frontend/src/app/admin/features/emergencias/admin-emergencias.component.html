@@ -1,0 +1,107 @@
+<div class="page">
+  <div class="page__header">
+    <div>
+      <h2 class="page__title">Emergencias</h2>
+      <p class="page__subtitle">Panel de seguimiento de todas las solicitudes de emergencia</p>
+    </div>
+    <button class="btn btn--outline" (click)="reload()" [disabled]="loading">
+      {{ loading ? 'Cargando…' : 'Actualizar' }}
+    </button>
+  </div>
+
+  <div *ngIf="error" class="alert alert--error">{{ error }}</div>
+
+  <!-- Tarjetas de resumen -->
+  <div class="summary-cards" *ngIf="!loading">
+    <div class="card" (click)="setTab('todas')" [class.card--active]="activeTab === 'todas'">
+      <span class="card__value">{{ count('todas') }}</span>
+      <span class="card__label">Total</span>
+    </div>
+    <div class="card card--nueva" (click)="setTab('nuevas')" [class.card--active]="activeTab === 'nuevas'">
+      <span class="card__value">{{ count('nuevas') }}</span>
+      <span class="card__label">Nuevas</span>
+    </div>
+    <div class="card card--proceso" (click)="setTab('en_proceso')" [class.card--active]="activeTab === 'en_proceso'">
+      <span class="card__value">{{ count('en_proceso') }}</span>
+      <span class="card__label">En proceso</span>
+    </div>
+    <div class="card card--finalizada" (click)="setTab('finalizadas')" [class.card--active]="activeTab === 'finalizadas'">
+      <span class="card__value">{{ count('finalizadas') }}</span>
+      <span class="card__label">Finalizadas</span>
+    </div>
+    <div class="card card--cancelada" (click)="setTab('canceladas')" [class.card--active]="activeTab === 'canceladas'">
+      <span class="card__value">{{ count('canceladas') }}</span>
+      <span class="card__label">Canceladas</span>
+    </div>
+  </div>
+
+  <!-- Barra de filtro -->
+  <div class="toolbar" *ngIf="!loading">
+    <div class="tabs">
+      <button class="tab" [class.tab--active]="activeTab === 'todas'" (click)="setTab('todas')">Todas</button>
+      <button class="tab tab--nueva" [class.tab--active]="activeTab === 'nuevas'" (click)="setTab('nuevas')">Nuevas</button>
+      <button class="tab tab--proceso" [class.tab--active]="activeTab === 'en_proceso'" (click)="setTab('en_proceso')">En proceso</button>
+      <button class="tab tab--finalizada" [class.tab--active]="activeTab === 'finalizadas'" (click)="setTab('finalizadas')">Finalizadas</button>
+      <button class="tab tab--cancelada" [class.tab--active]="activeTab === 'canceladas'" (click)="setTab('canceladas')">Canceladas</button>
+    </div>
+    <input
+      class="input input--search"
+      type="text"
+      placeholder="Buscar por ID, cliente, taller o descripción…"
+      [(ngModel)]="search"
+    />
+    <span class="toolbar__count">{{ filtered.length }} resultado(s)</span>
+  </div>
+
+  <div *ngIf="loading" class="state state--loading">Cargando emergencias…</div>
+
+  <div *ngIf="!loading && filtered.length === 0 && !error" class="state state--empty">
+    No hay emergencias para mostrar.
+  </div>
+
+  <!-- Tabla -->
+  <div *ngIf="!loading && filtered.length > 0" class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Estado</th>
+          <th>Cliente</th>
+          <th>Taller asignado</th>
+          <th>Descripción</th>
+          <th>Fecha solicitud</th>
+          <th>Última actualización</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let e of filtered" [class.row--cancelada]="e.estado === 'CANCELADA'">
+          <td class="td--id">{{ e.id }}</td>
+          <td>
+            <span class="badge" [ngClass]="estadoBadgeClass(e.estado)">
+              {{ estadoLabel(e.estado) }}
+            </span>
+          </td>
+          <td>{{ e.cliente_nombre ?? '—' }}</td>
+          <td>{{ e.taller_nombre ?? '—' }}</td>
+          <td class="td--desc">
+            <span *ngIf="e.descripcion_texto">{{ e.descripcion_texto }}</span>
+            <span *ngIf="!e.descripcion_texto" class="muted">Sin descripción</span>
+            <span *ngIf="e.estado === 'CANCELADA' && e.motivo_cancelacion" class="motivo">
+              Motivo: {{ e.motivo_cancelacion }}
+            </span>
+          </td>
+          <td class="td--date">{{ e.created_at | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td class="td--date">
+            <ng-container [ngSwitch]="e.estado">
+              <span *ngSwitchCase="'FINALIZADA'">{{ e.finalizada_at | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngSwitchCase="'CANCELADA'">{{ e.cancelado_en | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngSwitchCase="'EN_ATENCION'">{{ e.en_atencion_en | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngSwitchCase="'EN_CAMINO'">{{ e.en_camino_en | date:'dd/MM/yyyy HH:mm' }}</span>
+              <span *ngSwitchDefault>{{ e.asignado_en ? (e.asignado_en | date:'dd/MM/yyyy HH:mm') : '—' }}</span>
+            </ng-container>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

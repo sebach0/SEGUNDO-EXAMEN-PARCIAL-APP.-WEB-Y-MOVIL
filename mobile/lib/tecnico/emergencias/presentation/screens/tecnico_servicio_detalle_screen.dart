@@ -158,6 +158,13 @@ class _DetalleBody extends StatelessWidget {
         ),
         const SizedBox(height: 24),
         _BigAction(
+          icon: Icons.receipt_long_rounded,
+          label: 'Comprobante y cobro',
+          onPressed: () =>
+              context.push('/tecnico/app/servicios/${servicio.solicitudId}/comprobante'),
+        ),
+        const SizedBox(height: 12),
+        _BigAction(
           icon: Icons.map_outlined,
           label: 'Ver ubicación del cliente',
           onPressed: () => context.push('/tecnico/app/servicios/${servicio.solicitudId}/ubicacion'),

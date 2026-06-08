@@ -4,7 +4,6 @@ from __future__ import annotations
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.modules.ciclo4.deps import _DEFAULT_TENANT_ID
 from app.modules.talleres_y_tecnicos.talleres.models import (
     EstadoTallerEnum,
     ServicioCatalogo,
@@ -50,10 +49,8 @@ async def listar_taller_ids_elegibles(
     Talleres activos del tenant que ofrecen servicios compatibles con la categoría IA.
     Si la categoría es OTROS o desconocida, incluye todos los talleres activos del tenant.
     """
-    tid = tenant_id or _DEFAULT_TENANT_ID
     q = select(Taller.id).where(
         Taller.estado == EstadoTallerEnum.ACTIVO,
-        (Taller.tenant_id == tid) | (Taller.tenant_id.is_(None)),
     )
     res = await db.execute(q)
     taller_ids = [row[0] for row in res.all()]

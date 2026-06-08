@@ -54,6 +54,8 @@ class TenantMemberWorkshopRead(BaseModel):
     nombre_comercial: str
     ciudad: str
     estado: str
+    latitud: float | None = None
+    longitud: float | None = None
 
 
 class TenantMemberTechnicianRead(BaseModel):

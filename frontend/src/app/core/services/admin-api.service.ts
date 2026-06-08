@@ -121,6 +121,14 @@ export class AdminApiService {
     return this.http.put<TallerDto>(`${this.base}/talleres/${id}`, body);
   }
 
+  listAdminEmergencias(estado?: string): Observable<import('../models/admin-api.models').EmergenciaAdminDto[]> {
+    let params = new HttpParams();
+    if (estado) params = params.set('estado', estado);
+    return this.http.get<import('../models/admin-api.models').EmergenciaAdminDto[]>(
+      `${this.base}/incidents/admin/emergencias`, { params }
+    );
+  }
+
   getFinanzasResumen(filters?: { desde?: string; hasta?: string }): Observable<AdminFinanzasResumen> {
     let params = new HttpParams();
     if (filters?.desde) params = params.set('desde', filters.desde);

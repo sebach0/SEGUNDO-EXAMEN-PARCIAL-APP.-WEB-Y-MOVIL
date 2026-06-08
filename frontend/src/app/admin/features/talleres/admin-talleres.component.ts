@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { OsmMapPickerComponent } from '../../../shared/components/osm-map-picker/osm-map-picker.component';
 import type {
   EstadoTaller,
   TallerCreatePayload,
@@ -14,7 +15,7 @@ import type {
 @Component({
   selector: 'app-admin-talleres',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, OsmMapPickerComponent],
   templateUrl: './admin-talleres.component.html',
   styleUrl: './admin-talleres.component.scss',
 })

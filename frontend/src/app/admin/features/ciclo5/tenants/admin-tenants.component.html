@@ -41,7 +41,10 @@
       <tbody>
         <tr *ngFor="let t of filtered">
           <td>{{ t.id }}</td>
-          <td class="td--bold">{{ t.nombre }}</td>
+          <td class="td--bold">
+            <span class="tenant-dot" [style.background]="colorForTenant(t.id)"></span>
+            {{ t.nombre }}
+          </td>
           <td><code class="slug">{{ t.slug }}</code></td>
           <td>
             <span class="badge" [ngClass]="estadoBadgeClass(t.estado)">{{ t.estado }}</span>
@@ -69,6 +72,48 @@
       </tbody>
     </table>
   </div>
+
+  <!-- Mapa de ubicaciones de talleres por tenant -->
+  <div class="map-section">
+    <div class="map-section__header">
+      <div>
+        <h3 class="map-section__title">Ubicación de talleres por tenant</h3>
+        <p class="map-section__hint">
+          {{ talleresConUbicacion }} de {{ talleres.length }} talleres tienen ubicación registrada.
+          Haz clic en un marcador para ver su descripción y tenant.
+        </p>
+      </div>
+    </div>
+
+    <!-- Fila de filtro + leyenda -->
+    <div class="map-controls" *ngIf="tenants.length > 0">
+      <div class="map-filter">
+        <label class="map-filter__label">Filtrar por tenant:</label>
+        <select
+          class="input map-filter__select"
+          (change)="applyMapFilter($any($event.target).value)"
+        >
+          <option value="all">Todos los tenants</option>
+          <option *ngFor="let t of tenants" [value]="t.id">{{ t.nombre }}</option>
+          <option value="none">Sin tenant asignado</option>
+        </select>
+      </div>
+
+      <div class="map-legend">
+        <span class="legend-item" *ngFor="let t of tenants">
+          <span class="legend-dot" [style.background]="colorForTenant(t.id)"></span>
+          {{ t.nombre }}
+        </span>
+        <span class="legend-item legend-item--muted">
+          <span class="legend-dot" style="background:#64748b"></span>
+          Sin tenant
+        </span>
+      </div>
+    </div>
+
+    <div #tenantsMap class="tenants-map"></div>
+  </div>
+
 </div>
 
 <!-- Modal: crear tenant -->

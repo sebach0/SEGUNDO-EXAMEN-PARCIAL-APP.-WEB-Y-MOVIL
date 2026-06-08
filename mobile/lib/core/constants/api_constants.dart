@@ -32,6 +32,15 @@ class ApiConstants {
   static String appTecnicoEmergenciaEstado(int solicitudId) =>
       '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/solicitudes/$solicitudId/estado';
 
+  static String appTecnicoEmergenciaComprobante(int solicitudId) =>
+      '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/solicitudes/$solicitudId/comprobante';
+
+  static String appTecnicoEmergenciaCobrar(int solicitudId) =>
+      '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/solicitudes/$solicitudId/cobrar';
+
+  static String appTecnicoEmergenciaCotizacionItems(int solicitudId) =>
+      '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/solicitudes/$solicitudId/cotizacion/items';
+
   static String appTecnicoEmergenciaMensajes(int solicitudId) =>
       '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/$solicitudId/mensajes';
 

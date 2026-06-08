@@ -10,7 +10,7 @@
   <ng-container *ngIf="!loading && tenant">
     <div class="page__header">
       <div>
-        <h2 class="page__title">Asignaciones — {{ tenant.nombre }}</h2>
+        <h2 class="page__title">Talleres — {{ tenant.nombre }}</h2>
         <p class="page__subtitle">
           CU44 · Tenant <code class="slug">{{ tenant.slug }}</code> ·
           <span class="badge" [class.badge--activo]="tenant.estado === 'ACTIVO'"
@@ -19,131 +19,83 @@
       </div>
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab" [class.tab--active]="activeTab === 'usuarios'" (click)="setTab('usuarios')">
-        Usuarios ({{ members?.usuarios?.length ?? 0 }})
-      </button>
-      <button class="tab" [class.tab--active]="activeTab === 'talleres'" (click)="setTab('talleres')">
-        Talleres ({{ members?.talleres?.length ?? 0 }})
-      </button>
-      <button class="tab" [class.tab--active]="activeTab === 'tecnicos'" (click)="setTab('tecnicos')">
-        Técnicos ({{ members?.tecnicos?.length ?? 0 }})
-      </button>
-    </div>
+    <!-- Paneles de asignación -->
+    <div class="two-col">
 
-    <!-- Tab: Usuarios -->
-    <div *ngIf="activeTab === 'usuarios'" class="tab-content">
-      <div class="two-col">
-        <!-- Asignados -->
-        <div class="panel">
-          <h3 class="panel__title">Usuarios asignados</h3>
-          <div *ngIf="members?.usuarios?.length === 0" class="empty-state">Sin usuarios asignados.</div>
-          <table *ngIf="(members?.usuarios?.length ?? 0) > 0" class="table">
-            <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Estado</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let u of members?.usuarios">
-                <td>{{ u.id }}</td>
-                <td>{{ u.nombres }} {{ u.apellidos }}</td>
-                <td>{{ u.email }}</td>
-                <td><span class="pill">{{ u.estado }}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Disponibles para asignar -->
-        <div class="panel">
-          <h3 class="panel__title">Asignar usuarios</h3>
-          <div *ngIf="availableUsuarios.length === 0" class="empty-state">Todos los usuarios ya están asignados.</div>
-          <div *ngIf="availableUsuarios.length > 0">
-            <p class="panel__hint">Selecciona uno o más usuarios y presiona Asignar.</p>
-            <div class="check-list">
-              <label *ngFor="let u of availableUsuarios" class="check-item">
-                <input
-                  type="checkbox"
-                  [checked]="selectedUserIds.has(u.id)"
-                  (change)="toggleUser(u.id)"
-                />
-                <span>{{ u.nombres }} {{ u.apellidos }} <small>({{ u.email }})</small></span>
-              </label>
-            </div>
-            <button
-              class="btn btn--primary mt"
-              [disabled]="busy || selectedUserIds.size === 0"
-              (click)="assignUsers()"
-            >
-              {{ busy ? 'Asignando…' : 'Asignar seleccionados (' + selectedUserIds.size + ')' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab: Talleres -->
-    <div *ngIf="activeTab === 'talleres'" class="tab-content">
-      <div class="two-col">
-        <div class="panel">
-          <h3 class="panel__title">Talleres asignados</h3>
-          <div *ngIf="members?.talleres?.length === 0" class="empty-state">Sin talleres asignados.</div>
-          <table *ngIf="(members?.talleres?.length ?? 0) > 0" class="table">
-            <thead><tr><th>ID</th><th>Nombre</th><th>Ciudad</th><th>Estado</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let t of members?.talleres">
-                <td>{{ t.id }}</td>
-                <td>{{ t.nombre_comercial }}</td>
-                <td>{{ t.ciudad }}</td>
-                <td><span class="pill">{{ t.estado }}</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="panel">
-          <h3 class="panel__title">Asignar talleres</h3>
-          <div *ngIf="availableTalleres.length === 0" class="empty-state">Todos los talleres ya están asignados.</div>
-          <div *ngIf="availableTalleres.length > 0">
-            <p class="panel__hint">Selecciona talleres y presiona Asignar.</p>
-            <div class="check-list">
-              <label *ngFor="let t of availableTalleres" class="check-item">
-                <input
-                  type="checkbox"
-                  [checked]="selectedWorkshopIds.has(t.id)"
-                  (change)="toggleWorkshop(t.id)"
-                />
-                <span>{{ t.nombre_comercial }} <small>({{ t.ciudad }})</small></span>
-              </label>
-            </div>
-            <button
-              class="btn btn--primary mt"
-              [disabled]="busy || selectedWorkshopIds.size === 0"
-              (click)="assignWorkshops()"
-            >
-              {{ busy ? 'Asignando…' : 'Asignar seleccionados (' + selectedWorkshopIds.size + ')' }}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab: Técnicos -->
-    <div *ngIf="activeTab === 'tecnicos'" class="tab-content">
+      <!-- Talleres asignados -->
       <div class="panel">
-        <h3 class="panel__title">Técnicos asignados</h3>
-        <div *ngIf="members?.tecnicos?.length === 0" class="empty-state">Sin técnicos asignados directamente.</div>
-        <table *ngIf="(members?.tecnicos?.length ?? 0) > 0" class="table">
-          <thead><tr><th>ID</th><th>Usuario ID</th><th>Taller ID</th><th>Estado</th></tr></thead>
+        <h3 class="panel__title">Talleres asignados ({{ members?.talleres?.length ?? 0 }})</h3>
+        <div *ngIf="members?.talleres?.length === 0" class="empty-state">Sin talleres asignados.</div>
+        <table *ngIf="(members?.talleres?.length ?? 0) > 0" class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Ciudad</th>
+              <th>Estado</th>
+              <th>Ubicación</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr *ngFor="let tec of members?.tecnicos">
-              <td>{{ tec.id }}</td>
-              <td>{{ tec.usuario_id }}</td>
-              <td>{{ tec.taller_id }}</td>
-              <td><span class="pill">{{ tec.estado }}</span></td>
+            <tr *ngFor="let t of members?.talleres">
+              <td>{{ t.id }}</td>
+              <td>{{ t.nombre_comercial }}</td>
+              <td>{{ t.ciudad }}</td>
+              <td><span class="pill">{{ t.estado }}</span></td>
+              <td>
+                <span *ngIf="t.latitud != null && t.longitud != null" class="coords">
+                  {{ t.latitud | number:'1.4-4' }}, {{ t.longitud | number:'1.4-4' }}
+                </span>
+                <span *ngIf="t.latitud == null || t.longitud == null" class="no-coords">Sin ubicación</span>
+              </td>
             </tr>
           </tbody>
         </table>
-        <p class="panel__hint mt">Los técnicos heredan el tenant de su taller. Asigna el taller al tenant para incluir sus técnicos.</p>
       </div>
+
+      <!-- Asignar talleres disponibles -->
+      <div class="panel">
+        <h3 class="panel__title">Asignar talleres</h3>
+        <div *ngIf="availableTalleres.length === 0" class="empty-state">Todos los talleres ya están asignados.</div>
+        <div *ngIf="availableTalleres.length > 0">
+          <p class="panel__hint">Selecciona talleres y presiona Asignar.</p>
+          <div class="check-list">
+            <label *ngFor="let t of availableTalleres" class="check-item">
+              <input
+                type="checkbox"
+                [checked]="selectedWorkshopIds.has(t.id)"
+                (change)="toggleWorkshop(t.id)"
+              />
+              <span>
+                {{ t.nombre_comercial }}
+                <small>({{ t.ciudad }})</small>
+                <span *ngIf="t.latitud != null" class="loc-dot" title="Tiene ubicación registrada">&#9679;</span>
+              </span>
+            </label>
+          </div>
+          <button
+            class="btn btn--primary mt"
+            [disabled]="busy || selectedWorkshopIds.size === 0"
+            (click)="assignWorkshops()"
+          >
+            {{ busy ? 'Asignando…' : 'Asignar seleccionados (' + selectedWorkshopIds.size + ')' }}
+          </button>
+        </div>
+      </div>
+
     </div>
+
+    <!-- Mapa de ubicaciones -->
+    <div class="map-section">
+      <div class="map-section__header">
+        <h3 class="map-section__title">Mapa de talleres asignados</h3>
+        <p class="map-section__hint">
+          Mostrando {{ talleresConUbicacion }} de {{ members?.talleres?.length ?? 0 }} talleres con ubicación registrada.
+          Los talleres sin coordenadas no aparecen en el mapa.
+        </p>
+      </div>
+      <div #tallerMap class="taller-map"></div>
+    </div>
+
   </ng-container>
 </div>

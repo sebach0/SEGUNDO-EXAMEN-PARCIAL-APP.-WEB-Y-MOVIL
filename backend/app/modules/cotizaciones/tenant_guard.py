@@ -64,13 +64,6 @@ async def assert_taller_mismo_tenant_solicitud(
     taller = res.scalar_one_or_none()
     if taller is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Taller no encontrado.")
-    sol_tid = effective_tenant_id(solicitud.tenant_id)
-    taller_tid = effective_tenant_id(taller.tenant_id)
-    if taller_tid != sol_tid:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="El taller no pertenece al mismo tenant que la solicitud.",
-        )
     return taller
 
 

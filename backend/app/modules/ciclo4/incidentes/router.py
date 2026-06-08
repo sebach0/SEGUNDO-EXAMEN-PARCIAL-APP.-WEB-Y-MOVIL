@@ -386,3 +386,73 @@ async def listar_solicitudes_activas_admin(
         for s in solicitudes
     ]
 
+
+@incidents_router.get(
+    "/admin/emergencias",
+    dependencies=[Depends(require_permission("incidentes:leer"))],
+)
+async def listar_todas_emergencias_admin(
+    db: AsyncSession = Depends(get_db),
+    estado: str | None = Query(None),
+    limit: int = Query(200, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+):
+    """Admin — lista todas las emergencias con info de cliente y taller."""
+    from sqlalchemy import select as _select
+    from app.modules.incidentes.emergencias.models import (
+        SolicitudEmergencia,
+        EstadoSolicitudSeguimientoEnum,
+    )
+    from app.modules.clientes_y_vehiculos.clientes.models import Cliente
+    from app.modules.acceso_y_administracion.usuarios.models import Usuario
+    from app.modules.talleres_y_tecnicos.talleres.models import Taller
+
+    q = _select(SolicitudEmergencia).order_by(SolicitudEmergencia.created_at.desc())
+
+    if estado:
+        try:
+            q = q.where(SolicitudEmergencia.estado == EstadoSolicitudSeguimientoEnum(estado))
+        except ValueError:
+            pass
+
+    result = await db.execute(q.limit(limit).offset(offset))
+    solicitudes = result.scalars().all()
+
+    taller_ids = {s.taller_id for s in solicitudes if s.taller_id}
+    talleres_map: dict[int, str] = {}
+    if taller_ids:
+        t_res = await db.execute(
+            _select(Taller.id, Taller.nombre_comercial).where(Taller.id.in_(taller_ids))
+        )
+        talleres_map = {r.id: r.nombre_comercial for r in t_res.all()}
+
+    cliente_ids = {s.cliente_id for s in solicitudes if s.cliente_id}
+    clientes_map: dict[int, str] = {}
+    if cliente_ids:
+        c_res = await db.execute(
+            _select(Cliente.id, Usuario.nombres, Usuario.apellidos)
+            .join(Usuario, Cliente.usuario_id == Usuario.id)
+            .where(Cliente.id.in_(cliente_ids))
+        )
+        clientes_map = {r.id: f"{r.nombres} {r.apellidos}" for r in c_res.all()}
+
+    return [
+        {
+            "id": s.id,
+            "estado": s.estado.value if s.estado else None,
+            "cliente_id": s.cliente_id,
+            "cliente_nombre": clientes_map.get(s.cliente_id),
+            "taller_id": s.taller_id,
+            "taller_nombre": talleres_map.get(s.taller_id) if s.taller_id else None,
+            "descripcion_texto": s.descripcion_texto,
+            "created_at": s.created_at.isoformat() if s.created_at else None,
+            "asignado_en": s.asignado_en.isoformat() if s.asignado_en else None,
+            "en_camino_en": s.en_camino_en.isoformat() if s.en_camino_en else None,
+            "en_atencion_en": s.en_atencion_en.isoformat() if s.en_atencion_en else None,
+            "finalizada_at": s.finalizada_at.isoformat() if s.finalizada_at else None,
+            "cancelado_en": s.cancelado_en.isoformat() if s.cancelado_en else None,
+            "motivo_cancelacion": s.motivo_cancelacion,
+            "tenant_id": s.tenant_id,
+        }
+        for s in solicitudes
+    ]

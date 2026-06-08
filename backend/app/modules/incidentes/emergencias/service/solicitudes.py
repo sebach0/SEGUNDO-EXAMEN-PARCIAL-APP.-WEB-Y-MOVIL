@@ -1,8 +1,13 @@
 # Alta, listado, detalle, seguimiento y texto de solicitudes (cliente).
 from __future__ import annotations
 
+import asyncio
+import logging
+
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+
+_log = logging.getLogger(__name__)
 
 from app.core.timeutil import utc_now_naive
 from app.modules.ai.services.post_create import enrich_solicitud_ai_after_create
@@ -66,6 +71,57 @@ async def _post_create_pipeline(
     )
 
 
+async def _post_create_pipeline_bg(
+    *,
+    user_id: int,
+    user_tenant_id: int | None,
+    cliente_id: int,
+    sol_id: int,
+    sol_tenant_id: int | None,
+    vehiculo_id: int,
+    now,
+    bitacora_desc: str,
+) -> None:
+    """Ejecuta el pipeline IA + bandeja en una sesión DB propia (para background task)."""
+    from app.core.database import AsyncSessionLocal
+
+    try:
+        async with AsyncSessionLocal() as db:
+            from app.modules.incidentes.emergencias import repository as _repo
+            sol = await _repo.get_solicitud_for_cliente(db, solicitud_id=sol_id, cliente_id=cliente_id)
+            if sol is None:
+                return
+
+            await enrich_solicitud_ai_after_create(db, solicitud_id=sol_id, cliente_id=cliente_id)
+            await db.refresh(sol)
+
+            taller_ids = await listar_taller_ids_elegibles(
+                db,
+                tenant_id=sol.tenant_id,
+                ai_payload=sol.ai_payload,
+            )
+            if not taller_ids:
+                from app.modules.atencion.taller_emergencias.repository import insert_bandeja_pendiente_por_cada_taller
+                await insert_bandeja_pendiente_por_cada_taller(db, solicitud_id=sol_id, creado_at=now)
+            else:
+                await insert_bandeja_pendiente_por_talleres(
+                    db, solicitud_id=sol_id, taller_ids=taller_ids, creado_at=now
+                )
+
+            await registrar_accion(
+                db,
+                "emergencias",
+                "solicitudes_emergencia",
+                AccionBitacoraEnum.CREAR,
+                descripcion=bitacora_desc,
+                usuario_id=user_id,
+                entidad_id=sol_id,
+            )
+            await db.commit()
+    except Exception:
+        _log.exception("Error en pipeline AI background sol_id=%s", sol_id)
+
+
 async def crear_solicitud(
     user: Usuario,
     cliente_id: int,
@@ -111,14 +167,20 @@ async def crear_solicitud(
     if body.ubicacion_inicial is not None:
         await helpers.add_ubicacion_internal(db, sol, body.ubicacion_inicial, now)
 
-    await _post_create_pipeline(
-        db,
-        user=user,
-        cliente_id=cliente_id,
-        sol=sol,
-        vehiculo_id=body.vehiculo_id,
-        now=now,
-        bitacora_desc=f"Solicitud emergencia vehículo_id={body.vehiculo_id}",
+    await db.commit()
+
+    # Pipeline IA y bandeja en background para no bloquear la respuesta al cliente.
+    asyncio.create_task(
+        _post_create_pipeline_bg(
+            user_id=user.id,
+            user_tenant_id=user.tenant_id,
+            cliente_id=cliente_id,
+            sol_id=sol.id,
+            sol_tenant_id=sol.tenant_id,
+            vehiculo_id=body.vehiculo_id,
+            now=now,
+            bitacora_desc=f"Solicitud emergencia vehículo_id={body.vehiculo_id}",
+        )
     )
 
     s2 = await repository.get_solicitud_for_cliente(

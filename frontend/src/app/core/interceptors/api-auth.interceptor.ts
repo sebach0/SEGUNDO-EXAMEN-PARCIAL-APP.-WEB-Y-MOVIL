@@ -38,11 +38,13 @@ export const apiAuthInterceptor: HttpInterceptorFn = (req, next) => {
   const isTallerSharedApi =
     req.url.includes(`${api}/cotizaciones`) || req.url.includes(`${api}/kpis/`);
 
-  // Ciclo 4 legacy (incidents/sync/tenants).
+  // Ciclo 4 legacy (incidents/sync/tenants) — excluir rutas /admin/ que usan token de admin.
+  const isCiclo4Admin = req.url.includes(`${api}/incidents/admin`);
   const isCiclo4 =
-    req.url.includes(`${api}/incidents`) ||
-    req.url.includes(`${api}/sync`) ||
-    req.url.includes(`${api}/tenants`);
+    !isCiclo4Admin &&
+    (req.url.includes(`${api}/incidents`) ||
+      req.url.includes(`${api}/sync`) ||
+      req.url.includes(`${api}/tenants`));
 
   let token: string | null;
   if (isTallerApp) {

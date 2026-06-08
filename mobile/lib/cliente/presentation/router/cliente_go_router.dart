@@ -34,12 +34,15 @@ import '../../../tecnico/application/tecnico_auth_provider.dart';
 import '../../../tecnico/application/tecnico_auth_state.dart';
 import '../../../tecnico/presentation/screens/tecnico_home_screen.dart';
 import '../../../tecnico/presentation/screens/tecnico_login_screen.dart';
-import '../../../tecnico/emergencias/domain/tecnico_servicio_models.dart';
+import '../../../tecnico/emergencias/domain/tecnico_servicio_models.dart'
+    show ServicioAsignadoTecnico, ComprobanteTecnico;
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_actualizar_estado_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_chat_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_detalle_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_ubicacion_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_compartir_ubicacion_screen.dart';
+import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_comprobante_screen.dart';
+import '../../../tecnico/emergencias/presentation/screens/tecnico_editar_cotizacion_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicios_list_screen.dart';
 import '../../../tecnico/presentation/screens/tecnico_placeholder_screen.dart';
 import '../../../tecnico/presentation/screens/tecnico_perfil_screen.dart';
@@ -169,6 +172,26 @@ final goRouterProvider = Provider<GoRouter>((ref) {
               final id = int.tryParse(state.pathParameters['sid'] ?? '');
               if (id == null) return const SizedBox.shrink();
               return TecnicoServicioCompartirUbicacionScreen(solicitudId: id);
+            },
+          ),
+          GoRoute(
+            path: '/tecnico/app/servicios/:sid/comprobante',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['sid'] ?? '');
+              if (id == null) return const SizedBox.shrink();
+              return TecnicoServicioComprobanteScreen(solicitudId: id);
+            },
+          ),
+          GoRoute(
+            path: '/tecnico/app/servicios/:sid/cotizacion/editar',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['sid'] ?? '');
+              if (id == null) return const SizedBox.shrink();
+              final extra = state.extra;
+              return TecnicoEditarCotizacionScreen(
+                solicitudId: id,
+                comprobante: extra is ComprobanteTecnico ? extra : null,
+              );
             },
           ),
           GoRoute(

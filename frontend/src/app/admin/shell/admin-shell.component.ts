@@ -29,5 +29,6 @@ export class AdminShellComponent {
     { path: '/admin/panel/ciclo5/dashboard', label: 'Dashboard KPIs', exact: false },
     { path: '/admin/panel/ciclo5/reports', label: 'Reportes', exact: false },
     { path: '/admin/panel/ciclo5/sla', label: 'SLA Talleres', exact: false },
+    { path: '/admin/panel/emergencias', label: 'Emergencias', exact: false },
   ];
 }

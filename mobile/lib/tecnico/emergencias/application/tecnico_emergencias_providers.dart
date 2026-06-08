@@ -26,3 +26,9 @@ final tecnicoMensajesSolicitudProvider =
     FutureProvider.autoDispose.family<List<MensajeSolicitudRead>, int>((ref, solicitudId) async {
   return ref.watch(tecnicoEmergenciasRepositoryProvider).listarMensajes(solicitudId);
 });
+
+/// Comprobante y cobro del servicio (técnico).
+final tecnicoComprobanteSolicitudProvider =
+    FutureProvider.autoDispose.family<ComprobanteTecnico, int>((ref, solicitudId) async {
+  return ref.watch(tecnicoEmergenciasRepositoryProvider).obtenerComprobante(solicitudId);
+});

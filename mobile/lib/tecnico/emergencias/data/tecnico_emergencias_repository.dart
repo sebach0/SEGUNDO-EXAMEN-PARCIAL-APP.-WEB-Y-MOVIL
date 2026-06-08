@@ -85,6 +85,50 @@ final class TecnicoEmergenciasRepository {
     }
   }
 
+  Future<ComprobanteTecnico> obtenerComprobante(int solicitudId) async {
+    try {
+      final res = await _dio.get<Map<String, dynamic>>(
+        ApiConstants.appTecnicoEmergenciaComprobante(solicitudId),
+      );
+      final data = res.data;
+      if (data == null) throw Exception('Respuesta vacía del comprobante.');
+      return ComprobanteTecnico.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception(messageFromDio(e));
+    }
+  }
+
+  Future<ComprobanteTecnico> actualizarItemsCotizacion(
+    int solicitudId,
+    List<Map<String, dynamic>> items,
+  ) async {
+    try {
+      final res = await _dio.put<Map<String, dynamic>>(
+        ApiConstants.appTecnicoEmergenciaCotizacionItems(solicitudId),
+        data: {'items': items},
+      );
+      final data = res.data;
+      if (data == null) throw Exception('Respuesta vacía al guardar cotización.');
+      return ComprobanteTecnico.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception(messageFromDio(e));
+    }
+  }
+
+  Future<CobroRegistrado> registrarCobro(int solicitudId, {String metodo = 'EFECTIVO'}) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        ApiConstants.appTecnicoEmergenciaCobrar(solicitudId),
+        data: {'metodo': metodo},
+      );
+      final data = res.data;
+      if (data == null) throw Exception('Respuesta vacía al registrar cobro.');
+      return CobroRegistrado.fromJson(data);
+    } on DioException catch (e) {
+      throw Exception(messageFromDio(e));
+    }
+  }
+
   Future<List<MensajeSolicitudRead>> listarMensajes(int solicitudId) async {
     try {
       final res = await _dio.get<List<dynamic>>(ApiConstants.appTecnicoEmergenciaMensajes(solicitudId));

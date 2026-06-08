@@ -11,6 +11,13 @@ server {
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml;
 
+    # index.html y service worker: nunca cachear para que el SW detecte actualizaciones
+    location ~* (index\.html|ngsw\.json|ngsw-worker\.js|safety-worker\.js)$ {
+        add_header Cache-Control "no-store, no-cache, must-revalidate";
+        expires 0;
+        try_files $uri /index.html;
+    }
+
     location / {
         try_files $uri $uri/ /index.html;
     }

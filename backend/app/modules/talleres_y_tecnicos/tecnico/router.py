@@ -12,7 +12,15 @@ from app.modules.incidentes.emergencias.schemas import UbicacionCreateIn, Ubicac
 from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
 from . import service
-from .schemas import ActualizarEstadoServicioIn, ServicioAsignadoRead, UbicacionClienteActualRead
+from .schemas import (
+    ActualizarCotizacionTecnicoIn,
+    ActualizarEstadoServicioIn,
+    ComprobanteTecnicoRead,
+    RegistrarCobroIn,
+    ServicioAsignadoRead,
+    UbicacionClienteActualRead,
+)
+from app.modules.pagos_y_comisiones.pagos.schemas import PagoRead
 
 router = APIRouter(prefix="/app/tecnico/emergencias", tags=["Emergencias (técnico)"])
 
@@ -72,6 +80,51 @@ async def actualizar_estado_servicio(
 ):
     """CU34 — transiciones TECNICO_ASIGNADO→EN_CAMINO→EN_ATENCION→FINALIZADA."""
     return await service.actualizar_estado_servicio(current_user, solicitud_id, body, db)
+
+
+@router.get(
+    "/solicitudes/{solicitud_id}/comprobante",
+    response_model=ComprobanteTecnicoRead,
+    dependencies=[Depends(require_permission("servicios_tecnico:leer"))],
+)
+async def obtener_comprobante(
+    solicitud_id: int,
+    current_user: Usuario = Depends(_ensure_tecnico),
+    db: AsyncSession = Depends(get_db),
+):
+    """Comprobante de servicio con costo, cotización y estado de pago."""
+    return await service.get_comprobante(current_user, solicitud_id, db)
+
+
+@router.put(
+    "/solicitudes/{solicitud_id}/cotizacion/items",
+    response_model=ComprobanteTecnicoRead,
+    dependencies=[Depends(require_permission("servicios_tecnico:actualizar_estado"))],
+)
+async def actualizar_items_cotizacion(
+    solicitud_id: int,
+    body: ActualizarCotizacionTecnicoIn,
+    current_user: Usuario = Depends(_ensure_tecnico),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reemplaza los ítems de la cotización aceptada (técnico en atención, sin pago previo)."""
+    return await service.actualizar_items_cotizacion(current_user, solicitud_id, body, db)
+
+
+@router.post(
+    "/solicitudes/{solicitud_id}/cobrar",
+    response_model=PagoRead,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("servicios_tecnico:actualizar_estado"))],
+)
+async def registrar_cobro(
+    solicitud_id: int,
+    body: RegistrarCobroIn,
+    current_user: Usuario = Depends(_ensure_tecnico),
+    db: AsyncSession = Depends(get_db),
+):
+    """Registra el cobro al cliente (efectivo u otro método) una vez finalizado el servicio."""
+    return await service.registrar_cobro_efectivo(current_user, solicitud_id, body, db)
 
 
 @router.get(

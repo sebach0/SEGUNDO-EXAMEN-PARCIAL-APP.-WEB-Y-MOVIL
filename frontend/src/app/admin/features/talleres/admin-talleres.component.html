@@ -68,23 +68,78 @@
 
   <div class="tal__backdrop" *ngIf="detail || modalEdit || modalCreate" (click)="closeModals()"></div>
 
-  <div class="tal__modal" *ngIf="detail" role="dialog" aria-modal="true">
-    <h3>{{ detail.nombre_comercial }}</h3>
-    <dl class="tal__dl">
-      <dt>ID</dt>
-      <dd>{{ detail.id }}</dd>
-      <dt>Responsable (usuario id)</dt>
-      <dd>{{ detail.usuario_responsable_id }}</dd>
-      <dt>Dirección</dt>
-      <dd>{{ detail.direccion }}</dd>
-      <dt>Teléfono</dt>
-      <dd>{{ detail.telefono_contacto }}</dd>
-      <dt>Descripción</dt>
-      <dd>{{ detail.descripcion || '—' }}</dd>
-      <dt>Estado</dt>
-      <dd>{{ detail.estado }}</dd>
-    </dl>
-    <button type="button" class="tal__btn tal__btn--primary" (click)="closeModals()">Cerrar</button>
+  <!-- Modal detalle -->
+  <div class="tal__modal tal__modal--detail" *ngIf="detail" role="dialog" aria-modal="true">
+    <div class="tal__detail-header">
+      <div>
+        <h3 class="tal__detail-title">{{ detail.nombre_comercial }}</h3>
+        <span class="tal__pill tal__pill--lg">{{ detail.estado }}</span>
+      </div>
+      <button type="button" class="tal__close" (click)="closeModals()" aria-label="Cerrar">&times;</button>
+    </div>
+
+    <div class="tal__detail-body">
+      <!-- Columna izquierda: info -->
+      <div class="tal__detail-info">
+        <dl class="tal__dl">
+          <dt>ID</dt>
+          <dd>#{{ detail.id }}</dd>
+          <dt>Ciudad</dt>
+          <dd>{{ detail.ciudad }}</dd>
+          <dt>Dirección</dt>
+          <dd>{{ detail.direccion }}</dd>
+          <dt>Teléfono</dt>
+          <dd>{{ detail.telefono_contacto }}</dd>
+          <dt>Email</dt>
+          <dd>{{ detail.email_contacto }}</dd>
+          <dt>Descripción</dt>
+          <dd>{{ detail.descripcion || '—' }}</dd>
+          <dt>Creado</dt>
+          <dd>{{ detail.created_at ? (detail.created_at | date:'dd/MM/yyyy') : '—' }}</dd>
+          <dt>Ubicación</dt>
+          <dd *ngIf="detail.latitud != null && detail.longitud != null">
+            {{ detail.latitud | number:'1.5-5' }}, {{ detail.longitud | number:'1.5-5' }}
+          </dd>
+          <dd *ngIf="detail.latitud == null || detail.longitud == null" class="tal__muted-sm">
+            Sin coordenadas registradas
+          </dd>
+        </dl>
+
+        <div class="tal__detail-actions">
+          <button type="button" class="tal__btn" (click)="closeModals(); openEdit(detail)">Editar</button>
+          <button
+            type="button"
+            class="tal__btn tal__btn--primary"
+            *ngIf="detail.estado !== 'ACTIVO'"
+            [disabled]="busy"
+            (click)="setEstado(detail, 'ACTIVO')"
+          >Activar</button>
+          <button
+            type="button"
+            class="tal__btn"
+            *ngIf="detail.estado !== 'SUSPENDIDO'"
+            [disabled]="busy"
+            (click)="setEstado(detail, 'SUSPENDIDO')"
+          >Suspender</button>
+        </div>
+      </div>
+
+      <!-- Columna derecha: mapa -->
+      <div class="tal__detail-map">
+        <p class="tal__map-label">Ubicación del taller</p>
+        <app-osm-map-picker
+          [latitude]="detail.latitud"
+          [longitude]="detail.longitud"
+          [readonly]="true"
+          [showGeolocate]="false"
+          [height]="'320px'"
+          [primaryLabel]="detail.nombre_comercial"
+        ></app-osm-map-picker>
+        <p *ngIf="detail.latitud == null || detail.longitud == null" class="tal__map-hint">
+          Este taller aún no tiene ubicación registrada. El responsable puede añadirla desde su panel.
+        </p>
+      </div>
+    </div>
   </div>
 
   <div class="tal__modal" *ngIf="modalEdit" role="dialog" aria-modal="true">

@@ -52,6 +52,8 @@ async def listar_members(tenant_id: int, db: AsyncSession) -> TenantMembersRead:
             nombre_comercial=t.nombre_comercial,
             ciudad=t.ciudad,
             estado=t.estado.value,
+            latitud=float(t.latitud) if t.latitud is not None else None,
+            longitud=float(t.longitud) if t.longitud is not None else None,
         )
         for t in res_t.scalars().all()
     ]

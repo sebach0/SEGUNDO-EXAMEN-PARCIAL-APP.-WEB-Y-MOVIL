@@ -85,6 +85,10 @@ export interface TallerDto {
   ciudad: string;
   descripcion: string | null;
   estado: EstadoTaller;
+  tiene_grua: boolean;
+  latitud: number | null;
+  longitud: number | null;
+  tenant_id: number | null;
   created_at: string | null;
 }
 
@@ -189,6 +193,8 @@ export interface TenantMemberTaller {
   nombre_comercial: string;
   ciudad: string;
   estado: EstadoTaller;
+  latitud: number | null;
+  longitud: number | null;
 }
 
 export interface TenantMemberTecnico {
@@ -211,6 +217,36 @@ export interface AssignmentResultDto {
   assigned: number[];
   skipped?: number[];
   errors?: string[];
+}
+
+// ── Emergencias — vista admin ────────────────────────────────────────────────
+
+export type EstadoEmergencia =
+  | 'REGISTRADA'
+  | 'EN_REVISION'
+  | 'TALLER_ASIGNADO'
+  | 'TECNICO_ASIGNADO'
+  | 'EN_CAMINO'
+  | 'EN_ATENCION'
+  | 'FINALIZADA'
+  | 'CANCELADA';
+
+export interface EmergenciaAdminDto {
+  id: number;
+  estado: EstadoEmergencia;
+  cliente_id: number | null;
+  cliente_nombre: string | null;
+  taller_id: number | null;
+  taller_nombre: string | null;
+  descripcion_texto: string | null;
+  created_at: string | null;
+  asignado_en: string | null;
+  en_camino_en: string | null;
+  en_atencion_en: string | null;
+  finalizada_at: string | null;
+  cancelado_en: string | null;
+  motivo_cancelacion: string | null;
+  tenant_id: number | null;
 }
 
 // ── Ciclo 5 — KPI Dashboard (CU45) ──────────────────────────────────────────

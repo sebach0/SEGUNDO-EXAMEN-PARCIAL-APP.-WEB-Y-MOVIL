@@ -54,12 +54,15 @@ class TallerRead(BaseModel):
     descripcion: Optional[str]
     estado: EstadoTallerEnum
     tiene_grua: bool = False
+    latitud: Optional[float] = None
+    longitud: Optional[float] = None
+    tenant_id: Optional[int] = None
     created_at: Optional[datetime]
 
 class TallerUpdate(BaseModel):
     nombre_comercial: Optional[str] = None
     telefono_contacto: Optional[str] = None
-    email_contacto: Optional[EmailStr] = None
+    email_contacto: Optional[str] = None
     direccion: Optional[str] = None
     ciudad: Optional[str] = None
     descripcion: Optional[str] = None
