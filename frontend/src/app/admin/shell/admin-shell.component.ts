@@ -1,7 +1,8 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AdminAuthService } from '../../core/services/admin-auth.service';
+import { EmergencyNotificationService } from '../../core/services/emergency-notification.service';
 
 @Component({
   selector: 'app-admin-shell',
@@ -10,8 +11,29 @@ import { AdminAuthService } from '../../core/services/admin-auth.service';
   templateUrl: './admin-shell.component.html',
   styleUrl: './admin-shell.component.scss',
 })
-export class AdminShellComponent {
+export class AdminShellComponent implements OnInit, OnDestroy {
   readonly auth = inject(AdminAuthService);
+  readonly notifSvc = inject(EmergencyNotificationService);
+
+  bellOpen = false;
+
+  ngOnInit(): void {
+    this.notifSvc.startAdminPolling();
+  }
+
+  ngOnDestroy(): void {
+    this.notifSvc.stop();
+  }
+
+  toggleBell(): void {
+    this.bellOpen = !this.bellOpen;
+    if (this.bellOpen) this.notifSvc.markAllRead();
+  }
+
+  clearAll(): void {
+    this.notifSvc.clearAll();
+    this.bellOpen = false;
+  }
 
   readonly nav = [
     { path: '/admin/panel', label: 'Resumen', exact: true },

@@ -28,6 +28,41 @@
   <div class="shell__main">
     <header class="shell__topbar">
       <h1 class="shell__title">Panel taller</h1>
+
+      <div class="notif-wrapper">
+        <button
+          class="notif-bell"
+          [class.notif-bell--active]="bellOpen"
+          (click)="toggleBell()"
+          aria-label="Notificaciones de emergencia"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          <span class="notif-badge" *ngIf="notifSvc.unreadCount > 0">{{ notifSvc.unreadCount }}</span>
+        </button>
+
+        <div class="notif-dropdown" *ngIf="bellOpen">
+          <div class="notif-dropdown__header">
+            <span class="notif-dropdown__title">Alertas de emergencia</span>
+            <button class="notif-dropdown__clear" (click)="clearAll()">Limpiar todo</button>
+          </div>
+          <ng-container *ngIf="notifSvc.notifications.length > 0; else emptyTpl">
+            <div *ngFor="let n of notifSvc.notifications" class="notif-item" role="alert">
+              <div class="notif-item__body">
+                <span class="notif-item__titulo">{{ n.titulo }}</span>
+                <span class="notif-item__msg">{{ n.mensaje }}</span>
+              </div>
+              <button class="notif-item__close" (click)="notifSvc.dismiss(n.id)" aria-label="Cerrar">✕</button>
+            </div>
+          </ng-container>
+          <ng-template #emptyTpl>
+            <p class="notif-dropdown__empty">Sin notificaciones pendientes</p>
+          </ng-template>
+        </div>
+      </div>
+
       <div class="shell__user" *ngIf="auth.getMe() as me">
         <span class="shell__email">{{ me.email }}</span>
         <span class="shell__badge" *ngIf="me.roles?.length">{{ me.roles.join(', ') }}</span>
@@ -39,4 +74,7 @@
       <router-outlet />
     </main>
   </div>
+
+  <!-- Backdrop para cerrar dropdown al hacer click afuera -->
+  <div class="notif-backdrop" *ngIf="bellOpen" (click)="bellOpen = false"></div>
 </div>

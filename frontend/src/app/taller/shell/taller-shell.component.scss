@@ -203,3 +203,164 @@
 
 .shell--taller .shell__eyebrow { color: #4ade80; }
 .shell--taller .shell__navlink.shell__navlink--active { border-color: rgba(34, 197, 94, 0.35); background: rgba(34, 197, 94, 0.12); }
+
+// ── Campana de notificaciones ────────────────────────────────────
+.notif-wrapper {
+  position: relative;
+  z-index: 1001;
+}
+
+.notif-bell {
+  position: relative;
+  background: t.$ev-surface-2;
+  border: 1px solid t.$ev-border;
+  border-radius: t.$ev-radius-sm;
+  color: t.$ev-text;
+  cursor: pointer;
+  padding: 0.45rem 0.55rem;
+  line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.35);
+  }
+
+  &--active {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(34, 197, 94, 0.4);
+  }
+}
+
+.notif-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  background: #f85149;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.notif-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  width: 300px;
+  max-height: 380px;
+  overflow-y: auto;
+  background: t.$ev-surface;
+  border: 1px solid t.$ev-border;
+  border-radius: t.$ev-radius-md;
+  box-shadow: t.$ev-shadow-soft;
+  animation: dropDown 0.15s ease;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.6rem 0.875rem;
+    border-bottom: 1px solid t.$ev-border;
+    position: sticky;
+    top: 0;
+    background: t.$ev-surface;
+  }
+
+  &__title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: t.$ev-muted;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  &__clear {
+    background: none;
+    border: none;
+    color: t.$ev-muted;
+    font-size: 0.72rem;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s ease;
+
+    &:hover { color: t.$ev-text; }
+  }
+
+  &__empty {
+    padding: 1.75rem 1rem;
+    text-align: center;
+    color: t.$ev-muted;
+    font-size: 0.82rem;
+    margin: 0;
+  }
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.7rem 0.875rem;
+  border-bottom: 1px solid t.$ev-border;
+
+  &:last-child { border-bottom: none; }
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__titulo {
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: t.$ev-danger-text;
+  }
+
+  &__msg {
+    font-size: 0.76rem;
+    color: t.$ev-muted;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    color: t.$ev-muted;
+    cursor: pointer;
+    font-size: 0.75rem;
+    padding: 0;
+    flex-shrink: 0;
+    transition: color 0.15s ease;
+
+    &:hover { color: t.$ev-text; }
+  }
+}
+
+.notif-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+@keyframes dropDown {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

@@ -1,8 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { take } from 'rxjs';
 import { TallerAuthService } from '../../core/services/taller-auth.service';
+import { EmergencyNotificationService } from '../../core/services/emergency-notification.service';
 
 type NavItem = { path: string; label: string; exact: boolean; permiso?: string };
 
@@ -13,14 +14,29 @@ type NavItem = { path: string; label: string; exact: boolean; permiso?: string }
   templateUrl: './taller-shell.component.html',
   styleUrl: './taller-shell.component.scss',
 })
-export class TallerShellComponent implements OnInit {
+export class TallerShellComponent implements OnInit, OnDestroy {
   readonly auth = inject(TallerAuthService);
+  readonly notifSvc = inject(EmergencyNotificationService);
+
+  bellOpen = false;
 
   ngOnInit(): void {
-    this.auth
-      .refreshMeSiHaySesion()
-      .pipe(take(1))
-      .subscribe();
+    this.auth.refreshMeSiHaySesion().pipe(take(1)).subscribe();
+    this.notifSvc.startTallerPolling();
+  }
+
+  ngOnDestroy(): void {
+    this.notifSvc.stop();
+  }
+
+  toggleBell(): void {
+    this.bellOpen = !this.bellOpen;
+    if (this.bellOpen) this.notifSvc.markAllRead();
+  }
+
+  clearAll(): void {
+    this.notifSvc.clearAll();
+    this.bellOpen = false;
   }
 
   private readonly navAll: NavItem[] = [
