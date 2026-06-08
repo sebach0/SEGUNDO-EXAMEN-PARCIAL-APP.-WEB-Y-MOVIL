@@ -6,7 +6,7 @@
 // =========================================================
 export const environment = {
   production: true,
-  apiUrl: '/api',   // Relativo — nginx hace proxy al backend
+  apiUrl: 'https://segundo-examen-backend.onrender.com/api',
   appName: 'Plataforma Emergencias Vehiculares',
   mailhogWebUrl: '',
 };
