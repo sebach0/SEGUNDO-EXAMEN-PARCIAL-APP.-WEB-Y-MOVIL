@@ -26,6 +26,8 @@ RUN useradd -m -u 1001 appuser
 COPY --from=builder /install /usr/local
 COPY --chown=appuser:appuser . .
 
+RUN mkdir -p /app/uploads/evidencias && chown -R appuser:appuser /app/uploads
+
 USER appuser
 
 EXPOSE 8000
