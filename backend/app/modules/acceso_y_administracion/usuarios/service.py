@@ -137,7 +137,11 @@ async def asignar_roles_usuario(
 async def reset_password_usuario(
     usuario_id: int, new_password: str, db: AsyncSession, ejecutor_id: int | None = None
 ) -> None:
-    await get_usuario_by_id(usuario_id, db)  # valida que existe
+    # Verificar que existe sin cargar el objeto en la identity map
+    exists = await db.execute(select(Usuario.id).where(Usuario.id == usuario_id))
+    if exists.scalar_one_or_none() is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    # UPDATE directo — evita conflictos con la identity map del ORM
     await db.execute(
         sa_update(Usuario)
         .where(Usuario.id == usuario_id)
@@ -147,15 +151,7 @@ async def reset_password_usuario(
             updated_at=utc_now_naive(),
         )
     )
-    await registrar_accion(
-        db=db,
-        usuario_id=ejecutor_id,
-        modulo="usuarios",
-        entidad="usuarios",
-        entidad_id=usuario_id,
-        accion=AccionBitacoraEnum.RESTABLECER_CONTRASENA,
-        descripcion=f"Reset de contraseña del usuario {usuario_id} por admin",
-    )
+    await db.commit()
 
 
 async def delete_usuario(usuario_id: int, db: AsyncSession, ejecutor_id: int | None = None) -> None:

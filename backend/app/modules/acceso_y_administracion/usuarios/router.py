@@ -69,7 +69,6 @@ async def reset_password_usuario(
     current_user: Usuario = Depends(get_current_user),
 ):
     await service.reset_password_usuario(usuario_id, body.password, db, ejecutor_id=current_user.id)
-    await db.commit()
 
 
 @router.delete("/{usuario_id}", status_code=status.HTTP_204_NO_CONTENT)
