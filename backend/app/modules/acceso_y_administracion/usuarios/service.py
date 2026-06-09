@@ -137,19 +137,16 @@ async def asignar_roles_usuario(
 async def reset_password_usuario(
     usuario_id: int, new_password: str, db: AsyncSession, ejecutor_id: int | None = None
 ) -> None:
-    # Verificar que existe sin cargar el objeto en la identity map
+    from sqlalchemy import text
     exists = await db.execute(select(Usuario.id).where(Usuario.id == usuario_id))
     if exists.scalar_one_or_none() is None:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    # UPDATE directo — evita conflictos con la identity map del ORM
+    new_hash = hash_password(new_password)
     await db.execute(
-        sa_update(Usuario)
-        .where(Usuario.id == usuario_id)
-        .values(
-            password_hash=hash_password(new_password),
-            estado=EstadoUsuarioEnum.ACTIVO,
-            updated_at=utc_now_naive(),
-        )
+        text(
+            "UPDATE usuarios SET password_hash=:ph, estado='ACTIVO', updated_at=now() WHERE id=:uid"
+        ),
+        {"ph": new_hash, "uid": usuario_id},
     )
     await db.commit()
 
