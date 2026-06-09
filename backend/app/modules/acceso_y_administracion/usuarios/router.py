@@ -7,12 +7,17 @@ from app.core.dependencies import get_current_user
 from app.modules.acceso_y_administracion.usuarios import service
 from app.modules.acceso_y_administracion.roles.schemas import AsignarRolesAUsuario
 from app.modules.clientes_y_vehiculos.clientes.schemas import ClienteCreate, ClienteRead
+from pydantic import BaseModel, Field
 from app.modules.acceso_y_administracion.usuarios.schemas import (
     UsuarioCreate,
     UsuarioRead,
     UsuarioListRead,
     UsuarioUpdate,
 )
+
+
+class ResetPasswordBody(BaseModel):
+    password: str = Field(..., min_length=6)
 from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
 router = APIRouter(prefix="/usuarios", tags=["Usuarios"])
@@ -54,6 +59,17 @@ async def actualizar_usuario(
     return await service.update_usuario(
         usuario_id, body.model_dump(exclude_none=True), db, ejecutor_id=current_user.id
     )
+
+
+@router.post("/{usuario_id}/reset-password", status_code=status.HTTP_204_NO_CONTENT)
+async def reset_password_usuario(
+    usuario_id: int,
+    body: ResetPasswordBody,
+    db: AsyncSession = Depends(get_db),
+    current_user: Usuario = Depends(get_current_user),
+):
+    await service.reset_password_usuario(usuario_id, body.password, db, ejecutor_id=current_user.id)
+    await db.commit()
 
 
 @router.delete("/{usuario_id}", status_code=status.HTTP_204_NO_CONTENT)

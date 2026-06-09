@@ -133,6 +133,24 @@ async def asignar_roles_usuario(
     )
 
 
+async def reset_password_usuario(
+    usuario_id: int, new_password: str, db: AsyncSession, ejecutor_id: int | None = None
+) -> None:
+    user = await get_usuario_by_id(usuario_id, db)
+    user.password_hash = hash_password(new_password)
+    user.estado = EstadoUsuarioEnum.ACTIVO
+    user.updated_at = utc_now_naive()
+    await registrar_accion(
+        db=db,
+        usuario_id=ejecutor_id,
+        modulo="usuarios",
+        entidad="usuarios",
+        entidad_id=usuario_id,
+        accion=AccionBitacoraEnum.RESTABLECER_CONTRASENA,
+        descripcion=f"Reset de contraseña del usuario {usuario_id} por admin",
+    )
+
+
 async def delete_usuario(usuario_id: int, db: AsyncSession, ejecutor_id: int | None = None) -> None:
     """No elimina físicamente — cambia estado a INACTIVO (soft delete)."""
     user = await get_usuario_by_id(usuario_id, db)
