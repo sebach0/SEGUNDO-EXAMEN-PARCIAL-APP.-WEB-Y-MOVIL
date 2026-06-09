@@ -82,34 +82,15 @@
   }
 }
 
-// ── Tabs ────────────────────────────────────────────────────────
-.ukpi__tabs {
-  display: flex;
-  gap: 2px;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid t.$ev-border;
+// ── Separador entre secciones ────────────────────────────────────
+.ukpi__divider {
+  border: none;
+  border-top: 1px solid t.$ev-border;
+  margin: calc(t.$ev-space * 3) 0 calc(t.$ev-space * 2);
 }
 
-.ukpi__tab {
-  padding: 0.6rem 1.25rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: t.$ev-muted;
-  font-size: 0.875rem;
-  font-weight: 500;
-  font-family: inherit;
-  cursor: pointer;
-  margin-bottom: -1px;
-  transition: color 0.15s ease, border-color 0.15s ease;
-
-  &:hover { color: t.$ev-text; }
-
-  &--active {
-    color: t.$ev-text;
-    border-bottom-color: t.$ev-focus;
-    font-weight: 600;
-  }
+.ukpi__section-title--first {
+  margin-top: 0;
 }
 
 // ── Estado / error ───────────────────────────────────────────────

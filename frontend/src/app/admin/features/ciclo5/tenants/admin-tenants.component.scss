@@ -3,6 +3,8 @@
 
 .page {
   padding: calc(t.$ev-space * 3);
+  isolation: isolate;
+  position: relative;
 }
 
 .page__header {

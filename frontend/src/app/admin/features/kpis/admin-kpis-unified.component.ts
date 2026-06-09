@@ -14,8 +14,6 @@ import type { KpiSummary } from '../../../core/models/cotizacion.models';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-type Tab = 'operacional' | 'avanzado';
-
 @Component({
   selector: 'app-admin-kpis-unified',
   standalone: true,
@@ -29,8 +27,6 @@ export class AdminKpisUnifiedComponent implements OnInit {
   private readonly cotSvc = inject(CotizacionService);
   private readonly cdr    = inject(ChangeDetectorRef);
 
-  activeTab: Tab = 'avanzado';
-
   desde      = '';
   hasta      = '';
   tallerIdStr = '';
@@ -43,10 +39,6 @@ export class AdminKpisUnifiedComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
-  }
-
-  setTab(tab: Tab): void {
-    this.activeTab = tab;
   }
 
   load(): void {

@@ -22,183 +22,176 @@
     </div>
   </div>
 
-  <!-- Tabs -->
-  <div class="ukpi__tabs">
-    <button
-      class="ukpi__tab"
-      [class.ukpi__tab--active]="activeTab === 'avanzado'"
-      (click)="setTab('avanzado')"
-    >Dashboard avanzado</button>
-    <button
-      class="ukpi__tab"
-      [class.ukpi__tab--active]="activeTab === 'operacional'"
-      (click)="setTab('operacional')"
-    >Resumen operacional</button>
-  </div>
-
   <!-- Estado -->
   <div class="ukpi__state" *ngIf="loading">Calculando KPIs…</div>
   <div class="ukpi__alert" *ngIf="!loading && error" role="alert">{{ error }}</div>
 
-  <!-- ── TAB: AVANZADO ─────────────────────────────────────── -->
-  <ng-container *ngIf="!loading && activeTab === 'avanzado' && kpisAdv">
+  <ng-container *ngIf="!loading && (kpisAdv || kpisOp)">
 
-    <div class="ukpi__grid">
-      <div class="ukpi__card">
-        <span class="ukpi__card-label">Total incidentes</span>
-        <span class="ukpi__card-value">{{ kpisAdv.total_incidents }}</span>
-      </div>
-      <div class="ukpi__card ukpi__card--blue">
-        <span class="ukpi__card-label">Activos</span>
-        <span class="ukpi__card-value">{{ kpisAdv.active_incidents }}</span>
-      </div>
-      <div class="ukpi__card ukpi__card--green">
-        <span class="ukpi__card-label">Finalizados</span>
-        <span class="ukpi__card-value">{{ kpisAdv.completed_incidents }}</span>
-      </div>
-      <div class="ukpi__card ukpi__card--red">
-        <span class="ukpi__card-label">Cancelados</span>
-        <span class="ukpi__card-value">{{ kpisAdv.cancelled_cases }}</span>
-      </div>
-      <div class="ukpi__card">
-        <span class="ukpi__card-label">T. prom. asignación</span>
-        <span class="ukpi__card-value">{{ formatMin(kpisAdv.average_assignment_minutes) }}</span>
-      </div>
-      <div class="ukpi__card">
-        <span class="ukpi__card-label">T. prom. llegada</span>
-        <span class="ukpi__card-value">{{ formatMin(kpisAdv.average_arrival_minutes) }}</span>
-      </div>
-      <div class="ukpi__card">
-        <span class="ukpi__card-label">T. prom. total</span>
-        <span class="ukpi__card-value">{{ formatMin(kpisAdv.average_total_minutes) }}</span>
-      </div>
-      <div class="ukpi__card" [ngClass]="slaClass(kpisAdv.sla_compliance_percentage)">
-        <span class="ukpi__card-label">Cumplimiento SLA</span>
-        <span class="ukpi__card-value">{{ formatPct(kpisAdv.sla_compliance_percentage) }}</span>
-      </div>
-    </div>
-
-    <div class="ukpi__charts-row">
-      <div class="ukpi__chart-card">
-        <h3 class="ukpi__chart-title">Incidentes por tipo</h3>
-        <p class="ukpi__empty" *ngIf="kpisAdv.incidents_by_type.length === 0">Sin datos.</p>
-        <div *ngFor="let item of kpisAdv.incidents_by_type" class="ukpi__bar-item">
-          <span class="ukpi__bar-label">{{ item.tipo }}</span>
-          <div class="ukpi__bar-track">
-            <div class="ukpi__bar" [style.width.%]="kpisAdv.total_incidents > 0 ? (item.total / kpisAdv.total_incidents * 100) : 0"></div>
-          </div>
-          <span class="ukpi__bar-count">{{ item.total }}</span>
+    <!-- ── SECCIÓN 1: RESUMEN GENERAL (fuente avanzada) ──────── -->
+    <ng-container *ngIf="kpisAdv">
+      <h3 class="ukpi__section-title ukpi__section-title--first">Resumen general</h3>
+      <div class="ukpi__grid">
+        <div class="ukpi__card">
+          <span class="ukpi__card-label">Total incidentes</span>
+          <span class="ukpi__card-value">{{ kpisAdv.total_incidents }}</span>
+        </div>
+        <div class="ukpi__card ukpi__card--blue">
+          <span class="ukpi__card-label">Activos</span>
+          <span class="ukpi__card-value">{{ kpisAdv.active_incidents }}</span>
+        </div>
+        <div class="ukpi__card ukpi__card--green">
+          <span class="ukpi__card-label">Finalizados</span>
+          <span class="ukpi__card-value">{{ kpisAdv.completed_incidents }}</span>
+        </div>
+        <div class="ukpi__card ukpi__card--red">
+          <span class="ukpi__card-label">Cancelados</span>
+          <span class="ukpi__card-value">{{ kpisAdv.cancelled_cases }}</span>
+        </div>
+        <div class="ukpi__card">
+          <span class="ukpi__card-label">T. prom. asignación</span>
+          <span class="ukpi__card-value">{{ formatMin(kpisAdv.average_assignment_minutes) }}</span>
+        </div>
+        <div class="ukpi__card">
+          <span class="ukpi__card-label">T. prom. llegada</span>
+          <span class="ukpi__card-value">{{ formatMin(kpisAdv.average_arrival_minutes) }}</span>
+        </div>
+        <div class="ukpi__card">
+          <span class="ukpi__card-label">T. prom. total</span>
+          <span class="ukpi__card-value">{{ formatMin(kpisAdv.average_total_minutes) }}</span>
+        </div>
+        <div class="ukpi__card" [ngClass]="slaClass(kpisAdv.sla_compliance_percentage)">
+          <span class="ukpi__card-label">Cumplimiento SLA</span>
+          <span class="ukpi__card-value">{{ formatPct(kpisAdv.sla_compliance_percentage) }}</span>
         </div>
       </div>
 
-      <div class="ukpi__chart-card">
-        <h3 class="ukpi__chart-title">Zonas con más incidentes</h3>
-        <p class="ukpi__empty" *ngIf="kpisAdv.incidents_by_zone.length === 0">Sin datos de zona.</p>
-        <div *ngFor="let z of kpisAdv.incidents_by_zone" class="ukpi__bar-item">
-          <span class="ukpi__bar-label">{{ z.zona }}</span>
-          <div class="ukpi__bar-track">
-            <div class="ukpi__bar ukpi__bar--zone" [style.width.%]="kpisAdv.total_incidents > 0 ? (z.total / kpisAdv.total_incidents * 100) : 0"></div>
+      <!-- Gráficos -->
+      <div class="ukpi__charts-row">
+        <div class="ukpi__chart-card">
+          <h3 class="ukpi__chart-title">Incidentes por tipo</h3>
+          <p class="ukpi__empty" *ngIf="kpisAdv.incidents_by_type.length === 0">Sin datos.</p>
+          <div *ngFor="let item of kpisAdv.incidents_by_type" class="ukpi__bar-item">
+            <span class="ukpi__bar-label">{{ item.tipo }}</span>
+            <div class="ukpi__bar-track">
+              <div class="ukpi__bar" [style.width.%]="kpisAdv.total_incidents > 0 ? (item.total / kpisAdv.total_incidents * 100) : 0"></div>
+            </div>
+            <span class="ukpi__bar-count">{{ item.total }}</span>
           </div>
-          <span class="ukpi__bar-count">{{ z.total }}</span>
         </div>
-      </div>
-    </div>
 
-    <div class="ukpi__section" *ngIf="kpisAdv.top_workshops.length > 0">
-      <h3 class="ukpi__section-title">Talleres más eficientes</h3>
-      <div class="ukpi__tablewrap">
-        <table class="ukpi__table">
-          <thead>
-            <tr><th>#</th><th>Taller</th><th>Tiempo promedio</th><th>Total atendidos</th></tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let w of kpisAdv.top_workshops; let i = index">
-              <td class="ukpi__td-rank">{{ i + 1 }}</td>
-              <td class="ukpi__td-bold">{{ w.nombre_comercial }}</td>
-              <td>{{ formatMin(w.tiempo_promedio_min) }}</td>
-              <td>{{ w.total_atendidos }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </ng-container>
-
-  <!-- ── TAB: OPERACIONAL ──────────────────────────────────── -->
-  <ng-container *ngIf="!loading && activeTab === 'operacional' && kpisOp">
-
-    <div class="ukpi__grid">
-      <div class="ukpi__card ukpi__card--blue">
-        <span class="ukpi__card-label">Solicitudes activas</span>
-        <span class="ukpi__card-value">{{ kpisOp.incidentes_activos }}</span>
-      </div>
-      <div class="ukpi__card ukpi__card--green">
-        <span class="ukpi__card-label">Finalizados</span>
-        <span class="ukpi__card-value">{{ kpisOp.incidentes_finalizados }}</span>
-      </div>
-      <div class="ukpi__card ukpi__card--red">
-        <span class="ukpi__card-label">Cancelados</span>
-        <span class="ukpi__card-value">{{ kpisOp.incidentes_cancelados }}</span>
-      </div>
-      <div class="ukpi__card" [ngClass]="slaClass(kpisOp.cumplimiento_sla_pct)">
-        <span class="ukpi__card-label">Cumplimiento SLA</span>
-        <span class="ukpi__card-value">{{ formatPct(kpisOp.cumplimiento_sla_pct) }}</span>
-      </div>
-      <div class="ukpi__card">
-        <span class="ukpi__card-label">T. prom. asignación</span>
-        <span class="ukpi__card-value">{{ formatMin(kpisOp.tiempo_promedio_asignacion_min) }}</span>
-      </div>
-      <div class="ukpi__card">
-        <span class="ukpi__card-label">T. prom. llegada</span>
-        <span class="ukpi__card-value">{{ formatMin(kpisOp.tiempo_promedio_llegada_min) }}</span>
-      </div>
-      <div class="ukpi__card">
-        <span class="ukpi__card-label">T. prom. atención</span>
-        <span class="ukpi__card-value">{{ formatMin(kpisOp.tiempo_promedio_atencion_min) }}</span>
-      </div>
-    </div>
-
-    <div class="ukpi__charts-row">
-      <div class="ukpi__chart-card" *ngIf="opTipoEntries().length > 0">
-        <h3 class="ukpi__chart-title">Incidentes por tipo</h3>
-        <div *ngFor="let item of opTipoEntries()" class="ukpi__bar-item">
-          <span class="ukpi__bar-label">{{ item.tipo }}</span>
-          <div class="ukpi__bar-track">
-            <div class="ukpi__bar" [style.width.%]="(kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) > 0 ? (item.total / (kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) * 100) : 0"></div>
+        <div class="ukpi__chart-card">
+          <h3 class="ukpi__chart-title">Zonas con más incidentes</h3>
+          <p class="ukpi__empty" *ngIf="kpisAdv.incidents_by_zone.length === 0">Sin datos de zona.</p>
+          <div *ngFor="let z of kpisAdv.incidents_by_zone" class="ukpi__bar-item">
+            <span class="ukpi__bar-label">{{ z.zona }}</span>
+            <div class="ukpi__bar-track">
+              <div class="ukpi__bar ukpi__bar--zone" [style.width.%]="kpisAdv.total_incidents > 0 ? (z.total / kpisAdv.total_incidents * 100) : 0"></div>
+            </div>
+            <span class="ukpi__bar-count">{{ z.total }}</span>
           </div>
-          <span class="ukpi__bar-count">{{ item.total }}</span>
         </div>
       </div>
 
-      <div class="ukpi__chart-card" *ngIf="kpisOp!.zonas_con_mas_incidentes?.length > 0">
-        <h3 class="ukpi__chart-title">Zonas con más incidentes</h3>
-        <div *ngFor="let z of kpisOp.zonas_con_mas_incidentes" class="ukpi__bar-item">
-          <span class="ukpi__bar-label">{{ z.zona }}</span>
-          <div class="ukpi__bar-track">
-            <div class="ukpi__bar ukpi__bar--zone" [style.width.%]="(kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) > 0 ? (z.total / (kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) * 100) : 0"></div>
-          </div>
-          <span class="ukpi__bar-count">{{ z.total }}</span>
+      <!-- Talleres más eficientes -->
+      <div class="ukpi__section" *ngIf="kpisAdv.top_workshops.length > 0">
+        <h3 class="ukpi__section-title">Talleres más eficientes</h3>
+        <div class="ukpi__tablewrap">
+          <table class="ukpi__table">
+            <thead>
+              <tr><th>#</th><th>Taller</th><th>Tiempo promedio</th><th>Total atendidos</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let w of kpisAdv.top_workshops; let i = index">
+                <td class="ukpi__td-rank">{{ i + 1 }}</td>
+                <td class="ukpi__td-bold">{{ w.nombre_comercial }}</td>
+                <td>{{ formatMin(w.tiempo_promedio_min) }}</td>
+                <td>{{ w.total_atendidos }}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
-    </div>
+    </ng-container>
 
-    <div class="ukpi__section" *ngIf="kpisOp!.talleres_mas_eficientes?.length > 0">
-      <h3 class="ukpi__section-title">Talleres más eficientes</h3>
-      <div class="ukpi__tablewrap">
-        <table class="ukpi__table">
-          <thead>
-            <tr><th>Taller</th><th>Tiempo promedio</th><th>Total atendidos</th></tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let t of kpisOp.talleres_mas_eficientes">
-              <td class="ukpi__td-bold">{{ t.nombre_comercial }}</td>
-              <td>{{ formatMin(t.tiempo_promedio_min) }}</td>
-              <td>{{ t.total_atendidos }}</td>
-            </tr>
-          </tbody>
-        </table>
+    <!-- ── SECCIÓN 2: RESUMEN OPERACIONAL (fuente operacional) ── -->
+    <ng-container *ngIf="kpisOp">
+      <div class="ukpi__divider"></div>
+      <h3 class="ukpi__section-title">Detalle operacional</h3>
+      <div class="ukpi__grid">
+        <div class="ukpi__card ukpi__card--blue">
+          <span class="ukpi__card-label">Solicitudes activas</span>
+          <span class="ukpi__card-value">{{ kpisOp.incidentes_activos }}</span>
+        </div>
+        <div class="ukpi__card ukpi__card--green">
+          <span class="ukpi__card-label">Finalizados</span>
+          <span class="ukpi__card-value">{{ kpisOp.incidentes_finalizados }}</span>
+        </div>
+        <div class="ukpi__card ukpi__card--red">
+          <span class="ukpi__card-label">Cancelados</span>
+          <span class="ukpi__card-value">{{ kpisOp.incidentes_cancelados }}</span>
+        </div>
+        <div class="ukpi__card" [ngClass]="slaClass(kpisOp.cumplimiento_sla_pct)">
+          <span class="ukpi__card-label">Cumplimiento SLA</span>
+          <span class="ukpi__card-value">{{ formatPct(kpisOp.cumplimiento_sla_pct) }}</span>
+        </div>
+        <div class="ukpi__card">
+          <span class="ukpi__card-label">T. prom. asignación</span>
+          <span class="ukpi__card-value">{{ formatMin(kpisOp.tiempo_promedio_asignacion_min) }}</span>
+        </div>
+        <div class="ukpi__card">
+          <span class="ukpi__card-label">T. prom. llegada</span>
+          <span class="ukpi__card-value">{{ formatMin(kpisOp.tiempo_promedio_llegada_min) }}</span>
+        </div>
+        <div class="ukpi__card">
+          <span class="ukpi__card-label">T. prom. atención</span>
+          <span class="ukpi__card-value">{{ formatMin(kpisOp.tiempo_promedio_atencion_min) }}</span>
+        </div>
       </div>
-    </div>
+
+      <div class="ukpi__charts-row" *ngIf="opTipoEntries().length > 0 || kpisOp!.zonas_con_mas_incidentes?.length > 0">
+        <div class="ukpi__chart-card" *ngIf="opTipoEntries().length > 0">
+          <h3 class="ukpi__chart-title">Incidentes por tipo</h3>
+          <div *ngFor="let item of opTipoEntries()" class="ukpi__bar-item">
+            <span class="ukpi__bar-label">{{ item.tipo }}</span>
+            <div class="ukpi__bar-track">
+              <div class="ukpi__bar" [style.width.%]="(kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) > 0 ? (item.total / (kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) * 100) : 0"></div>
+            </div>
+            <span class="ukpi__bar-count">{{ item.total }}</span>
+          </div>
+        </div>
+
+        <div class="ukpi__chart-card" *ngIf="kpisOp!.zonas_con_mas_incidentes?.length > 0">
+          <h3 class="ukpi__chart-title">Zonas con más incidentes</h3>
+          <div *ngFor="let z of kpisOp.zonas_con_mas_incidentes" class="ukpi__bar-item">
+            <span class="ukpi__bar-label">{{ z.zona }}</span>
+            <div class="ukpi__bar-track">
+              <div class="ukpi__bar ukpi__bar--zone" [style.width.%]="(kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) > 0 ? (z.total / (kpisOp.incidentes_activos + kpisOp.incidentes_finalizados) * 100) : 0"></div>
+            </div>
+            <span class="ukpi__bar-count">{{ z.total }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ukpi__section" *ngIf="kpisOp!.talleres_mas_eficientes?.length > 0">
+        <h3 class="ukpi__section-title">Talleres más eficientes (operacional)</h3>
+        <div class="ukpi__tablewrap">
+          <table class="ukpi__table">
+            <thead>
+              <tr><th>Taller</th><th>Tiempo promedio</th><th>Total atendidos</th></tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let t of kpisOp.talleres_mas_eficientes">
+                <td class="ukpi__td-bold">{{ t.nombre_comercial }}</td>
+                <td>{{ formatMin(t.tiempo_promedio_min) }}</td>
+                <td>{{ t.total_atendidos }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </ng-container>
+
   </ng-container>
 
   <div class="ukpi__state" *ngIf="!loading && !error && !kpisAdv && !kpisOp">
