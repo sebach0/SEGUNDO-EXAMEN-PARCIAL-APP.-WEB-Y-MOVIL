@@ -172,10 +172,50 @@ class _CotizacionesListScreenState
       barrierDismissible: true,
       builder: (dialogContext) => AlertDialog(
         title: const Text('¿Aceptar esta cotización?'),
-        content: Text(
-          'Taller: ${cotizacion.tallerNombre ?? 'Sin nombre'}\n'
-          'Total: Bs. ${cotizacion.montoTotal.toStringAsFixed(2)}\n\n'
-          'Las demás cotizaciones serán descartadas.',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Taller: ${cotizacion.tallerNombre ?? 'Sin nombre'}'),
+            if (cotizacion.items.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              for (final item in cotizacion.items)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          item.cantidad != 1.0
+                              ? '${item.cantidad.toStringAsFixed(0)} × ${item.descripcion}'
+                              : item.descripcion,
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                      Text(
+                        'Bs. ${item.subtotal.toStringAsFixed(2)}',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+              const Divider(height: 16),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text('Total', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                  Text(
+                    'Bs. ${cotizacion.montoTotal.toStringAsFixed(2)}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ] else
+              Text('Total: Bs. ${cotizacion.montoTotal.toStringAsFixed(2)}'),
+            const SizedBox(height: 12),
+            const Text('Las demás cotizaciones serán descartadas.'),
+          ],
         ),
         actions: [
           TextButton(
@@ -330,24 +370,45 @@ class _CotizacionCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          '${item.cantidad.toStringAsFixed(0)} × ${item.descripcion}',
+                          item.cantidad != 1.0
+                              ? '${item.cantidad.toStringAsFixed(0)} × ${item.descripcion}'
+                              : item.descripcion,
                           style: const TextStyle(fontSize: 13),
                         ),
                       ),
                       Text(
                         'Bs. ${item.subtotal.toStringAsFixed(2)}',
                         style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: item == c.itemTraslado
-                                ? FontWeight.w600
-                                : FontWeight.w500,
-                            color: item == c.itemTraslado
-                                ? scheme.primary
-                                : null),
+                          fontSize: 13,
+                          fontWeight: item == c.itemTraslado ? FontWeight.w600 : FontWeight.w500,
+                          color: item == c.itemTraslado ? scheme.primary : null,
+                        ),
                       ),
                     ],
                   ),
                 ),
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 6),
+                child: Divider(height: 1),
+              ),
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Total',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    ),
+                  ),
+                  Text(
+                    'Bs. ${c.montoTotal.toStringAsFixed(2)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ],
+              ),
             ],
             // Botón seleccionar
             if (onSeleccionar != null) ...[

@@ -43,12 +43,9 @@ export class AdminShellComponent implements OnInit, OnDestroy {
     { path: '/admin/panel/permisos', label: 'Permisos', exact: false },
     { path: '/admin/panel/talleres', label: 'Talleres', exact: false },
     { path: '/admin/panel/bitacora', label: 'Bitácora', exact: false },
-    // Ciclo 4
+    { path: '/admin/panel/kpis', label: 'KPIs', exact: false },
     { path: '/admin/panel/ciclo4/realtime-monitor', label: 'Monitor RT', exact: false },
-    { path: '/admin/panel/ciclo4/kpis', label: 'KPIs (C4)', exact: false },
-    // Ciclo 5
     { path: '/admin/panel/ciclo5/tenants', label: 'Tenants', exact: false },
-    { path: '/admin/panel/ciclo5/dashboard', label: 'Dashboard KPIs', exact: false },
     { path: '/admin/panel/ciclo5/reports', label: 'Reportes', exact: false },
     { path: '/admin/panel/ciclo5/sla', label: 'SLA Talleres', exact: false },
     { path: '/admin/panel/emergencias', label: 'Emergencias', exact: false },

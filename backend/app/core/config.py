@@ -148,6 +148,8 @@ class Settings(BaseSettings):
     # ── Firebase Cloud Messaging (CU19) — opcional; ruta al JSON de cuenta de servicio ──
     FCM_ENABLED: bool = False
     FIREBASE_CREDENTIALS_PATH: str | None = None  # ej. firebase-credentials.json (relativo a backend/)
+    # Alternativa para Render/cloud: contenido JSON completo del service account como variable de entorno.
+    FIREBASE_CREDENTIALS_JSON: str | None = None
 
     @property
     def firebase_credentials_file(self) -> Path | None:

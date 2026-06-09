@@ -18,17 +18,38 @@ def _ensure_firebase_app() -> bool:
         return True
     if not settings.FCM_ENABLED:
         return False
-    p = settings.firebase_credentials_file
-    if p is None:
-        _log.warning("FCM_ENABLED sin credenciales válidas (FIREBASE_CREDENTIALS_PATH).")
-        return False
+
+    cred = None
+
+    # Prioridad 1: JSON completo en variable de entorno (útil para Render/cloud).
+    if settings.FIREBASE_CREDENTIALS_JSON:
+        import json
+        try:
+            cred = credentials.Certificate(json.loads(settings.FIREBASE_CREDENTIALS_JSON))
+        except Exception as e:
+            _log.exception("FCM: error al parsear FIREBASE_CREDENTIALS_JSON: %s", e)
+
+    # Prioridad 2: archivo en disco.
+    if cred is None:
+        p = settings.firebase_credentials_file
+        if p is None:
+            _log.warning(
+                "FCM_ENABLED=True pero sin credenciales "
+                "(FIREBASE_CREDENTIALS_PATH ni FIREBASE_CREDENTIALS_JSON)."
+            )
+            return False
+        try:
+            cred = credentials.Certificate(str(p))
+        except Exception as e:
+            _log.exception("FCM: error al cargar credenciales desde archivo: %s", e)
+            return False
+
     try:
-        cred = credentials.Certificate(str(p))
         firebase_admin.initialize_app(cred)
         _initialized = True
         return True
     except ValueError:
-        # Ya existe una app por defecto (p. ej. reload uvicorn)
+        # Ya existe una app por defecto (p. ej. reload uvicorn).
         _initialized = True
         return True
     except Exception as e:

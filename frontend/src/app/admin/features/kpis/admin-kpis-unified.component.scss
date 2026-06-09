@@ -1,0 +1,267 @@
+@use '../../admin-theme' as t;
+@use '../../admin-ui' as ui;
+
+.ukpi {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.ukpi__h {
+  @include ui.ev-page-title;
+}
+
+.ukpi__lead {
+  margin: -1rem 0 1.5rem;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+// ── Filtros ─────────────────────────────────────────────────────
+.ukpi__filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: calc(t.$ev-space * 2);
+  background: t.$ev-surface;
+  border: 1px solid t.$ev-border;
+  border-radius: t.$ev-radius-md;
+}
+
+.ukpi__filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.ukpi__filter-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: t.$ev-muted;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ukpi__input {
+  background: t.$ev-surface-2;
+  border: 1px solid t.$ev-border;
+  color: t.$ev-text;
+  border-radius: t.$ev-radius-sm;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.ukpi__filter-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ukpi__btn {
+  padding: 0.48rem 0.9rem;
+  border-radius: t.$ev-radius-sm;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &--primary {
+    background: rgba(67, 97, 238, 0.25);
+    border: 1px solid rgba(67, 97, 238, 0.45);
+    color: t.$ev-text;
+    &:hover { background: rgba(67, 97, 238, 0.38); }
+  }
+
+  &--ghost {
+    background: t.$ev-surface-2;
+    border: 1px solid t.$ev-border;
+    color: t.$ev-muted;
+    &:hover { color: t.$ev-text; }
+  }
+}
+
+// ── Tabs ────────────────────────────────────────────────────────
+.ukpi__tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid t.$ev-border;
+}
+
+.ukpi__tab {
+  padding: 0.6rem 1.25rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition: color 0.15s ease, border-color 0.15s ease;
+
+  &:hover { color: t.$ev-text; }
+
+  &--active {
+    color: t.$ev-text;
+    border-bottom-color: t.$ev-focus;
+    font-weight: 600;
+  }
+}
+
+// ── Estado / error ───────────────────────────────────────────────
+.ukpi__state {
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+  padding: 2rem 0;
+}
+
+.ukpi__alert {
+  @include ui.ev-alert-error;
+}
+
+// ── Grid de tarjetas ────────────────────────────────────────────
+.ukpi__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: calc(t.$ev-space * 2);
+  margin-bottom: calc(t.$ev-space * 3);
+}
+
+.ukpi__card {
+  @include ui.ev-card;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+
+  &--blue   { border-color: rgba(67, 97, 238, 0.35); }
+  &--green  { border-color: rgba(46, 160, 67, 0.35); }
+  &--red    { border-color: rgba(248, 81, 73, 0.35); }
+  &--yellow { border-color: rgba(234, 179, 8, 0.35); }
+}
+
+.ukpi__card-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.ukpi__card-value {
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: t.$ev-text;
+
+  .ukpi__card--green & { color: #4ade80; }
+  .ukpi__card--red   & { color: t.$ev-danger-text; }
+  .ukpi__card--blue  & { color: t.$ev-cyan; }
+  .ukpi__card--yellow & { color: #fbbf24; }
+}
+
+// ── Charts row ──────────────────────────────────────────────────
+.ukpi__charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: calc(t.$ev-space * 2);
+  margin-bottom: calc(t.$ev-space * 3);
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.ukpi__chart-card {
+  @include ui.ev-card;
+}
+
+.ukpi__chart-title {
+  margin: 0 0 1rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: t.$ev-text;
+}
+
+.ukpi__bar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.ukpi__bar-label {
+  font-size: 0.78rem;
+  color: t.$ev-muted;
+  min-width: 90px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ukpi__bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.ukpi__bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(76, 201, 240, 0.8), rgba(67, 97, 238, 0.9));
+  min-width: 4px;
+  transition: width 0.4s ease;
+
+  &--zone {
+    background: linear-gradient(90deg, rgba(114, 9, 183, 0.7), rgba(67, 97, 238, 0.85));
+  }
+}
+
+.ukpi__bar-count {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: t.$ev-text;
+  min-width: 24px;
+  text-align: right;
+}
+
+// ── Sección tabla ────────────────────────────────────────────────
+.ukpi__section {
+  margin-bottom: calc(t.$ev-space * 3);
+}
+
+.ukpi__section-title {
+  margin: 0 0 calc(t.$ev-space * 1.5);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.ukpi__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.ukpi__table {
+  @include ui.ev-table;
+}
+
+.ukpi__td-rank {
+  font-weight: 700;
+  color: t.$ev-muted;
+}
+
+.ukpi__td-bold {
+  font-weight: 600;
+}
+
+.ukpi__empty {
+  font-size: 0.82rem;
+  color: t.$ev-muted;
+}

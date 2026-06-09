@@ -421,6 +421,7 @@ async def proponer_cotizacion(
             f"{nombre_taller} envió una propuesta de Bs. {monto_final:.2f}. "
             "Compará precio, distancia y servicios en la app."
         ),
+        extra_data={"accion": "COTIZACION_NUEVA"},
     )
 
     cot_full = await _get_cot_with_items(db, cot.id)

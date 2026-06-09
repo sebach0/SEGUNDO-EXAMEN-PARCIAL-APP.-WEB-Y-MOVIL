@@ -23,6 +23,7 @@ async def crear_notificacion_y_push(
     tipo: TipoNotificacionEnum,
     titulo: str,
     mensaje: str,
+    extra_data: dict[str, str] | None = None,
 ) -> NotificacionRead:
     now = utc_now_naive()
     row = await notif_repository.insert_notificacion(
@@ -34,10 +35,11 @@ async def crear_notificacion_y_push(
         mensaje=mensaje,
         created_at=now,
     )
-    data = {
+    data: dict[str, str] = {
         "tipo": tipo.value,
         "notificacion_id": str(row.id),
         **({"solicitud_id": str(solicitud_id)} if solicitud_id is not None else {}),
+        **(extra_data or {}),
     }
     await send_fcm_to_usuario(
         db,
@@ -57,6 +59,7 @@ async def notificar_cliente_solicitud_emergencia(
     tipo: TipoNotificacionEnum,
     titulo: str,
     mensaje: str,
+    extra_data: dict[str, str] | None = None,
 ) -> None:
     res = await db.execute(select(Cliente).where(Cliente.id == solicitud.cliente_id))
     cli = res.scalar_one_or_none()
@@ -69,6 +72,7 @@ async def notificar_cliente_solicitud_emergencia(
         tipo=tipo,
         titulo=titulo,
         mensaje=mensaje,
+        extra_data=extra_data,
     )
 
 

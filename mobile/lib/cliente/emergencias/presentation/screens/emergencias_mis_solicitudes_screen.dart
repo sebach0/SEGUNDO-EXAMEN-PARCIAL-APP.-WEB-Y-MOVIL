@@ -99,6 +99,24 @@ class _SolicitudTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     EstadoSolicitudBadge(estado: solicitud.estado, compact: true),
+                    if (solicitud.estado == EstadoSolicitudEmergencia.finalizada) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(Icons.receipt_long_outlined,
+                              size: 13, color: Colors.green.shade600),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Comprobante disponible',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.green.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     Text(
                       'Vehículo #${solicitud.vehiculoId} · ${_fecha(solicitud.createdAt)}',

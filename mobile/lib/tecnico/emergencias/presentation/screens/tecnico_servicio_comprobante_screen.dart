@@ -205,64 +205,36 @@ class _ComprobanteBody extends StatelessWidget {
                 ),
               if (c.cotizacionItems.isNotEmpty) ...[
                 const Divider(height: 1),
-                const SizedBox(height: 8),
-                // Encabezado tabla
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: Text('Concepto',
-                          style: tt.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                    SizedBox(
-                      width: 60,
-                      child: Text('Cant.',
-                          textAlign: TextAlign.right,
-                          style: tt.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                    SizedBox(
-                      width: 76,
-                      child: Text('Subtotal',
-                          textAlign: TextAlign.right,
-                          style: tt.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                              fontWeight: FontWeight.w700)),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 10),
                 for (final item in c.cotizacionItems)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.only(bottom: 10),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          flex: 4,
-                          child: Text(item.descripcion,
-                              style: tt.bodySmall?.copyWith(height: 1.35)),
-                        ),
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            item.cantidad % 1 == 0
-                                ? item.cantidad.toInt().toString()
-                                : item.cantidad.toStringAsFixed(1),
-                            textAlign: TextAlign.right,
-                            style: tt.bodySmall,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                item.descripcion,
+                                style: tt.bodySmall?.copyWith(
+                                    height: 1.35, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${item.cantidad % 1 == 0 ? item.cantidad.toInt() : item.cantidad.toStringAsFixed(1)} uds × Bs. ${item.precioUnitario.toStringAsFixed(2)}',
+                                style: tt.labelSmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                            ],
                           ),
                         ),
-                        SizedBox(
-                          width: 76,
-                          child: Text(
-                            'Bs. ${item.subtotal.toStringAsFixed(2)}',
-                            textAlign: TextAlign.right,
-                            style: tt.bodySmall,
-                          ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Bs. ${item.subtotal.toStringAsFixed(2)}',
+                          style: tt.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -295,7 +267,7 @@ class _ComprobanteBody extends StatelessWidget {
             ],
 
             // Total
-            if (c.montoACobrar != null) ...[
+            if (c.montoACobrar != null || c.cotizacionItems.isNotEmpty) ...[
               Container(
                 margin: const EdgeInsets.only(top: 8),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -306,12 +278,14 @@ class _ComprobanteBody extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('TOTAL A COBRAR',
-                        style: tt.titleSmall?.copyWith(
-                            color: scheme.onPrimaryContainer,
-                            fontWeight: FontWeight.w800)),
                     Text(
-                      'Bs. ${c.montoACobrar!.toStringAsFixed(2)}',
+                      c.montoACobrar != null ? 'TOTAL A COBRAR' : 'TOTAL ESTIMADO',
+                      style: tt.titleSmall?.copyWith(
+                          color: scheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      'Bs. ${(c.montoACobrar ?? c.cotizacionItems.fold(0.0, (s, i) => s + i.subtotal)).toStringAsFixed(2)}',
                       style: tt.titleMedium?.copyWith(
                           color: scheme.primary, fontWeight: FontWeight.w900),
                     ),

@@ -77,14 +77,19 @@ class _FcmMessageListenerState extends ConsumerState<FcmMessageListener> {
     final solicitudId = int.tryParse((message.data['solicitud_id'] ?? '').toString());
     if (solicitudId == null) return '/';
     final tipo = (message.data['tipo'] ?? '').toString().toUpperCase();
+    final accion = (message.data['accion'] ?? '').toString().toUpperCase();
     final location =
         ref.read(goRouterProvider).routerDelegate.currentConfiguration.uri.toString();
     final esTecnico = location.startsWith('/tecnico');
-    return switch ((esTecnico, tipo)) {
-      (true, 'MENSAJE_NUEVO') => '/tecnico/app/servicios/$solicitudId/chat',
-      (true, _) => '/tecnico/app/servicios/$solicitudId',
-      (false, 'MENSAJE_NUEVO') => '/cliente/app/emergencias/solicitudes/$solicitudId/chat',
-      (false, _) => '/cliente/app/emergencias/solicitudes/$solicitudId/seguimiento',
+    return switch ((esTecnico, tipo, accion)) {
+      (true, 'MENSAJE_NUEVO', _) => '/tecnico/app/servicios/$solicitudId/chat',
+      (true, _, _) => '/tecnico/app/servicios/$solicitudId',
+      (false, 'MENSAJE_NUEVO', _) =>
+        '/cliente/app/emergencias/solicitudes/$solicitudId/chat',
+      (false, _, 'COTIZACION_NUEVA') =>
+        '/cliente/app/emergencias/solicitudes/$solicitudId/cotizaciones',
+      (false, _, _) =>
+        '/cliente/app/emergencias/solicitudes/$solicitudId/seguimiento',
     };
   }
 

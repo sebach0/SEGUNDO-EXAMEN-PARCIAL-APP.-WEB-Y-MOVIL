@@ -51,7 +51,18 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./features/finanzas/admin-finanzas.component').then((m) => m.AdminFinanzasComponent),
       },
-      // ── Ciclo 4: monitor en tiempo real + KPIs ─────────────────────────────
+      // ── KPIs unificados ────────────────────────────────────────────────────
+      {
+        path: 'kpis',
+        loadComponent: () =>
+          import('./features/kpis/admin-kpis-unified.component').then(
+            (m) => m.AdminKpisUnifiedComponent,
+          ),
+      },
+      // Rutas legacy — redirigen al panel unificado
+      { path: 'ciclo4/kpis',    redirectTo: 'kpis', pathMatch: 'full' },
+      { path: 'ciclo5/dashboard', redirectTo: 'kpis', pathMatch: 'full' },
+      // ── Ciclo 4: monitor en tiempo real ───────────────────────────────────
       {
         path: 'ciclo4/realtime-monitor',
         loadComponent: () =>
@@ -59,14 +70,7 @@ export const ADMIN_ROUTES: Routes = [
             (m) => m.AdminRealtimeMonitorComponent,
           ),
       },
-      {
-        path: 'ciclo4/kpis',
-        loadComponent: () =>
-          import('./features/ciclo4/kpis/operational-dashboard.component').then(
-            (m) => m.OperationalDashboardComponent,
-          ),
-      },
-      // ── Ciclo 5: Tenants, KPIs completo, Reportes, SLA ────────────────────
+      // ── Ciclo 5: Tenants, Reportes, SLA ───────────────────────────────────
       {
         path: 'ciclo5/tenants',
         loadComponent: () =>
@@ -79,13 +83,6 @@ export const ADMIN_ROUTES: Routes = [
         loadComponent: () =>
           import('./features/ciclo5/asignaciones/admin-tenant-asignaciones.component').then(
             (m) => m.AdminTenantAsignacionesComponent,
-          ),
-      },
-      {
-        path: 'ciclo5/dashboard',
-        loadComponent: () =>
-          import('./features/ciclo5/kpis/admin-kpis-dashboard.component').then(
-            (m) => m.AdminKpisDashboardComponent,
           ),
       },
       {

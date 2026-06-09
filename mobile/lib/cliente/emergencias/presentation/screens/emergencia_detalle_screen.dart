@@ -169,6 +169,54 @@ class _EmergenciaDetalleScreenState
               SolicitudPagoCtaBlock(
                   solicitudId: widget.solicitudId, estado: d.estado),
 
+              // ── Comprobante (servicio finalizado) ─────────────────────────
+              if (d.estado == EstadoSolicitudEmergencia.finalizada) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withValues(alpha: 0.07),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: Colors.green.withValues(alpha: 0.3)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.check_circle_rounded,
+                              color: Colors.green, size: 18),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Servicio finalizado',
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleSmall
+                                ?.copyWith(
+                                  color: Colors.green.shade700,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ShadButton(
+                          onPressed: () => context.push(
+                            '/cliente/app/emergencias/solicitudes/${widget.solicitudId}/pagos',
+                          ),
+                          leading: const Icon(Icons.receipt_long_rounded,
+                              size: 20),
+                          child: const Text('Ver comprobante de pago'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // ── Cancelar solicitud ────────────────────────────────────────
               if (_puedeCancelar(d.estado)) ...[
                 const SizedBox(height: 24),

@@ -23,7 +23,7 @@ async def login(
     """
     Autentica al usuario con email + password.
     """
-    result = await db.execute(select(Usuario).where(Usuario.email == email))
+    result = await db.execute(select(Usuario).where(Usuario.email == email.strip().lower()))
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(password, user.password_hash):

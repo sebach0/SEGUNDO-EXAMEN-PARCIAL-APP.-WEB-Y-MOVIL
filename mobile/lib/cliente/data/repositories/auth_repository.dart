@@ -17,7 +17,7 @@ final class AuthRepository {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
         ApiConstants.login,
-        data: {'email': email.trim(), 'password': password},
+        data: {'email': email.trim().toLowerCase(), 'password': password},
       );
       final data = res.data;
       if (data == null) throw Exception('Respuesta inválida del servidor.');
