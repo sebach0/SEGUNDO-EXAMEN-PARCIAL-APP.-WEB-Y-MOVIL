@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from fastapi import HTTPException, status
 
+from sqlalchemy import update as sa_update
 from app.core.security import hash_password
 from app.core.timeutil import utc_now_naive
 from app.modules.clientes_y_vehiculos.clientes.models import Cliente
@@ -136,10 +137,16 @@ async def asignar_roles_usuario(
 async def reset_password_usuario(
     usuario_id: int, new_password: str, db: AsyncSession, ejecutor_id: int | None = None
 ) -> None:
-    user = await get_usuario_by_id(usuario_id, db)
-    user.password_hash = hash_password(new_password)
-    user.estado = EstadoUsuarioEnum.ACTIVO
-    user.updated_at = utc_now_naive()
+    await get_usuario_by_id(usuario_id, db)  # valida que existe
+    await db.execute(
+        sa_update(Usuario)
+        .where(Usuario.id == usuario_id)
+        .values(
+            password_hash=hash_password(new_password),
+            estado=EstadoUsuarioEnum.ACTIVO,
+            updated_at=utc_now_naive(),
+        )
+    )
     await registrar_accion(
         db=db,
         usuario_id=ejecutor_id,
