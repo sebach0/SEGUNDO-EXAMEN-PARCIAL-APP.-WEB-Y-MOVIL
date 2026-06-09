@@ -1,0 +1,45 @@
+<div class="bk">
+  <header class="bk__header">
+    <div>
+      <h1 class="bk__title">Backup del sistema</h1>
+      <p class="bk__lead">Descargá un archivo ZIP con los datos principales de la plataforma en formato JSON.</p>
+    </div>
+  </header>
+
+  <!-- Info card -->
+  <div class="bk__card">
+    <div class="bk__card-icon">&#128190;</div>
+    <div class="bk__card-body">
+      <h2 class="bk__card-title">Contenido del backup</h2>
+      <p class="bk__card-desc">El archivo incluye las siguientes tablas:</p>
+      <ul class="bk__table-list">
+        <li *ngFor="let t of tables" class="bk__table-item">{{ t }}</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="error" class="bk__error">
+    {{ error }}
+  </div>
+
+  <!-- Last download -->
+  <p *ngIf="lastDownload" class="bk__last">
+    Último backup descargado: <strong>{{ lastDownload }}</strong>
+  </p>
+
+  <!-- Action -->
+  <button
+    class="bk__btn"
+    [class.bk__btn--loading]="loading"
+    [disabled]="loading"
+    (click)="download()"
+  >
+    <span *ngIf="!loading">&#8681; Descargar backup</span>
+    <span *ngIf="loading">Generando backup&#8230;</span>
+  </button>
+
+  <p class="bk__hint">
+    El backup contiene datos sensibles. Guardalo en un lugar seguro y no lo compartas.
+  </p>
+</div>

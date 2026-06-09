@@ -320,4 +320,8 @@ export class AdminApiService {
       { params },
     );
   }
+
+  downloadBackup(): Observable<Blob> {
+    return this.http.get(`${this.base}/admin/backup/descargar`, { responseType: 'blob' });
+  }
 }

@@ -119,6 +119,7 @@ from app.modules.kpis.router import router as kpis_router
 from app.modules.kpis.admin_router import admin_dashboard_router
 from app.modules.reports.router import reports_router
 from app.modules.sla.router import sla_router
+from app.modules.backup.router import backup_router
 
 # ── Crear aplicación ─────────────────────────────────────────
 app = FastAPI(
@@ -181,6 +182,7 @@ app.include_router(kpis_router, prefix=PREFIX)
 app.include_router(admin_dashboard_router, prefix=PREFIX)
 app.include_router(reports_router, prefix=PREFIX)
 app.include_router(sla_router, prefix=PREFIX)
+app.include_router(backup_router, prefix=PREFIX)
 
 # Archivos de evidencia (foto/audio) servidos en HTTPS/HTTP según el entorno. si
 _evid_dir = settings.evidencias_upload_dir
