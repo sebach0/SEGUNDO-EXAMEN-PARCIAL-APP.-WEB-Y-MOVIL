@@ -1,8 +1,9 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ElementRef, NgZone, OnDestroy, ViewChild, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import * as L from 'leaflet';
 import { TallerEmergenciasApiService } from '../../../../core/services/taller-emergencias-api.service';
 import { TallerApiService } from '../../../../core/services/taller-api.service';
 import { TallerAuthService } from '../../../../core/services/taller-auth.service';
@@ -20,12 +21,17 @@ import type { TecnicoPortalDto } from '../../../../core/models/taller-api.models
   templateUrl: './taller-emergencias-incidente-detalle.component.html',
   styleUrl: './taller-emergencias-incidente-detalle.component.scss',
 })
-export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
+export class TallerEmergenciasIncidenteDetalleComponent implements OnInit, OnDestroy {
+  @ViewChild('detailMap', { static: false }) mapHost?: ElementRef<HTMLDivElement>;
+
   private readonly api = inject(TallerEmergenciasApiService);
   private readonly tallerApi = inject(TallerApiService);
   private readonly auth = inject(TallerAuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly zone = inject(NgZone);
+
+  private map: L.Map | null = null;
 
   bandejaId: number | null = null;
   detalle: SolicitudBandejaDetalleDto | null = null;
@@ -58,6 +64,11 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.map?.remove();
+    this.map = null;
+  }
+
   load(): void {
     if (!this.bandejaId) return;
     this.loading = true;
@@ -68,11 +79,13 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
     this.selectedTecnicoId = null;
     this.observacionAsignacion = '';
     this.tiempoEstimadoMin = null;
+    this.destroyMap();
     this.api.getBandejaDetalle(this.bandejaId).subscribe({
       next: (d) => {
         this.detalle = d;
         this.loading = false;
         this.cargarDatosAsignacion(d);
+        setTimeout(() => this.zone.runOutsideAngular(() => this.initDetailMap()), 80);
       },
       error: (err) => {
         this.loading = false;
@@ -147,6 +160,40 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
     const p = this.auth.getMe()?.permisos;
     if (!p?.length) return true;
     return p.includes('tecnicos:asignar');
+  }
+
+  private initDetailMap(): void {
+    const d = this.detalle;
+    if (!d?.latitud || !d?.longitud) return;
+    const host = this.mapHost?.nativeElement;
+    if (!host) return;
+
+    this.destroyMap();
+
+    const lat = Number(d.latitud);
+    const lng = Number(d.longitud);
+
+    this.map = L.map(host, { zoomControl: true }).setView([lat, lng], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(this.map);
+
+    const label = d.direccion_referencia
+      ? `<strong>${d.direccion_referencia}</strong><br>${d.latitud}, ${d.longitud}`
+      : `${d.latitud}, ${d.longitud}`;
+
+    L.marker([lat, lng])
+      .bindPopup(label, { maxWidth: 240 })
+      .addTo(this.map)
+      .openPopup();
+
+    setTimeout(() => this.map?.invalidateSize(), 300);
+  }
+
+  private destroyMap(): void {
+    this.map?.remove();
+    this.map = null;
   }
 
   externalMapLink(): string | null {

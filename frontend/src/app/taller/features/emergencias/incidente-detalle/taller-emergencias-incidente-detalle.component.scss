@@ -256,3 +256,26 @@
   font-size: 0.75rem;
   color: t.$ev-muted;
 }
+
+.emg__map {
+  margin-top: 0.85rem;
+  height: 280px;
+  border-radius: t.$ev-radius-md;
+  border: 1px solid t.$ev-border;
+  overflow: hidden;
+
+  // Leaflet controls sobre fondo oscuro
+  :global(.leaflet-control-zoom a) {
+    background: t.$ev-surface;
+    color: t.$ev-text;
+    border-color: t.$ev-border;
+  }
+
+  :global(.leaflet-popup-content-wrapper),
+  :global(.leaflet-popup-tip) {
+    background: t.$ev-surface;
+    color: t.$ev-text;
+    border: 1px solid t.$ev-border;
+    box-shadow: 0 4px 16px rgba(0,0,0,.5);
+  }
+}

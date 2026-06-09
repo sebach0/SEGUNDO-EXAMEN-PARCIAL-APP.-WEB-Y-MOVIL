@@ -200,6 +200,8 @@ class _EmergenciaWizardScreenState extends ConsumerState<EmergenciaWizardScreen>
     } on DioException catch (e) {
       if (isNetworkFailure(e)) {
         _toast('Sin conexión: no se pudo transcribir el audio.');
+      } else if (e.response?.statusCode == 503) {
+        // IA deshabilitada en el servidor — el audio se sube igual como evidencia
       } else {
         _toast('No se pudo transcribir: ${messageFromDio(e)}');
       }

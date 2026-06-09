@@ -67,19 +67,25 @@
       <section class="emg__card emg__card--wide">
         <h3 class="emg__card-title">Ubicación</h3>
         <dl class="emg__dl">
+          <dt>Referencia</dt>
+          <dd>{{ detalle.direccion_referencia || '—' }}</dd>
           <dt>Coordenadas</dt>
           <dd>
             <ng-container *ngIf="detalle.latitud && detalle.longitud; else sinGeo">
               {{ detalle.latitud }}, {{ detalle.longitud }}
-              <a *ngIf="externalMapLink() as map" [href]="map" class="emg__link" target="_blank" rel="noopener noreferrer"
-                >Abrir en mapa</a
-              >
+              <a *ngIf="externalMapLink() as map" [href]="map" class="emg__link" target="_blank" rel="noopener noreferrer">Abrir en OSM</a>
             </ng-container>
-            <ng-template #sinGeo>—</ng-template>
+            <ng-template #sinGeo>Sin coordenadas registradas</ng-template>
           </dd>
-          <dt>Referencia</dt>
-          <dd>{{ detalle.direccion_referencia || '—' }}</dd>
         </dl>
+        <div
+          #detailMap
+          class="emg__map"
+          *ngIf="detalle.latitud && detalle.longitud"
+        ></div>
+        <p class="emg__muted" *ngIf="!detalle.latitud || !detalle.longitud">
+          El cliente no proporcionó coordenadas para esta solicitud.
+        </p>
       </section>
 
       <section class="emg__card emg__card--wide">
