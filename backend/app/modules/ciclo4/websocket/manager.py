@@ -19,6 +19,10 @@ _log = logging.getLogger(__name__)
 # ID reservado para el canal de monitoreo admin (no es un incidente real)
 ADMIN_CHANNEL_ID = 0
 
+# Los canales de taller se mapean como TALLER_CHANNEL_BASE + taller_id
+# para no colisionar con los incidentes ni con el canal admin.
+TALLER_CHANNEL_BASE = 1_000_000
+
 
 class ConnectionManager:
     """
@@ -149,6 +153,42 @@ class ConnectionManager:
         if dead:
             async with self._lock:
                 conns = self._active.get(ADMIN_CHANNEL_ID, [])
+                for ws in dead:
+                    if ws in conns:
+                        conns.remove(ws)
+
+    async def broadcast_to_taller(
+        self,
+        taller_id: int,
+        event_type: str,
+        message: str | None = None,
+        payload: dict | None = None,
+    ) -> None:
+        """Emite un evento al canal privado de un taller (TALLER_CHANNEL_BASE + taller_id)."""
+        channel_id = TALLER_CHANNEL_BASE + taller_id
+        data = json.dumps(
+            {
+                "type": event_type,
+                "incident_id": None,
+                "status": None,
+                "message": message,
+                "payload": payload or {},
+                "emitted_at": datetime.now(timezone.utc).isoformat(),
+            }
+        )
+        async with self._lock:
+            targets = list(self._active.get(channel_id, []))
+
+        dead: list[WebSocket] = []
+        for ws in targets:
+            try:
+                await ws.send_text(data)
+            except Exception:
+                dead.append(ws)
+
+        if dead:
+            async with self._lock:
+                conns = self._active.get(channel_id, [])
                 for ws in dead:
                     if ws in conns:
                         conns.remove(ws)

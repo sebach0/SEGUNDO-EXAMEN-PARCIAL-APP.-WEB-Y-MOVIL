@@ -101,12 +101,27 @@ async def _post_create_pipeline_bg(
                 ai_payload=sol.ai_payload,
             )
             if not taller_ids:
-                from app.modules.atencion.taller_emergencias.repository import insert_bandeja_pendiente_por_cada_taller
-                await insert_bandeja_pendiente_por_cada_taller(db, solicitud_id=sol_id, creado_at=now)
-            else:
-                await insert_bandeja_pendiente_por_talleres(
-                    db, solicitud_id=sol_id, taller_ids=taller_ids, creado_at=now
-                )
+                from sqlalchemy import select as _sel
+                from app.modules.talleres_y_tecnicos.talleres.models import Taller as _T, EstadoTallerEnum as _ETE
+                _res = await db.execute(_sel(_T.id).where(_T.estado == _ETE.ACTIVO))
+                taller_ids = [r[0] for r in _res.all()]
+
+            await insert_bandeja_pendiente_por_talleres(
+                db, solicitud_id=sol_id, taller_ids=taller_ids, creado_at=now
+            )
+
+            # Notificar en tiempo real a los talleres elegibles
+            try:
+                from app.modules.ciclo4.websocket.manager import manager as _ws_manager
+                for _tid in taller_ids:
+                    await _ws_manager.broadcast_to_taller(
+                        taller_id=_tid,
+                        event_type="BANDEJA_ACTUALIZADA",
+                        message=f"Nueva solicitud #{sol_id} disponible",
+                        payload={"solicitud_id": sol_id},
+                    )
+            except Exception:
+                _log.exception("Error al notificar talleres vía WebSocket sol_id=%s", sol_id)
 
             await registrar_accion(
                 db,

@@ -1,8 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subject, interval } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
 import { TallerEmergenciasApiService } from '../../../../core/services/taller-emergencias-api.service';
+import { RealtimeService } from '../../../../core/services/realtime.service';
 import type { BandejaIncidenteBaseDto, EstadoSolicitudSeguimiento } from '../../../../core/models/taller-emergencias.models';
 
 @Component({
@@ -12,10 +15,12 @@ import type { BandejaIncidenteBaseDto, EstadoSolicitudSeguimiento } from '../../
   templateUrl: './taller-emergencias-bandeja.component.html',
   styleUrl: './taller-emergencias-bandeja.component.scss',
 })
-export class TallerEmergenciasBandejaComponent implements OnInit {
+export class TallerEmergenciasBandejaComponent implements OnInit, OnDestroy {
   private readonly api = inject(TallerEmergenciasApiService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly realtime = inject(RealtimeService);
+  private readonly destroy$ = new Subject<void>();
 
   rows: BandejaIncidenteBaseDto[] = [];
   search = '';
@@ -47,6 +52,21 @@ export class TallerEmergenciasBandejaComponent implements OnInit {
       }
     });
     this.reload();
+
+    this.realtime.connectToTallerFeed();
+
+    this.realtime.tallerFeedEvents$().pipe(
+      filter((e) => e.type === 'BANDEJA_ACTUALIZADA'),
+      takeUntil(this.destroy$),
+    ).subscribe(() => this.silentReload());
+
+    interval(60_000).pipe(takeUntil(this.destroy$)).subscribe(() => this.silentReload());
+  }
+
+  ngOnDestroy(): void {
+    this.realtime.disconnectTallerFeed();
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   reload(): void {
@@ -61,6 +81,13 @@ export class TallerEmergenciasBandejaComponent implements OnInit {
         this.loading = false;
         this.error = this.msg(err, 'No se pudo cargar la bandeja de solicitudes.');
       },
+    });
+  }
+
+  private silentReload(): void {
+    this.api.listBandejaDisponibles().subscribe({
+      next: (list) => { this.rows = list; },
+      error: () => {},
     });
   }
 

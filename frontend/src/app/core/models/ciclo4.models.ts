@@ -128,7 +128,9 @@ export type RealtimeEventType =
   | 'SERVICIO_ATENDIDO'
   | 'SERVICIO_FINALIZADO'
   | 'ETA_ACTUALIZADO'
-  | 'SERVICIO_RETRASADO';
+  | 'SERVICIO_RETRASADO'
+  | 'BANDEJA_ACTUALIZADA'
+  | 'TALLER_FEED_CONNECTED';
 
 export interface RealtimeEvent {
   type: RealtimeEventType | string;

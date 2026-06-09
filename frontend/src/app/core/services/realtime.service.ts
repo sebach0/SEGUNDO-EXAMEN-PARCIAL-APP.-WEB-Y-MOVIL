@@ -29,6 +29,7 @@ export class RealtimeService {
   private readonly auth = inject(TallerAuthService);
   private readonly zone = inject(NgZone);
 
+  // ── Incident WS state ────────────────────────────────────────────────────────
   private ws: WebSocket | null = null;
   private currentIncidentId: number | null = null;
   private reconnectAttempt = 0;
@@ -37,6 +38,15 @@ export class RealtimeService {
 
   private readonly _events$ = new Subject<RealtimeEvent>();
   private readonly _status$ = new BehaviorSubject<WsConnectionStatus>('disconnected');
+
+  // ── Taller feed WS state ─────────────────────────────────────────────────────
+  private wsTaller: WebSocket | null = null;
+  private tallerFeedDestroyed = true;
+  private tallerFeedReconnectAttempt = 0;
+  private tallerFeedReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private readonly _tallerFeedEvents$ = new Subject<RealtimeEvent>();
+  private readonly _tallerFeedStatus$ = new BehaviorSubject<WsConnectionStatus>('disconnected');
 
   // ── API pública ───────────────────────────────────────────────────────────
 
@@ -93,6 +103,34 @@ export class RealtimeService {
     }
     this._status$.next('disconnected');
     this.currentIncidentId = null;
+  }
+
+  // ── Taller Feed API ───────────────────────────────────────────────────────
+
+  tallerFeedEvents$(): Observable<RealtimeEvent> {
+    return this._tallerFeedEvents$.asObservable();
+  }
+
+  tallerFeedStatus$(): Observable<WsConnectionStatus> {
+    return this._tallerFeedStatus$.asObservable();
+  }
+
+  connectToTallerFeed(): void {
+    if (!this.tallerFeedDestroyed && this.wsTaller?.readyState === WebSocket.OPEN) return;
+    this.tallerFeedDestroyed = false;
+    this.tallerFeedReconnectAttempt = 0;
+    this._connectTallerFeed();
+  }
+
+  disconnectTallerFeed(): void {
+    this.tallerFeedDestroyed = true;
+    this._clearTallerFeedReconnectTimer();
+    if (this.wsTaller) {
+      this.wsTaller.onclose = null;
+      this.wsTaller.close();
+      this.wsTaller = null;
+    }
+    this._tallerFeedStatus$.next('disconnected');
   }
 
   // ── Internos ──────────────────────────────────────────────────────────────
@@ -159,6 +197,59 @@ export class RealtimeService {
     if (this.reconnectTimer != null) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+  }
+
+  // ── Taller feed internos ──────────────────────────────────────────────────
+
+  private _buildTallerFeedUrl(): string {
+    const token = this.auth.getAccessToken() ?? '';
+    const baseWs = window.location.origin.replace(/^http/, 'ws');
+    return `${baseWs}/api/ws/taller/feed?token=${token}`;
+  }
+
+  private _connectTallerFeed(): void {
+    if (this.tallerFeedDestroyed) return;
+    const url = this._buildTallerFeedUrl();
+    this.zone.runOutsideAngular(() => {
+      const ws = new WebSocket(url);
+      this.wsTaller = ws;
+
+      ws.onopen = () => this.zone.run(() => {
+        this.tallerFeedReconnectAttempt = 0;
+        this._tallerFeedStatus$.next('connected');
+      });
+
+      ws.onmessage = (event: MessageEvent) => this.zone.run(() => {
+        try {
+          const data = JSON.parse(event.data as string) as RealtimeEvent;
+          this._tallerFeedEvents$.next(data);
+        } catch {
+          // Mensaje no parseable — ignorar
+        }
+      });
+
+      ws.onerror = () => this.zone.run(() => this._tallerFeedStatus$.next('reconnecting'));
+
+      ws.onclose = () => this.zone.run(() => {
+        if (!this.tallerFeedDestroyed) this._scheduleTallerFeedReconnect();
+      });
+    });
+  }
+
+  private _scheduleTallerFeedReconnect(): void {
+    this._tallerFeedStatus$.next('reconnecting');
+    const delay = Math.min(1000 * 2 ** this.tallerFeedReconnectAttempt, 30_000);
+    this.tallerFeedReconnectAttempt++;
+    this.tallerFeedReconnectTimer = setTimeout(() => {
+      if (!this.tallerFeedDestroyed) this._connectTallerFeed();
+    }, delay);
+  }
+
+  private _clearTallerFeedReconnectTimer(): void {
+    if (this.tallerFeedReconnectTimer != null) {
+      clearTimeout(this.tallerFeedReconnectTimer);
+      this.tallerFeedReconnectTimer = null;
     }
   }
 }

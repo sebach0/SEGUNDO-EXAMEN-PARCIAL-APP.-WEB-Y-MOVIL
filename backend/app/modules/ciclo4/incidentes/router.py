@@ -332,6 +332,69 @@ async def ws_admin_feed(
         await ws_manager.disconnect(websocket, ADMIN_CHANNEL_ID)
 
 
+# ── WebSocket taller feed (bandeja en tiempo real) ───────────────────────────
+
+@ws_router.websocket("/taller/feed")
+async def ws_taller_feed(
+    websocket: WebSocket,
+    token: str | None = Query(None, description="JWT de acceso (rol TALLER_RESPONSABLE)"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Canal WebSocket privado por taller.
+
+    Conexión: ws://host/api/ws/taller/feed?token=<jwt>
+
+    Emite BANDEJA_ACTUALIZADA cuando llega una nueva solicitud a la bandeja del taller.
+    """
+    from app.modules.ciclo4.websocket.manager import TALLER_CHANNEL_BASE
+
+    if not token:
+        await websocket.close(code=4001, reason="Token requerido")
+        return
+
+    try:
+        payload = decode_token(token)
+        user_id = int(payload.get("sub", 0))
+        if payload.get("type") != "access" or not user_id:
+            raise ValueError("Token inválido")
+    except Exception:
+        await websocket.close(code=4001, reason="Token inválido o expirado")
+        return
+
+    from sqlalchemy import select as _select
+    from app.modules.talleres_y_tecnicos.talleres.models import Taller as _Taller
+
+    t_result = await db.execute(
+        _select(_Taller).where(_Taller.usuario_responsable_id == user_id)
+    )
+    taller = t_result.scalar_one_or_none()
+    if taller is None:
+        await websocket.close(code=4003, reason="No se encontró taller asociado al usuario")
+        return
+
+    channel_id = TALLER_CHANNEL_BASE + taller.id
+    await ws_manager.connect(websocket, channel_id)
+    try:
+        await ws_manager.send_personal(websocket, {
+            "type": "TALLER_FEED_CONNECTED",
+            "incident_id": None,
+            "status": "ok",
+            "message": f"Feed taller #{taller.id} activo",
+            "payload": {"taller_id": taller.id},
+            "emitted_at": datetime.now(timezone.utc).isoformat(),
+        })
+        while True:
+            try:
+                await websocket.receive_text()
+            except WebSocketDisconnect:
+                break
+    except WebSocketDisconnect:
+        pass
+    finally:
+        await ws_manager.disconnect(websocket, channel_id)
+
+
 # ── REST: solicitudes activas para admin ──────────────────────────────────────
 
 @incidents_router.get(
