@@ -1,7 +1,7 @@
 # app/modules/auth/service.py
 import uuid
 from fastapi import HTTPException, Request, status
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -23,7 +23,7 @@ async def login(
     """
     Autentica al usuario con email + password.
     """
-    result = await db.execute(select(Usuario).where(Usuario.email == email.strip().lower()))
+    result = await db.execute(select(Usuario).where(func.lower(Usuario.email) == email.strip().lower()))
     user = result.scalar_one_or_none()
 
     if not user or not verify_password(password, user.password_hash):
