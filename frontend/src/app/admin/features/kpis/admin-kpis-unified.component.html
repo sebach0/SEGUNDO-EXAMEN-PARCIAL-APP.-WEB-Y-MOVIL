@@ -149,7 +149,7 @@
         </div>
       </div>
 
-      <div class="ukpi__charts-row" *ngIf="opTipoEntries().length > 0 || kpisOp!.zonas_con_mas_incidentes?.length > 0">
+      <div class="ukpi__charts-row" *ngIf="opTipoEntries().length > 0 || (kpisOp?.zonas_con_mas_incidentes?.length ?? 0) > 0">
         <div class="ukpi__chart-card" *ngIf="opTipoEntries().length > 0">
           <h3 class="ukpi__chart-title">Incidentes por tipo</h3>
           <div *ngFor="let item of opTipoEntries()" class="ukpi__bar-item">
@@ -161,7 +161,7 @@
           </div>
         </div>
 
-        <div class="ukpi__chart-card" *ngIf="kpisOp!.zonas_con_mas_incidentes?.length > 0">
+        <div class="ukpi__chart-card" *ngIf="(kpisOp?.zonas_con_mas_incidentes?.length ?? 0) > 0">
           <h3 class="ukpi__chart-title">Zonas con más incidentes</h3>
           <div *ngFor="let z of kpisOp.zonas_con_mas_incidentes" class="ukpi__bar-item">
             <span class="ukpi__bar-label">{{ z.zona }}</span>
@@ -173,7 +173,7 @@
         </div>
       </div>
 
-      <div class="ukpi__section" *ngIf="kpisOp!.talleres_mas_eficientes?.length > 0">
+      <div class="ukpi__section" *ngIf="(kpisOp?.talleres_mas_eficientes?.length ?? 0) > 0">
         <h3 class="ukpi__section-title">Talleres más eficientes (operacional)</h3>
         <div class="ukpi__tablewrap">
           <table class="ukpi__table">
