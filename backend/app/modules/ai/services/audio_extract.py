@@ -16,52 +16,38 @@ class AudioExtractResult:
 
 
 _BATERIA = (
-    "batería",
-    "bateria",
-    "no enciende",
-    "no prende",
-    "arranque",
-    "tablero",
-    "luces apagadas",
-    "descargad",
+    "batería", "bateria", "no enciende", "no prende", "arranque",
+    "tablero", "luces apagadas", "descargad", "no arranca",
+    "batería muerta", "bateria muerta", "sin corriente",
+    "alternador", "cortocircuito", "starter", "no tiene carga",
+    "se descargó", "motor no arranca",
 )
 _LLANTA = (
-    "llanta",
-    "neumático",
-    "neumatico",
-    "pinchad",
-    "goma",
-    "rueda",
-    "desinflad",
+    "llanta", "neumático", "neumatico", "pinchad", "goma",
+    "rueda", "desinflad", "se reventó", "ponchad", "ponchó",
+    "llantazo", "llanta reventada", "goma baja", "goma reventada",
+    "se revento la goma",
 )
 _CHOQUE = (
-    "choque",
-    "accidente",
-    "impacto",
-    "colision",
-    "colisión",
-    "golpe",
-    "abollad",
-    "airbag",
+    "choque", "accidente", "impacto", "colision", "colisión",
+    "golpe", "abollad", "airbag", "volcó", "volco", "volcad",
+    "estrellé", "chocó", "chocamos", "nos chocaron",
+    "se salió de la vía", "salió de la via",
 )
 _MOTOR = (
-    "motor",
-    "sobrecalent",
-    "temperatura",
-    "humo",
-    "fuga de aceite",
-    "aceite",
-    "check engine",
+    "motor", "sobrecalent", "temperatura", "humo", "fuga de aceite",
+    "aceite", "check engine", "vibra", "traquetea", "se apagó",
+    "se paró", "perdió potencia", "se ahoga", "correa", "embrague",
+    "clutch", "refrigerante", "recalentado", "agua hirviendo",
+    "vapor", "pierde aceite", "gotea aceite", "falla mecanica",
 )
 _URGENTE = (
-    "urgente",
-    "grave",
-    "atrapad",
-    "herid",
-    "carretera",
-    "autopista",
-    "peligro",
-    "incendio",
+    "urgente", "urgentísimo", "urgentisimo", "grave", "gravísimo",
+    "atrapad", "herid", "carretera", "autopista", "peligro",
+    "incendio", "explosión", "explosion", "fuego", "llamas",
+    "no puedo salir", "inconsciente", "desmayad", "sangre",
+    "volcamos", "volcó", "me estrellé", "personas heridas",
+    "niños", "nino", "bebé", "bebe atrapado",
 )
 
 
@@ -103,21 +89,23 @@ def extract_from_transcription(transcripcion: str) -> AudioExtractResult:
             urg = "alta"
             break
 
-    # contexto: primera oración o hasta 160 chars
-    one = re.split(r"[.!?]\s+", transcripcion.strip())
-    ctx = (one[0] if one else transcripcion)[:160].strip()
+    # contexto: primera oración o hasta 200 chars
+    sentences = re.split(r"[.!?]\s+", transcripcion.strip())
+    ctx = (sentences[0] if sentences else transcripcion)[:200].strip()
 
+    all_patterns = _BATERIA + _LLANTA + _CHOQUE + _MOTOR
     kw_unique: list[str] = []
     seen: set[str] = set()
     for token in re.split(r"\s+", t):
         token = re.sub(r"^[^\w]+|[^\w]+$", "", token)
         if len(token) >= 4 and token not in seen:
-            for p in _BATERIA + _LLANTA + _CHOQUE + _MOTOR:
-                if p in token or token in p:
+            for p in all_patterns:
+                np = normalize_for_match(p)
+                if np and (np in token or token in np):
                     seen.add(token)
                     kw_unique.append(token)
                     break
-        if len(kw_unique) >= 8:
+        if len(kw_unique) >= 12:
             break
 
     return AudioExtractResult(
