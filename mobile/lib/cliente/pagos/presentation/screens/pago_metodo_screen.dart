@@ -8,7 +8,6 @@ import '../../application/pagos_providers.dart';
 import '../../domain/pago_models.dart';
 import '../widgets/metodo_pago_selector.dart';
 
-/// Paso 2 — método de pago. Inicia el pago en el servidor y pasa [PagoDraft.pagoIniciado] a confirmación.
 class PagoMetodoScreen extends ConsumerStatefulWidget {
   const PagoMetodoScreen({super.key, required this.solicitudId, required this.draft});
 
@@ -56,32 +55,75 @@ class _PagoMetodoScreenState extends ConsumerState<PagoMetodoScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = ShadTheme.of(context);
+    final cs = theme.colorScheme;
 
     return Scaffold(
+      backgroundColor: cs.background,
       appBar: AppBar(
         title: const Text('Método de pago'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
-        ),
+        leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => context.pop()),
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
+      body: Column(
         children: [
-          Text('Monto: ${widget.draft.montoTexto} BOB', style: theme.textTheme.large),
-          const SizedBox(height: 20),
-          MetodoPagoSelector(
-            valor: _metodo,
-            onChanged: (m) => setState(() => _metodo = m),
+          // ── Monto fijo en la parte superior ────────────────────────────────
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            decoration: BoxDecoration(
+              color: cs.card,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: cs.border),
+            ),
+            child: Row(children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: cs.primary.withValues(alpha: 0.1), shape: BoxShape.circle),
+                child: Icon(Icons.receipt_rounded, color: cs.primary, size: 22),
+              ),
+              const SizedBox(width: 14),
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Total a pagar', style: theme.textTheme.muted),
+                Text(
+                  'Bs. ${widget.draft.montoTexto}',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: cs.primary),
+                ),
+              ]),
+            ]),
           ),
-          const SizedBox(height: 28),
-          ShadButton(
-            onPressed: _metodo == null || _busy ? null : _revisarYConfirmar,
-            child: _busy
-                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2))
-                : const Text('Revisar y confirmar'),
+
+          const SizedBox(height: 4),
+
+          // ── Selector de métodos (scrollable) ───────────────────────────────
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+              children: [
+                MetodoPagoSelector(
+                  valor: _metodo,
+                  onChanged: (m) => setState(() => _metodo = m),
+                ),
+              ],
+            ),
           ),
         ],
+      ),
+
+      // ── Botón flotante inferior ─────────────────────────────────────────────
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: ShadButton(
+            onPressed: _metodo == null || _busy ? null : _revisarYConfirmar,
+            child: _busy
+                ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : Row(mainAxisSize: MainAxisSize.min, children: const [
+                    Icon(Icons.arrow_forward_rounded, size: 18),
+                    SizedBox(width: 8),
+                    Text('Revisar y confirmar'),
+                  ]),
+          ),
+        ),
       ),
     );
   }
