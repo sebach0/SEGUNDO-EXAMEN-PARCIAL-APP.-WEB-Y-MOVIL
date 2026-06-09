@@ -285,7 +285,7 @@ class _ComprobanteBody extends StatelessWidget {
                           fontWeight: FontWeight.w800),
                     ),
                     Text(
-                      'Bs. ${(c.montoACobrar ?? c.cotizacionItems.fold(0.0, (s, i) => s + i.subtotal)).toStringAsFixed(2)}',
+                      'Bs. ${(c.montoACobrar ?? c.cotizacionItems.fold<double>(0.0, (s, i) => s + i.subtotal)).toStringAsFixed(2)}',
                       style: tt.titleMedium?.copyWith(
                           color: scheme.primary, fontWeight: FontWeight.w900),
                     ),
