@@ -175,6 +175,7 @@ export class AdminTenantsComponent implements OnInit, AfterViewInit, OnDestroy {
         this.busy = false;
         this.successMsg = `Tenant "${t.nombre}" creado.`;
         this.buildColorMap();
+        this.zone.runOutsideAngular(() => this.updateMapMarkers());
         setTimeout(() => {
           this.successMsg = null;
           this.cdr.markForCheck();
@@ -208,6 +209,8 @@ export class AdminTenantsComponent implements OnInit, AfterViewInit, OnDestroy {
         this.editTarget = null;
         this.busy = false;
         this.successMsg = `Tenant "${updated.nombre}" actualizado.`;
+        this.buildColorMap();
+        this.zone.runOutsideAngular(() => this.updateMapMarkers());
         setTimeout(() => {
           this.successMsg = null;
           this.cdr.markForCheck();
@@ -228,6 +231,7 @@ export class AdminTenantsComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (updated) => {
         this.tenants = this.tenants.map((x) => (x.id === updated.id ? updated : x));
         this.busy = false;
+        this.zone.runOutsideAngular(() => this.updateMapMarkers());
         this.cdr.markForCheck();
       },
       error: () => {
@@ -243,6 +247,7 @@ export class AdminTenantsComponent implements OnInit, AfterViewInit, OnDestroy {
       next: (updated) => {
         this.tenants = this.tenants.map((x) => (x.id === updated.id ? updated : x));
         this.busy = false;
+        this.zone.runOutsideAngular(() => this.updateMapMarkers());
         this.cdr.markForCheck();
       },
       error: () => {
