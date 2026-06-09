@@ -247,20 +247,8 @@ export class TallerEmergenciasIncidenteDetalleComponent implements OnInit {
     return d.evidencias;
   }
 
-  /**
-   * Las URLs se guardan con el host del backend; en el navegador se sirve por el mismo sitio bajo /api/...
-   */
   evidenciaSrc(url: string): string {
     if (!url) return '';
-    if (url.startsWith('/')) return url;
-    try {
-      const u = new URL(url);
-      if (u.pathname.includes('/media/evidencias/')) {
-        return u.pathname + (u.search || '');
-      }
-    } catch {
-      /* no absoluta */
-    }
     return url;
   }
 

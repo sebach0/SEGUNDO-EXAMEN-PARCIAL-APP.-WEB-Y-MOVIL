@@ -179,10 +179,6 @@ class _EmergenciaWizardScreenState extends ConsumerState<EmergenciaWizardScreen>
       _toast('Se necesita permiso de micrófono.');
       return false;
     }
-    if (!await _recorder.hasPermission()) {
-      if (mounted) _toast('No se pudo acceder al micrófono.');
-      return false;
-    }
     return true;
   }
 

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from fastapi import HTTPException, status
 
 from sqlalchemy import update as sa_update
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password
 from app.core.timeutil import utc_now_naive
 from app.modules.clientes_y_vehiculos.clientes.models import Cliente
 from app.modules.acceso_y_administracion.usuarios.models import Usuario, EstadoUsuarioEnum
@@ -136,7 +136,7 @@ async def asignar_roles_usuario(
 
 async def reset_password_usuario(
     usuario_id: int, new_password: str, db: AsyncSession, ejecutor_id: int | None = None
-) -> dict:
+) -> None:
     from sqlalchemy import text
     exists = await db.execute(select(Usuario.id).where(Usuario.id == usuario_id))
     if exists.scalar_one_or_none() is None:
@@ -149,13 +149,6 @@ async def reset_password_usuario(
         {"ph": new_hash, "uid": usuario_id},
     )
     await db.commit()
-    # Verificar que se guardó correctamente
-    result = await db.execute(
-        text("SELECT password_hash FROM usuarios WHERE id=:uid"),
-        {"uid": usuario_id},
-    )
-    stored_hash = result.scalar_one()
-    return {"hash_matches": verify_password(new_password, stored_hash), "hash_prefix": stored_hash[:10]}
 
 
 async def delete_usuario(usuario_id: int, db: AsyncSession, ejecutor_id: int | None = None) -> None:

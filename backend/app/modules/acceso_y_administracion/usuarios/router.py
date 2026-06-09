@@ -61,14 +61,14 @@ async def actualizar_usuario(
     )
 
 
-@router.post("/{usuario_id}/reset-password")
+@router.post("/{usuario_id}/reset-password", status_code=status.HTTP_204_NO_CONTENT)
 async def reset_password_usuario(
     usuario_id: int,
     body: ResetPasswordBody,
     db: AsyncSession = Depends(get_db),
     current_user: Usuario = Depends(get_current_user),
 ):
-    return await service.reset_password_usuario(usuario_id, body.password, db, ejecutor_id=current_user.id)
+    await service.reset_password_usuario(usuario_id, body.password, db, ejecutor_id=current_user.id)
 
 
 @router.delete("/{usuario_id}", status_code=status.HTTP_204_NO_CONTENT)
