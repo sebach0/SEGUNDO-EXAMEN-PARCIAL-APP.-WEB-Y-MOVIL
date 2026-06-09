@@ -1,4 +1,371 @@
-:host {
-  display: block;
+@use '../../admin-theme' as t;
+@use '../../admin-ui' as ui;
+
+.fin {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
+// ── Cabecera ─────────────────────────────────────────────────────────────────
+
+.fin__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: calc(t.$ev-space * 2.5);
+}
+
+.fin__title {
+  @include ui.ev-page-title;
+  margin-bottom: 0.25rem;
+}
+
+.fin__lead {
+  margin: 0;
+  font-size: 0.875rem;
+  color: t.$ev-muted;
+}
+
+.fin__filters {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.fin__label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: t.$ev-muted;
+}
+
+.fin__input {
+  @include ui.ev-input;
+  font-size: 0.8125rem;
+}
+
+.fin__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  @include ui.ev-btn-primary;
+  padding: 0.52rem 0.9rem;
+  font-size: 0.8rem;
+}
+
+// ── Alert / Loading ───────────────────────────────────────────────────────────
+
+.fin__alert {
+  @include ui.ev-alert-error;
+}
+
+.fin__loading {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: calc(t.$ev-space * 2);
+  margin-bottom: calc(t.$ev-space * 3);
+}
+
+.fin__pulse {
+  height: 110px;
+  border-radius: t.$ev-radius-lg;
+  background: t.$ev-surface;
+  border: 1px solid t.$ev-border;
+  animation: finPulse 1.4s ease-in-out infinite;
+
+  &:nth-child(2) { animation-delay: 0.1s; }
+  &:nth-child(3) { animation-delay: 0.2s; }
+  &:nth-child(4) { animation-delay: 0.3s; }
+  &:nth-child(5) { animation-delay: 0.4s; }
+  &:nth-child(6) { animation-delay: 0.5s; }
+}
+
+@keyframes finPulse {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+// ── Banda período ─────────────────────────────────────────────────────────────
+
+.fin__period {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  align-items: center;
+  padding: 0.6rem 1rem;
+  margin-bottom: calc(t.$ev-space * 2.5);
+  border-radius: t.$ev-radius-sm;
+  background: t.$ev-surface;
+  border: 1px solid t.$ev-border;
+  font-size: 0.78rem;
+  color: t.$ev-muted;
+}
+
+.fin__period-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 0.35rem;
+  vertical-align: middle;
+
+  &--blue { background: #4361ee; }
+}
+
+// ── KPI Grid ──────────────────────────────────────────────────────────────────
+
+.fin__kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: calc(t.$ev-space * 2);
+  margin-bottom: calc(t.$ev-space * 3.5);
+}
+
+.fin__kpi {
+  @include ui.ev-card;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    border-color: rgba(67, 97, 238, 0.35);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  }
+
+  &--highlight {
+    border-color: rgba(76, 201, 240, 0.35);
+    background: linear-gradient(135deg, rgba(76, 201, 240, 0.07) 0%, rgba(67, 97, 238, 0.07) 100%);
+
+    &:hover {
+      border-color: rgba(76, 201, 240, 0.55);
+    }
+  }
+}
+
+.fin__kpi-icon {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &--cyan   { background: rgba(76, 201, 240, 0.15); color: #4cc9f0; }
+  &--blue   { background: rgba(67, 97, 238, 0.15);  color: #4361ee; }
+  &--purple { background: rgba(114, 9, 183, 0.2);   color: #9b5de5; }
+  &--amber  { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+  &--green  { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+  &--muted  { background: rgba(139, 148, 158, 0.15); color: t.$ev-muted; }
+}
+
+.fin__kpi-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.fin__kpi-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: t.$ev-muted;
+}
+
+.fin__kpi-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+
+  &--large {
+    font-size: 1.625rem;
+    color: #4cc9f0;
+  }
+}
+
+.fin__kpi-hint {
+  font-size: 0.72rem;
+  color: t.$ev-muted;
+}
+
+// ── Secciones ─────────────────────────────────────────────────────────────────
+
+.fin__section {
+  margin-bottom: calc(t.$ev-space * 3.5);
+
+  &--empty {
+    padding: calc(t.$ev-space * 2);
+    border-radius: t.$ev-radius-lg;
+    border: 1px dashed t.$ev-border;
+    text-align: center;
+  }
+}
+
+.fin__section-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: calc(t.$ev-space * 1.5);
+}
+
+.fin__section-title {
+  margin: 0 0 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.fin__section-sub {
+  margin: 0;
+  font-size: 0.75rem;
+  color: t.$ev-muted;
+}
+
+.fin__empty-msg {
+  color: t.$ev-muted;
+  font-size: 0.875rem;
+}
+
+// ── Tabla Top Talleres ────────────────────────────────────────────────────────
+
+.fin__tablewrap {
+  @include ui.ev-card;
+  padding: 0;
+  overflow: auto;
+}
+
+.fin__table {
+  @include ui.ev-table;
+}
+
+.fin__th--rank {
+  width: 40px;
+  text-align: center !important;
+}
+
+.fin__th--chart {
+  width: 140px;
+}
+
+.fin__td--rank {
+  text-align: center;
+}
+
+.fin__rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: t.$ev-surface-2;
+  color: t.$ev-muted;
+  border: 1px solid t.$ev-border;
+
+  &--top {
+    background: rgba(67, 97, 238, 0.18);
+    border-color: rgba(67, 97, 238, 0.4);
+    color: #818cf8;
+  }
+}
+
+.fin__td--name {
+  font-weight: 600;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fin__td--muted {
+  color: t.$ev-muted;
+  font-size: 0.8rem;
+}
+
+.fin__td--bar {
+  padding-right: 1.25rem !important;
+}
+
+.fin__minitrack {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  overflow: hidden;
+  min-width: 80px;
+}
+
+.fin__minibar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(76, 201, 240, 0.8), rgba(67, 97, 238, 0.9));
+  min-width: 4px;
+  transition: width 0.6s ease;
+}
+
+// ── Gráfico serie diaria ──────────────────────────────────────────────────────
+
+.fin__chart {
+  @include ui.ev-card;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.fin__barrow {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.fin__barmeta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.775rem;
+}
+
+.fin__bardate {
+  width: 36px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: t.$ev-text;
+}
+
+.fin__barcnt {
+  flex-shrink: 0;
+  color: t.$ev-muted;
+  width: 42px;
+}
+
+.fin__barmoney {
+  margin-left: auto;
+  font-weight: 600;
+  color: t.$ev-text;
+}
+
+.fin__bartrack {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.fin__bar {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(76, 201, 240, 0.75), rgba(67, 97, 238, 0.9));
+  min-width: 4px;
+  transition: width 0.5s ease;
+}

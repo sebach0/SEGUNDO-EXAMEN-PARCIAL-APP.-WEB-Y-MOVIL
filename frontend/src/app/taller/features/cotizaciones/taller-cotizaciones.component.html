@@ -115,14 +115,6 @@
           }
         </label>
 
-        @if (costoTraslado() > 0 && (form.value.monto_total ?? 0) > 0) {
-          <p class="oferta__total-estimado oferta__field--full">
-            Total estimado al cliente:
-            <strong>{{ totalEstimado() | number:'1.2-2' }} BOB</strong>
-            (servicio + traslado del técnico)
-          </p>
-        }
-
         <div class="oferta__field oferta__field--full">
           <span>ETA de llegada (opcional)</span>
           <div class="oferta__duracion">

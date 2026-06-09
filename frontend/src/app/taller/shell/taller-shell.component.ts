@@ -81,7 +81,6 @@ export class TallerShellComponent implements OnInit, OnDestroy {
     { path: '/taller/panel/tecnicos', label: 'Técnicos', exact: false },
     // Ciclo 4
     { path: '/taller/panel/ciclo4/offline-incidents', label: 'Incidentes offline', exact: false },
-    { path: '/taller/panel/ciclo4/sync/status', label: 'Estado de sync', exact: false },
     // Ciclo 4 Segunda Fase
     { path: '/taller/panel/servicios', label: 'Mis servicios', exact: false },
   ];
