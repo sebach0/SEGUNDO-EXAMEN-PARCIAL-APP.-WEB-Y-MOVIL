@@ -17,6 +17,11 @@ from .helpers import rol_id_por_nombre
 
 
 async def registro_cliente_publico(body: RegistroClienteMovilIn, db: AsyncSession) -> ClienteMiPerfilRead:
+    from app.core.config import settings
+
+    email_activo = settings.EMAIL_ENABLED
+    estado_usuario = EstadoUsuarioEnum.PENDIENTE if email_activo else EstadoUsuarioEnum.ACTIVO
+
     user = await usuarios_service.create_usuario(
         {
             "nombres": body.nombres.strip(),
@@ -25,7 +30,7 @@ async def registro_cliente_publico(body: RegistroClienteMovilIn, db: AsyncSessio
             "telefono": body.telefono.strip(),
             "password": body.password,
             "username": None,
-            "estado": EstadoUsuarioEnum.PENDIENTE,
+            "estado": estado_usuario,
         },
         db,
         ejecutor_id=None,
@@ -45,7 +50,8 @@ async def registro_cliente_publico(body: RegistroClienteMovilIn, db: AsyncSessio
         usuario_id=user.id,
         entidad_id=cliente.id,
     )
-    await crear_y_enviar_verificacion_email(db, user)
+    if email_activo:
+        await crear_y_enviar_verificacion_email(db, user)
     return await mi_perfil_read(user, cliente, db)
 
 

@@ -54,7 +54,13 @@ async def _rol_id_by_nombre(db: AsyncSession, nombre: str) -> int:
 
 
 async def registro_taller_publico(body: RegistroTallerIn, db: AsyncSession) -> MiTallerRead:
-    """Crea usuario responsable, rol TALLER_RESPONSABLE y taller en estado PENDIENTE."""
+    """Crea usuario responsable, rol TALLER_RESPONSABLE y taller."""
+    from app.core.config import settings
+
+    email_activo = settings.EMAIL_ENABLED
+    estado_usuario = EstadoUsuarioEnum.PENDIENTE if email_activo else EstadoUsuarioEnum.ACTIVO
+    estado_taller = EstadoTallerEnum.PENDIENTE if email_activo else EstadoTallerEnum.ACTIVO
+
     nombres, apellidos = _split_nombre_completo(body.responsable_nombre_completo)
     dup_tel = await db.execute(select(Usuario).where(Usuario.telefono == body.telefono))
     if dup_tel.scalar_one_or_none():
@@ -68,7 +74,7 @@ async def registro_taller_publico(body: RegistroTallerIn, db: AsyncSession) -> M
             "telefono": body.telefono,
             "password": body.password,
             "username": None,
-            "estado": EstadoUsuarioEnum.PENDIENTE,
+            "estado": estado_usuario,
         },
         db,
         ejecutor_id=None,
@@ -94,13 +100,14 @@ async def registro_taller_publico(body: RegistroTallerIn, db: AsyncSession) -> M
             "direccion": body.direccion,
             "ciudad": body.ciudad,
             "descripcion": body.descripcion,
-            "estado": EstadoTallerEnum.PENDIENTE,
+            "estado": estado_taller,
         },
         db,
         ejecutor_id=user.id,
     )
     u2 = await usuarios_service.get_usuario_by_id(user.id, db)
-    await crear_y_enviar_verificacion_email(db, u2)
+    if email_activo:
+        await crear_y_enviar_verificacion_email(db, u2)
     return await build_mi_taller_read(taller, u2)
 
 
