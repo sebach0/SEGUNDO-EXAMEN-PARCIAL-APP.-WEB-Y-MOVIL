@@ -1,6 +1,7 @@
 # Sincronización offline de solicitudes_emergencia (client_uuid anti-duplicado).
 from __future__ import annotations
 
+import asyncio
 import uuid
 from datetime import datetime
 
@@ -15,7 +16,7 @@ from app.modules.incidentes.emergencias import repository
 from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum, SolicitudEmergencia
 from app.modules.incidentes.emergencias.schemas import UbicacionCreateIn
 from app.modules.incidentes.emergencias.service.helpers import add_ubicacion_internal
-from app.modules.incidentes.emergencias.service.solicitudes import _post_create_pipeline
+from app.modules.incidentes.emergencias.service.solicitudes import _post_create_pipeline_bg
 from app.modules.incidentes.emergencias.solicitud_lifecycle import init_reportado_en
 from app.modules.acceso_y_administracion.usuarios.models import Usuario
 
@@ -103,14 +104,21 @@ async def sincronizar_solicitud_offline(
         except Exception:
             pass
 
-    await _post_create_pipeline(
-        db,
-        user=user,
-        cliente_id=cliente_id,
-        sol=sol,
-        vehiculo_id=body.vehiculo_id,
-        now=now,
-        bitacora_desc=f"Solicitud offline sync vehículo_id={body.vehiculo_id}",
+    # Commit la solicitud antes del background task (igual que el flujo online).
+    # _post_create_pipeline_bg abre su propia sesión y necesita ver la solicitud ya committed.
+    await db.commit()
+
+    asyncio.create_task(
+        _post_create_pipeline_bg(
+            user_id=user.id,
+            user_tenant_id=user.tenant_id,
+            cliente_id=cliente_id,
+            sol_id=sol.id,
+            sol_tenant_id=sol.tenant_id,
+            vehiculo_id=body.vehiculo_id,
+            now=now,
+            bitacora_desc=f"Solicitud offline sync vehículo_id={body.vehiculo_id}",
+        )
     )
 
     return SyncSolicitudOfflineOut(
