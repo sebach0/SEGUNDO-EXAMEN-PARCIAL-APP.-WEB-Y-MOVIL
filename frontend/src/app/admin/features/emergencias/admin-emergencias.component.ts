@@ -2,12 +2,17 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
+  NgZone,
+  OnDestroy,
   OnInit,
   inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject, interval } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminApiService } from '../../../core/services/admin-api.service';
+import { AdminAuthService } from '../../../core/services/admin-auth.service';
 import type { EmergenciaAdminDto, EstadoEmergencia } from '../../../core/models/admin-api.models';
 
 type TabFilter = 'todas' | 'nuevas' | 'en_proceso' | 'finalizadas' | 'canceladas';
@@ -25,9 +30,13 @@ const ESTADOS_EN_PROCESO: EstadoEmergencia[] = [
   templateUrl: './admin-emergencias.component.html',
   styleUrl: './admin-emergencias.component.scss',
 })
-export class AdminEmergenciasComponent implements OnInit {
+export class AdminEmergenciasComponent implements OnInit, OnDestroy {
   private readonly api = inject(AdminApiService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly auth = inject(AdminAuthService);
+  private readonly zone = inject(NgZone);
+  private readonly destroy$ = new Subject<void>();
+  private ws: WebSocket | null = null;
 
   all: EmergenciaAdminDto[] = [];
   loading = true;
@@ -38,6 +47,37 @@ export class AdminEmergenciasComponent implements OnInit {
 
   ngOnInit(): void {
     this.reload();
+    this._connectAdminFeed();
+    interval(30_000).pipe(takeUntil(this.destroy$)).subscribe(() => this.silentReload());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.ws) { this.ws.onclose = null; this.ws.close(); this.ws = null; }
+  }
+
+  private _connectAdminFeed(): void {
+    const token = this.auth.getAccessToken() ?? '';
+    const baseWs = window.location.origin.replace(/^http/, 'ws');
+    const url = `${baseWs}/api/ws/admin/feed?token=${token}`;
+    this.zone.runOutsideAngular(() => {
+      const ws = new WebSocket(url);
+      this.ws = ws;
+      ws.onmessage = () => this.zone.run(() => this.silentReload());
+      ws.onclose = () => {
+        if (!this.destroy$.closed) {
+          setTimeout(() => this._connectAdminFeed(), 5_000);
+        }
+      };
+    });
+  }
+
+  private silentReload(): void {
+    this.api.listAdminEmergencias().subscribe({
+      next: (data) => { this.all = data; this.cdr.markForCheck(); },
+      error: () => {},
+    });
   }
 
   reload(): void {

@@ -110,7 +110,7 @@ async def _post_create_pipeline_bg(
                 db, solicitud_id=sol_id, taller_ids=taller_ids, creado_at=now
             )
 
-            # Notificar en tiempo real a los talleres elegibles
+            # Notificar en tiempo real a talleres y admin
             try:
                 from app.modules.ciclo4.websocket.manager import manager as _ws_manager
                 for _tid in taller_ids:
@@ -120,8 +120,13 @@ async def _post_create_pipeline_bg(
                         message=f"Nueva solicitud #{sol_id} disponible",
                         payload={"solicitud_id": sol_id},
                     )
+                await _ws_manager.broadcast_to_admin(
+                    event_type="NUEVA_SOLICITUD",
+                    message=f"Nueva solicitud de emergencia #{sol_id}",
+                    payload={"solicitud_id": sol_id},
+                )
             except Exception:
-                _log.exception("Error al notificar talleres vía WebSocket sol_id=%s", sol_id)
+                _log.exception("Error al notificar vía WebSocket sol_id=%s", sol_id)
 
             await registrar_accion(
                 db,

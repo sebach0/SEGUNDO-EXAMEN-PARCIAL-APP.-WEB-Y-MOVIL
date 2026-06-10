@@ -128,6 +128,13 @@ async def sincronizar_solicitud_offline(
                     payload={"solicitud_id": sol.id},
                 )
             )
+        asyncio.create_task(
+            _ws_manager.broadcast_to_admin(
+                event_type="NUEVA_SOLICITUD",
+                message=f"Nueva solicitud de emergencia #{sol.id}",
+                payload={"solicitud_id": sol.id},
+            )
+        )
     except Exception:
         pass
 
