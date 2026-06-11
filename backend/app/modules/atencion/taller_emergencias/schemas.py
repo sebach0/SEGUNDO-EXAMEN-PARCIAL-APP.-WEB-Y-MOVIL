@@ -144,8 +144,17 @@ class HistorialAtencionRead(BaseModel):
     tipo_vehiculo: str | None
 
 
+class ItemDesgloseCotizacionRead(BaseModel):
+    """Ítem de cotización aceptada para el desglose de comisión."""
+    model_config = ConfigDict(from_attributes=True)
+    descripcion: str
+    cantidad: Decimal
+    precio_unitario: Decimal
+    subtotal: Decimal
+
+
 class ComisionTallerRead(BaseModel):
-    """CU31 — fila de comisiones_taller + datos opcionales del pago."""
+    """CU31 — fila de comisiones_taller + datos opcionales del pago + desglose cotización."""
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -168,6 +177,7 @@ class ComisionTallerRead(BaseModel):
     pago_estado: EstadoPagoEnum | None = None
     pago_pagado_at: datetime | None = None
     pago_moneda: str | None = None
+    cotizacion_items: list[ItemDesgloseCotizacionRead] = Field(default_factory=list)
 
 
 class ResumenComisionesRead(BaseModel):

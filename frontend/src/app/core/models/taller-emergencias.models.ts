@@ -155,6 +155,13 @@ export type EstadoComisionTaller = 'PENDIENTE' | 'CALCULADA' | 'LIQUIDADA' | 'AN
 
 export type EstadoPago = string;
 
+export interface ItemDesgloseCotizacionDto {
+  descripcion: string;
+  cantidad: string;
+  precio_unitario: string;
+  subtotal: string;
+}
+
 /** GET `/app/taller/emergencias/comisiones` */
 export interface ComisionTallerDto {
   id: number;
@@ -173,4 +180,5 @@ export interface ComisionTallerDto {
   pago_estado: EstadoPago | null;
   pago_pagado_at: string | null;
   pago_moneda: string | null;
+  cotizacion_items: ItemDesgloseCotizacionDto[];
 }

@@ -41,9 +41,43 @@ async def listar_historial_atenciones(
 
 
 async def listar_comisiones_taller(taller_id: int, db: AsyncSession) -> list[ComisionTallerRead]:
-    """CU31 — detalle con join opcional a pagos."""
+    """CU31 — detalle con join opcional a pagos + desglose de ítems de cotización."""
+    from sqlalchemy import select as _sel
+    from sqlalchemy.orm import selectinload as _sil
+    from app.modules.cotizaciones.models import Cotizacion, CotizacionItem, EstadoCotizacionEnum
+
     rows = await repository.list_comisiones_taller_con_pago(db, taller_id=taller_id)
-    return [ComisionTallerRead.model_validate(r) for r in rows]
+    comisiones = [ComisionTallerRead.model_validate(r) for r in rows]
+
+    if not comisiones:
+        return comisiones
+
+    sol_ids = [c.solicitud_id for c in comisiones]
+    res = await db.execute(
+        _sel(Cotizacion)
+        .options(_sil(Cotizacion.items))
+        .where(
+            Cotizacion.solicitud_id.in_(sol_ids),
+            Cotizacion.estado == EstadoCotizacionEnum.ACEPTADA,
+        )
+    )
+    cots_by_sol: dict[int, Cotizacion] = {cot.solicitud_id: cot for cot in res.scalars().all()}
+
+    from app.modules.atencion.taller_emergencias.schemas import ItemDesgloseCotizacionRead
+    for com in comisiones:
+        cot = cots_by_sol.get(com.solicitud_id)
+        if cot and cot.items:
+            com.cotizacion_items = [
+                ItemDesgloseCotizacionRead(
+                    descripcion=item.descripcion,
+                    cantidad=item.cantidad,
+                    precio_unitario=item.precio_unitario,
+                    subtotal=item.subtotal,
+                )
+                for item in cot.items
+            ]
+
+    return comisiones
 
 
 async def obtener_resumen_comisiones(taller_id: int, db: AsyncSession) -> ResumenComisionesRead:

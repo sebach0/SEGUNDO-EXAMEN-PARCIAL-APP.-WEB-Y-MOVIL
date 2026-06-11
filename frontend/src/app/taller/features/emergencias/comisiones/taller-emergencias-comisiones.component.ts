@@ -2,7 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TallerEmergenciasApiService } from '../../../../core/services/taller-emergencias-api.service';
-import type { ComisionTallerDto, ResumenComisionesDto } from '../../../../core/models/taller-emergencias.models';
+import type { ComisionTallerDto, ItemDesgloseCotizacionDto, ResumenComisionesDto } from '../../../../core/models/taller-emergencias.models';
 
 @Component({
   selector: 'app-taller-emergencias-comisiones',
@@ -18,6 +18,7 @@ export class TallerEmergenciasComisionesComponent implements OnInit {
   rows: ComisionTallerDto[] = [];
   loading = true;
   error: string | null = null;
+  expandedId: number | null = null;
 
   ngOnInit(): void {
     this.loading = true;
@@ -76,6 +77,20 @@ export class TallerEmergenciasComisionesComponent implements OnInit {
       ANULADA: 'Anulada',
     };
     return m[e] ?? e;
+  }
+
+  toggleDesglose(id: number): void {
+    this.expandedId = this.expandedId === id ? null : id;
+  }
+
+  parseNum(s: string | null | undefined): number {
+    if (s == null) return 0;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  itemsTotal(items: ItemDesgloseCotizacionDto[]): number {
+    return items.reduce((acc, i) => acc + this.parseNum(i.subtotal), 0);
   }
 
   linkDetalle(c: ComisionTallerDto): string[] | null {

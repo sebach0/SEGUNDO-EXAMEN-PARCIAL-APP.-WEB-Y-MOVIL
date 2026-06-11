@@ -26,6 +26,7 @@
     <table class="emg__table">
       <thead>
         <tr>
+          <th></th>
           <th>Solicitud</th>
           <th>Estado</th>
           <th>Servicio</th>
@@ -37,29 +38,84 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let c of rows">
-          <td><strong>#{{ c.solicitud_id }}</strong></td>
-          <td>
-            <span class="emg__pill">{{ estadoUi(c.estado) }}</span>
-          </td>
-          <td class="emg__muted">{{ formatoMoneda(c.monto_servicio, c.pago_moneda) }}</td>
-          <td class="emg__muted">{{ formatoMoneda(c.monto_comision, c.pago_moneda) }}</td>
-          <td>{{ formatoMoneda(c.monto_taller_neto, c.pago_moneda) }}</td>
-          <td class="emg__muted">
-            <ng-container *ngIf="c.pago_estado; else sinPago">{{ c.pago_estado }}</ng-container>
-            <ng-template #sinPago>—</ng-template>
-          </td>
-          <td class="emg__muted" style="font-size: 0.8rem">{{ c.calculado_at | date : 'short' }}</td>
-          <td class="emg__actions">
-            <a
-              *ngIf="linkDetalle(c) as link; else sinLink"
-              class="emg__mini emg__mini--link"
-              [routerLink]="link"
-              >Ver solicitud</a
-            >
-            <ng-template #sinLink><span class="emg__muted">—</span></ng-template>
-          </td>
-        </tr>
+        <ng-container *ngFor="let c of rows">
+          <tr [class.emg__row--expanded]="expandedId === c.id">
+            <td>
+              <button
+                *ngIf="c.cotizacion_items?.length"
+                type="button"
+                class="emg__expand-btn"
+                [class.emg__expand-btn--open]="expandedId === c.id"
+                (click)="toggleDesglose(c.id)"
+                [attr.aria-expanded]="expandedId === c.id"
+                aria-label="Ver desglose de cotización"
+              >▶</button>
+              <span *ngIf="!c.cotizacion_items?.length" class="emg__muted">—</span>
+            </td>
+            <td><strong>#{{ c.solicitud_id }}</strong></td>
+            <td>
+              <span class="emg__pill">{{ estadoUi(c.estado) }}</span>
+            </td>
+            <td class="emg__muted">{{ formatoMoneda(c.monto_servicio, c.pago_moneda) }}</td>
+            <td class="emg__muted">{{ formatoMoneda(c.monto_comision, c.pago_moneda) }}</td>
+            <td>{{ formatoMoneda(c.monto_taller_neto, c.pago_moneda) }}</td>
+            <td class="emg__muted">
+              <ng-container *ngIf="c.pago_estado; else sinPago">{{ c.pago_estado }}</ng-container>
+              <ng-template #sinPago>—</ng-template>
+            </td>
+            <td class="emg__muted" style="font-size: 0.8rem">{{ c.calculado_at | date : 'short' }}</td>
+            <td class="emg__actions">
+              <a
+                *ngIf="linkDetalle(c) as link; else sinLink"
+                class="emg__mini emg__mini--link"
+                [routerLink]="link"
+                >Ver solicitud</a
+              >
+              <ng-template #sinLink><span class="emg__muted">—</span></ng-template>
+            </td>
+          </tr>
+
+          <!-- Fila de desglose expandible -->
+          <tr *ngIf="expandedId === c.id && c.cotizacion_items?.length" class="emg__row--desglose">
+            <td colspan="9">
+              <div class="emg__desglose">
+                <h4 class="emg__desglose-title">Desglose de cotización — Solicitud #{{ c.solicitud_id }}</h4>
+                <table class="emg__desglose-table">
+                  <thead>
+                    <tr>
+                      <th>Descripción</th>
+                      <th class="emg__num">Cantidad</th>
+                      <th class="emg__num">P. Unitario</th>
+                      <th class="emg__num">Subtotal</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of c.cotizacion_items">
+                      <td>{{ item.descripcion }}</td>
+                      <td class="emg__num">{{ parseNum(item.cantidad) | number:'1.2-2' }}</td>
+                      <td class="emg__num">Bs. {{ parseNum(item.precio_unitario) | number:'1.2-2' }}</td>
+                      <td class="emg__num">Bs. {{ parseNum(item.subtotal) | number:'1.2-2' }}</td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="3" class="emg__desglose-total-label">Total cotización</td>
+                      <td class="emg__num emg__desglose-total">Bs. {{ itemsTotal(c.cotizacion_items) | number:'1.2-2' }}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="3" class="emg__desglose-total-label emg__muted">Comisión plataforma ({{ parseNum(c.porcentaje_plataforma) | number:'1.0-1' }}%)</td>
+                      <td class="emg__num emg__muted">− Bs. {{ parseNum(c.monto_comision) | number:'1.2-2' }}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="3" class="emg__desglose-total-label"><strong>Neto para el taller</strong></td>
+                      <td class="emg__num emg__desglose-neto"><strong>Bs. {{ parseNum(c.monto_taller_neto) | number:'1.2-2' }}</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
       </tbody>
     </table>
     <p class="emg__empty" *ngIf="!rows.length">No hay comisiones registradas.</p>
