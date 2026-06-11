@@ -216,5 +216,16 @@ class Settings(BaseSettings):
     def evidencias_upload_dir(self) -> Path:
         return _BACKEND_DIR / "uploads" / "evidencias"
 
+    # ── Backup automático ──────────────────────────────────────────────────────
+    BACKUP_AUTO_ENABLED: bool = True
+    BACKUP_INTERVAL_HOURS: int = 24
+    BACKUP_MAX_FILES: int = 7
+    BACKUP_DIR: str = "/app/backups"
+
+    @property
+    def backup_dir_path(self) -> Path:
+        p = Path(self.BACKUP_DIR)
+        return p if p.is_absolute() else _BACKEND_DIR / self.BACKUP_DIR
+
 
 settings = Settings()

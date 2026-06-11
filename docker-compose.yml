@@ -162,6 +162,7 @@ services:
     volumes:
       - ./backend/firebase-credentials.json:/app/firebase-credentials.json:ro
       - ./backend/uploads:/app/uploads
+      - ./backups:/app/backups
 
   ai-inference:
     profiles: ["ai"]

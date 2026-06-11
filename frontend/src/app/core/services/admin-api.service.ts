@@ -8,6 +8,7 @@ import type {
   AdminFinanzasReportes,
   AdminFinanzasResumen,
   AssignmentResultDto,
+  BackupFile,
   BitacoraDto,
   IncidentReportReadDto,
   PerformanceReportReadDto,
@@ -323,5 +324,13 @@ export class AdminApiService {
 
   downloadBackup(): Observable<Blob> {
     return this.http.get(`${this.base}/admin/backup/descargar`, { responseType: 'blob' });
+  }
+
+  getBackupHistory(): Observable<BackupFile[]> {
+    return this.http.get<BackupFile[]>(`${this.base}/admin/backup/historial`);
+  }
+
+  downloadBackupFile(filename: string): Observable<Blob> {
+    return this.http.get(`${this.base}/admin/backup/archivo/${filename}`, { responseType: 'blob' });
   }
 }

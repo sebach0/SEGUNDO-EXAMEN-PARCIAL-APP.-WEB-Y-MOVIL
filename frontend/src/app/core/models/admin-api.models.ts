@@ -369,3 +369,10 @@ export interface WorkshopSlaDetailDto {
   workshop: WorkshopSlaDto;
   cases_out_of_sla: SlaCaseDetailDto[];
 }
+
+export interface BackupFile {
+  filename: string;
+  size_bytes: number;
+  created_at: string;
+}
+

@@ -79,6 +79,15 @@ async def lifespan(app: FastAPI):
                     "Manual: docker compose exec backend python -m app.seeds",
                     exc_info=last_err,
                 )
+    if settings.BACKUP_AUTO_ENABLED:
+        from app.modules.backup.scheduler import run_backup_scheduler
+        asyncio.create_task(
+            run_backup_scheduler(
+                settings.backup_dir_path,
+                settings.BACKUP_INTERVAL_HOURS,
+                settings.BACKUP_MAX_FILES,
+            )
+        )
     yield
 
 # ── Importar todos los routers si ────────────────────────────────
