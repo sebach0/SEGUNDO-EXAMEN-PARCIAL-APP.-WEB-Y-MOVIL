@@ -98,7 +98,15 @@
             <td>{{ row.tipo_incidente || '—' }}</td>
             <td>{{ row.zona || '—' }}</td>
             <td>{{ row.taller || '—' }}</td>
-            <td><span class="pill" [class.pill--done]="row.estado === 'FINALIZADA'" [class.pill--cancel]="row.estado === 'CANCELADA'">{{ row.estado }}</span></td>
+            <td>
+              <span class="pill"
+                [class.pill--done]="row.estado === 'FINALIZADA'"
+                [class.pill--cancel]="row.estado === 'CANCELADA'"
+                [class.pill--active]="row.estado === 'EN_ATENCION' || row.estado === 'EN_CAMINO'"
+                [class.pill--assigned]="row.estado === 'TALLER_ASIGNADO' || row.estado === 'TECNICO_ASIGNADO'"
+                [class.pill--pending]="row.estado === 'REGISTRADA' || row.estado === 'EN_REVISION'"
+              >{{ row.estado | titlecase }}</span>
+            </td>
             <td>{{ formatDate(row.reportado_en) }}</td>
             <td>{{ formatDate(row.asignado_en) }}</td>
             <td>{{ formatDate(row.finalizado_en) }}</td>
