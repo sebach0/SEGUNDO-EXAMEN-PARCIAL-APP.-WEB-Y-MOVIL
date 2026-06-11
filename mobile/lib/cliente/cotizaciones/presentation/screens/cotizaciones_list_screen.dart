@@ -186,7 +186,7 @@ class _CotizacionesListScreenState
                     children: [
                       Expanded(
                         child: Text(
-                          item.cantidad != 1.0
+                          item.cantidad != 1.0 && item != cotizacion.itemTraslado
                               ? '${item.cantidad.toStringAsFixed(0)} × ${item.descripcion}'
                               : item.descripcion,
                           style: const TextStyle(fontSize: 13),
@@ -370,7 +370,7 @@ class _CotizacionCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          item.cantidad != 1.0
+                          item.cantidad != 1.0 && item != c.itemTraslado
                               ? '${item.cantidad.toStringAsFixed(0)} × ${item.descripcion}'
                               : item.descripcion,
                           style: const TextStyle(fontSize: 13),
@@ -400,7 +400,7 @@ class _CotizacionCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'Bs. ${c.montoTotal.toStringAsFixed(2)}',
+                    'Bs. ${c.items.fold(0.0, (s, i) => s + i.subtotal).toStringAsFixed(2)}',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,

@@ -367,7 +367,12 @@ async def proponer_cotizacion(
     if costo_traslado > 0 and distancia is not None:
         items_finales.append(_item_traslado_in(distancia))
 
-    monto_final = body.monto_total + costo_traslado
+    # Si hay ítems, el total se calcula sumando sus subtotales (cantidad × precio_unitario).
+    # Si no hay ítems, se respeta el monto_total ingresado por el taller + traslado.
+    if user_items:
+        monto_final = sum(i.cantidad * i.precio_unitario for i in items_finales)
+    else:
+        monto_final = body.monto_total + costo_traslado
     tenant_id = resolve_tenant_for_cotizacion(sol, taller)
 
     now = utc_now_naive()
