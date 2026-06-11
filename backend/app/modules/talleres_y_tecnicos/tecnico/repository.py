@@ -70,6 +70,26 @@ async def list_servicios_asignados_a_tecnico(
     return [dict(x) for x in r.mappings().all()]
 
 
+async def list_historial_tecnico(
+    db: AsyncSession, *, tecnico_id: int, limit: int = 100
+) -> list[dict[str, Any]]:
+    from app.modules.incidentes.emergencias.models import EstadoSolicitudSeguimientoEnum
+    stmt = (
+        _servicios_select()
+        .where(
+            SolicitudEmergencia.tecnico_id == tecnico_id,
+            SolicitudEmergencia.estado.in_([
+                EstadoSolicitudSeguimientoEnum.FINALIZADA,
+                EstadoSolicitudSeguimientoEnum.CANCELADA,
+            ]),
+        )
+        .order_by(SolicitudEmergencia.updated_at.desc())
+        .limit(limit)
+    )
+    r = await db.execute(stmt)
+    return [dict(x) for x in r.mappings().all()]
+
+
 async def get_servicio_asignado_detalle(
     db: AsyncSession, *, solicitud_id: int, tecnico_id: int
 ) -> dict[str, Any] | None:

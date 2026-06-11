@@ -25,6 +25,19 @@ final class TecnicoEmergenciasRepository {
     }
   }
 
+  Future<List<ServicioAsignadoTecnico>> listarHistorial() async {
+    try {
+      final res = await _dio.get<List<dynamic>>(ApiConstants.appTecnicoHistorial);
+      final list = res.data ?? const [];
+      return list
+          .whereType<Map>()
+          .map((e) => ServicioAsignadoTecnico.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } on DioException catch (e) {
+      throw Exception(messageFromDio(e));
+    }
+  }
+
   Future<UbicacionClienteActual> obtenerUbicacionCliente(int solicitudId) async {
     try {
       final res = await _dio.get<Map<String, dynamic>>(

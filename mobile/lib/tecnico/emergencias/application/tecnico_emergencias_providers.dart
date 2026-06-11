@@ -15,6 +15,12 @@ final tecnicoServiciosAsignadosProvider =
   return ref.watch(tecnicoEmergenciasRepositoryProvider).listarServiciosAsignados();
 });
 
+/// Historial de servicios finalizados/cancelados del técnico.
+final tecnicoHistorialProvider =
+    FutureProvider.autoDispose<List<ServicioAsignadoTecnico>>((ref) async {
+  return ref.watch(tecnicoEmergenciasRepositoryProvider).listarHistorial();
+});
+
 /// CU33
 final tecnicoUbicacionClienteProvider =
     FutureProvider.autoDispose.family<UbicacionClienteActual, int>((ref, solicitudId) async {

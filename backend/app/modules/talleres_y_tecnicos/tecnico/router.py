@@ -39,6 +39,19 @@ async def listar_servicios_asignados(
 
 
 @router.get(
+    "/historial",
+    response_model=list[ServicioAsignadoRead],
+    dependencies=[Depends(require_permission("servicios_tecnico:leer"))],
+)
+async def listar_historial(
+    current_user: Usuario = Depends(_ensure_tecnico),
+    db: AsyncSession = Depends(get_db),
+):
+    """Servicios finalizados y cancelados del técnico (historial)."""
+    return await service.listar_historial(current_user, db)
+
+
+@router.get(
     "/solicitudes/{solicitud_id}/ubicacion",
     response_model=UbicacionClienteActualRead,
     dependencies=[Depends(require_permission("cliente_ubicacion:leer"))],

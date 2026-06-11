@@ -8,14 +8,14 @@ class TecnicoAppShell extends StatelessWidget {
   final Widget child;
 
   static bool _showBottomNav(String path) {
-    if (path.startsWith('/tecnico/app/historial')) return false;
-    // Detalle / ubicación / estado / chat: pantalla completa sin barra inferior.
+    // Detalle / ubicación / estado / chat / comprobante: pantalla completa sin barra inferior.
     if (path.startsWith('/tecnico/app/servicios/')) return false;
     return true;
   }
 
   static int _indexForPath(String path) {
-    if (path.startsWith('/tecnico/app/perfil')) return 2;
+    if (path.startsWith('/tecnico/app/perfil')) return 3;
+    if (path.startsWith('/tecnico/app/historial')) return 2;
     if (path.startsWith('/tecnico/app/servicios')) return 1;
     return 0;
   }
@@ -37,6 +37,8 @@ class TecnicoAppShell extends StatelessWidget {
                     context.go('/tecnico/app/inicio');
                   case 1:
                     context.go('/tecnico/app/servicios');
+                  case 2:
+                    context.go('/tecnico/app/historial');
                   default:
                     context.go('/tecnico/app/perfil');
                 }
@@ -51,6 +53,11 @@ class TecnicoAppShell extends StatelessWidget {
                   icon: Icon(Icons.assignment_outlined),
                   selectedIcon: Icon(Icons.assignment_rounded),
                   label: 'Servicios',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.history_outlined),
+                  selectedIcon: Icon(Icons.history_rounded),
+                  label: 'Historial',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.person_outline),

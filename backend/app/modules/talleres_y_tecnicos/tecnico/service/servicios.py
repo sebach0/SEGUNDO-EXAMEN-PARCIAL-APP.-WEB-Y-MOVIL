@@ -13,3 +13,9 @@ async def listar_servicios_asignados(user: Usuario, db: AsyncSession) -> list[Se
     t = await get_tecnico_row_for_usuario(user.id, db)
     rows = await repository.list_servicios_asignados_a_tecnico(db, tecnico_id=t.id)
     return [ServicioAsignadoRead.model_validate(r) for r in rows]
+
+
+async def listar_historial(user: Usuario, db: AsyncSession) -> list[ServicioAsignadoRead]:
+    t = await get_tecnico_row_for_usuario(user.id, db)
+    rows = await repository.list_historial_tecnico(db, tecnico_id=t.id)
+    return [ServicioAsignadoRead.model_validate(r) for r in rows]

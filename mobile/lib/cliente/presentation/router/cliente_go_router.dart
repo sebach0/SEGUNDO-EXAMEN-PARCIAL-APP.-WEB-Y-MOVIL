@@ -43,8 +43,8 @@ import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_ubica
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_compartir_ubicacion_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicio_comprobante_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_editar_cotizacion_screen.dart';
+import '../../../tecnico/emergencias/presentation/screens/tecnico_historial_screen.dart';
 import '../../../tecnico/emergencias/presentation/screens/tecnico_servicios_list_screen.dart';
-import '../../../tecnico/presentation/screens/tecnico_placeholder_screen.dart';
 import '../../../tecnico/presentation/screens/tecnico_perfil_screen.dart';
 import '../../../tecnico/presentation/screens/tecnico_recover_screen.dart';
 import '../../../tecnico/presentation/screens/tecnico_splash_screen.dart';
@@ -220,18 +220,7 @@ final goRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/tecnico/app/historial',
-            builder: (context, state) => Scaffold(
-              appBar: AppBar(
-                title: const Text('Historial'),
-                leading: BackButton(onPressed: () => context.pop()),
-              ),
-              body: const TecnicoPlaceholderScreen(
-                title: '',
-                message:
-                    'Próximamente podrás revisar el historial de atenciones desde esta pantalla.',
-                icon: Icons.history_rounded,
-              ),
-            ),
+            builder: (context, state) => const TecnicoHistorialScreen(),
           ),
           GoRoute(
             path: '/tecnico/app/perfil',

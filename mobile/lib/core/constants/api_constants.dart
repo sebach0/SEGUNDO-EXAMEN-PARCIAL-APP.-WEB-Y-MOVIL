@@ -23,6 +23,9 @@ class ApiConstants {
   static String get appTecnicoEmergenciasServiciosAsignados =>
       '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/servicios-asignados';
 
+  static String get appTecnicoHistorial =>
+      '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/historial';
+
   static String appTecnicoEmergenciaUbicacion(int solicitudId) =>
       '${AppEnv.apiBaseUrl}/app/tecnico/emergencias/solicitudes/$solicitudId/ubicacion';
 
