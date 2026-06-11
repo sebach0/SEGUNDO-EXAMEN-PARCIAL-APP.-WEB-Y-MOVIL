@@ -53,7 +53,6 @@ class ActualizarEstadoServicioIn(BaseModel):
     nuevo_estado: EstadoSolicitudSeguimientoEnum
     observacion: str | None = Field(default=None, max_length=2000)
     presupuesto_bob: Decimal | None = Field(default=None, gt=0)
-        return self
 
 
 # ── Comprobante y cobro ───────────────────────────────────────────────────────
