@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/utils/bolivia_time.dart';
+import '../../../../cliente/emergencias/domain/solicitud_emergencia_models.dart'
+    show EstadoSolicitudEmergencia;
 import '../../application/tecnico_emergencias_providers.dart';
 import '../../domain/tecnico_servicio_models.dart';
 import '../widgets/tecnico_estado_servicio_badge.dart';
