@@ -76,10 +76,16 @@ async def get_comprobante(
     )
     pago = res_pago.scalar_one_or_none()
 
-    # Monto a cobrar: cotización > presupuesto_bob
+    # Monto a cobrar: suma de ítems si existen (evita usar monto_total desactualizado)
     monto_a_cobrar: Decimal | None = None
     if cot is not None:
-        monto_a_cobrar = _quantize(cot.monto_total)
+        if cot.items:
+            monto_a_cobrar = _quantize(sum(
+                Decimal(str(i.cantidad)) * Decimal(str(i.precio_unitario))
+                for i in cot.items
+            ))
+        else:
+            monto_a_cobrar = _quantize(cot.monto_total)
     elif sol.presupuesto_bob is not None:
         monto_a_cobrar = _quantize(sol.presupuesto_bob)
 
@@ -158,7 +164,9 @@ async def registrar_cobro_efectivo(
 
     # Determinar monto: cotización aceptada o presupuesto_bob
     res_cot = await db.execute(
-        select(Cotizacion).where(
+        select(Cotizacion)
+        .options(selectinload(Cotizacion.items))
+        .where(
             Cotizacion.solicitud_id == solicitud_id,
             Cotizacion.estado == EstadoCotizacionEnum.ACEPTADA,
         )
@@ -168,7 +176,13 @@ async def registrar_cobro_efectivo(
     monto: Decimal | None = None
     cotizacion_id: int | None = None
     if cot is not None:
-        monto = _quantize(cot.monto_total)
+        if cot.items:
+            monto = _quantize(sum(
+                Decimal(str(i.cantidad)) * Decimal(str(i.precio_unitario))
+                for i in cot.items
+            ))
+        else:
+            monto = _quantize(cot.monto_total)
         cotizacion_id = cot.id
     elif sol.presupuesto_bob is not None and sol.presupuesto_bob > 0:
         monto = _quantize(sol.presupuesto_bob)
