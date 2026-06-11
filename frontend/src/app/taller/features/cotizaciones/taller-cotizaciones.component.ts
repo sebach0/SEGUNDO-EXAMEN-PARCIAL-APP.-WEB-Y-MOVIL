@@ -155,6 +155,10 @@ export class TallerCotizacionesComponent implements OnInit, OnDestroy {
     return this.items.controls.reduce((acc, _, i) => acc + this.subtotal(i), 0);
   }
 
+  cotItemsTotal(cot: Cotizacion): number {
+    return cot.items.reduce((acc, item) => acc + item.subtotal, 0);
+  }
+
   costoTraslado(): number {
     return this.contexto()?.costo_traslado_estimado ?? 0;
   }

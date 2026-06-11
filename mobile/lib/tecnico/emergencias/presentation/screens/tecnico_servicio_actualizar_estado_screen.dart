@@ -32,62 +32,12 @@ class _TecnicoServicioActualizarEstadoScreenState extends ConsumerState<TecnicoS
     super.dispose();
   }
 
-  Future<double?> _pedirMontoPresupuestoBob() async {
-    final ctrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    try {
-      return await showDialog<double>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Presupuesto (BOB)'),
-          content: Form(
-            key: formKey,
-            child: TextFormField(
-              controller: ctrl,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Monto en bolivianos',
-                hintText: 'Ej. 450.50',
-                border: OutlineInputBorder(),
-                prefixText: 'Bs. ',
-              ),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return 'Ingresa un monto';
-                final n = double.tryParse(v.trim().replaceAll(',', '.'));
-                if (n == null || n <= 0) return 'Monto inválido (debe ser mayor a 0)';
-                return null;
-              },
-            ),
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancelar')),
-            FilledButton(
-              onPressed: () {
-                if (formKey.currentState?.validate() != true) return;
-                final n = double.parse(ctrl.text.trim().replaceAll(',', '.'));
-                Navigator.pop(ctx, n);
-              },
-              child: const Text('Continuar'),
-            ),
-          ],
-        ),
-      );
-    } finally {
-      ctrl.dispose();
-    }
-  }
-
   Future<void> _confirmarYGuardar(EstadoSolicitudEmergencia destino) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmar cambio'),
-        content: Text(
-          destino == EstadoSolicitudEmergencia.enAtencion
-              ? '¿Marcar el servicio como “${destino.etiquetaUi}”? Luego se te pedirá el monto en Bs. para mostrarlo al cliente.'
-              : '¿Marcar el servicio como “${destino.etiquetaUi}”?',
-        ),
+        content: Text('¿Marcar el servicio como “${destino.etiquetaUi}”?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancelar')),
           FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Guardar')),
@@ -95,12 +45,6 @@ class _TecnicoServicioActualizarEstadoScreenState extends ConsumerState<TecnicoS
       ),
     );
     if (ok != true || !mounted) return;
-
-    double? presupuestoBob;
-    if (destino == EstadoSolicitudEmergencia.enAtencion) {
-      presupuestoBob = await _pedirMontoPresupuestoBob();
-      if (presupuestoBob == null || !mounted) return;
-    }
 
     setState(() => _guardando = true);
     try {
@@ -110,7 +54,6 @@ class _TecnicoServicioActualizarEstadoScreenState extends ConsumerState<TecnicoS
         solicitudId: widget.solicitudId,
         nuevoEstado: destino,
         observacion: obs.isEmpty ? null : obs,
-        presupuestoBob: presupuestoBob,
       );
       ref.invalidate(tecnicoServiciosAsignadosProvider);
       if (mounted) {
