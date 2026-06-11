@@ -1,9 +1,12 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, NgZone, OnDestroy, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Subject, interval } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { TallerEmergenciasApiService } from '../../../../core/services/taller-emergencias-api.service';
 import { TallerApiService } from '../../../../core/services/taller-api.service';
+import { TallerAuthService } from '../../../../core/services/taller-auth.service';
 import type { EstadoSolicitudSeguimiento, HistorialAtencionDto } from '../../../../core/models/taller-emergencias.models';
 import type { TecnicoPortalDto } from '../../../../core/models/taller-api.models';
 
@@ -16,10 +19,14 @@ type HistorialModo = 'mis' | 'historial' | 'servicios';
   templateUrl: './taller-emergencias-historial-list.component.html',
   styleUrl: './taller-emergencias-historial-list.component.scss',
 })
-export class TallerEmergenciasHistorialListComponent implements OnInit {
+export class TallerEmergenciasHistorialListComponent implements OnInit, OnDestroy {
   private readonly api = inject(TallerEmergenciasApiService);
   private readonly tallerApi = inject(TallerApiService);
+  private readonly auth = inject(TallerAuthService);
   private readonly route = inject(ActivatedRoute);
+  private readonly zone = inject(NgZone);
+  private readonly destroy$ = new Subject<void>();
+  private ws: WebSocket | null = null;
 
   modo: HistorialModo = 'historial';
   rows: HistorialAtencionDto[] = [];
@@ -48,14 +55,49 @@ export class TallerEmergenciasHistorialListComponent implements OnInit {
     const m = this.route.snapshot.data['historialModo'];
     this.modo = m === 'mis' || m === 'servicios' ? m : 'historial';
     this.tallerApi.listTecnicos().subscribe({
-      next: (list) => {
-        this.tecnicos = list;
-      },
-      error: () => {
-        this.tecnicos = [];
-      },
+      next: (list) => { this.tecnicos = list; },
+      error: () => { this.tecnicos = []; },
     });
     this.reload();
+    this._connectTallerFeed();
+    interval(30_000).pipe(takeUntil(this.destroy$)).subscribe(() => this._silentReload());
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    if (this.ws) { this.ws.onclose = null; this.ws.close(); this.ws = null; }
+  }
+
+  private _connectTallerFeed(): void {
+    const token = this.auth.getAccessToken() ?? '';
+    const baseWs = window.location.origin.replace(/^http/, 'ws');
+    const url = `${baseWs}/api/ws/taller/feed?token=${token}`;
+    this.zone.runOutsideAngular(() => {
+      const ws = new WebSocket(url);
+      this.ws = ws;
+      ws.onmessage = () => this.zone.run(() => this._silentReload());
+      ws.onclose = () => {
+        if (!this.destroy$.closed) {
+          setTimeout(() => this._connectTallerFeed(), 5_000);
+        }
+      };
+    });
+  }
+
+  private _silentReload(): void {
+    const params =
+      this.modo === 'historial'
+        ? {
+            estado: this.estado || undefined,
+            desde: this.desde || undefined,
+            hasta: this.hasta || undefined,
+          }
+        : undefined;
+    this.api.listHistorialAtenciones(params).subscribe({
+      next: (list) => { this.rows = list; },
+      error: () => {},
+    });
   }
 
   titulo(): string {

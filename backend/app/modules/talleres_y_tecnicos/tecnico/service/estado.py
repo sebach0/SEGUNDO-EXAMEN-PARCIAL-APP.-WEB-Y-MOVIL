@@ -148,6 +148,20 @@ async def actualizar_estado_servicio(
     )
     await evaluar_y_notificar_retraso(db, se)
 
+    # Notificar al panel del taller en tiempo real
+    if se.taller_id is not None:
+        try:
+            import asyncio as _asyncio
+            from app.modules.ciclo4.websocket.manager import manager as _ws_manager
+            _asyncio.create_task(_ws_manager.broadcast_to_taller(
+                taller_id=se.taller_id,
+                event_type="ESTADO_CAMBIADO",
+                message=f"Solicitud #{solicitud_id} → {body.nuevo_estado.value}",
+                payload={"solicitud_id": solicitud_id, "estado": body.nuevo_estado.value},
+            ))
+        except Exception:
+            pass
+
     row = await repository.get_servicio_asignado_detalle(db, solicitud_id=solicitud_id, tecnico_id=t.id)
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Solicitud no encontrada.")
