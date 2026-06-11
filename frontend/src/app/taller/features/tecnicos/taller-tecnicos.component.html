@@ -9,7 +9,7 @@
       type="search"
       class="tech__search"
       [(ngModel)]="search"
-      placeholder="Buscar por nombre, email, especialidad…"
+      placeholder="Buscar por nombre, email…"
       aria-label="Buscar técnicos"
     />
     <select class="tech__select" [(ngModel)]="estado" aria-label="Filtrar por estado">
@@ -27,7 +27,6 @@
         <tr>
           <th>Nombre</th>
           <th>Teléfono</th>
-          <th>Especialidad</th>
           <th>Disponibilidad</th>
           <th>Estado</th>
           <th>Acciones</th>
@@ -40,7 +39,6 @@
             <span class="tech__muted" style="font-size: 0.75rem">{{ t.email }}</span>
           </td>
           <td>{{ t.telefono }}</td>
-          <td>{{ t.especialidad_nombre || '—' }}</td>
           <td>{{ t.disponibilidad || '—' }}</td>
           <td><span class="tech__pill">{{ t.estado }}</span></td>
           <td class="tech__actions">
@@ -82,8 +80,6 @@
       <dd>{{ selected.telefono }}</dd>
       <dt>Documento</dt>
       <dd>{{ selected.documento || '—' }}</dd>
-      <dt>Especialidad</dt>
-      <dd>{{ selected.especialidad_nombre || '—' }}</dd>
       <dt>Disponibilidad</dt>
       <dd>{{ selected.disponibilidad || '—' }}</dd>
       <dt>Estado</dt>
@@ -107,13 +103,6 @@
       <label class="tech__lbl"
         >Contraseña inicial<input class="tech__inp" [(ngModel)]="createForm.password" type="password"
       /></label>
-      <label class="tech__lbl"
-        >Especialidad
-        <select class="tech__inp" [(ngModel)]="createForm.especialidad_id">
-          <option [ngValue]="null">—</option>
-          <option *ngFor="let e of especialidades" [ngValue]="e.id">{{ e.nombre }}</option>
-        </select>
-      </label>
       <label class="tech__lbl tech__full">Disponibilidad<input class="tech__inp" [(ngModel)]="createForm.disponibilidad" /></label>
       <label class="tech__lbl"
         >Estado
@@ -135,13 +124,6 @@
       <label class="tech__lbl">Correo<input class="tech__inp" [(ngModel)]="editEmail" type="email" /></label>
       <label class="tech__lbl">Teléfono<input class="tech__inp" [(ngModel)]="editTelefono" /></label>
       <label class="tech__lbl">Documento<input class="tech__inp" [(ngModel)]="editDocumento" /></label>
-      <label class="tech__lbl"
-        >Especialidad
-        <select class="tech__inp" [(ngModel)]="editEsp">
-          <option [ngValue]="null">—</option>
-          <option *ngFor="let e of especialidades" [ngValue]="e.id">{{ e.nombre }}</option>
-        </select>
-      </label>
       <label class="tech__lbl">Disponibilidad<input class="tech__inp" [(ngModel)]="editDisp" /></label>
       <label class="tech__lbl"
         >Estado

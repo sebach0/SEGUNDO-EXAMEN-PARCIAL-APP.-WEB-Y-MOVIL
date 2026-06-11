@@ -317,17 +317,36 @@ class _CotizacionCard extends StatelessWidget {
                 label: 'Distancia',
                 value: '${c.distanciaKm!.toStringAsFixed(1)} km',
               ),
-            if (c.costoTraslado > 0) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 120,
+                    child: Text(
+                      'Monto del servicio',
+                      style: TextStyle(fontSize: 13, color: scheme.outline),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      'Bs. ${c.montoServicio.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (c.costoTraslado > 0)
               _Row(
                 label: 'Traslado técnico',
                 value: 'Bs. ${c.costoTraslado.toStringAsFixed(2)}',
               ),
-              if (c.montoServicio > 0 && c.montoServicio < c.montoTotal)
-                _Row(
-                  label: 'Servicio',
-                  value: 'Bs. ${c.montoServicio.toStringAsFixed(2)}',
-                ),
-            ],
             _Row(label: 'Daño', value: c.descripcionDanio),
             _Row(label: 'Servicio', value: c.detalleServicio),
             if (c.serviciosOfrecidos.isNotEmpty) ...[

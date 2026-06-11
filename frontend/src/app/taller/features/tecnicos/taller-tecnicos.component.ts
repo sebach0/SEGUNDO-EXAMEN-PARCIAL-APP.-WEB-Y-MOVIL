@@ -1,10 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
 import { TallerApiService } from '../../../core/services/taller-api.service';
 import type {
-  EspecialidadDto,
   EstadoTecnico,
   TecnicoPortalCreatePayload,
   TecnicoPortalDto,
@@ -22,7 +20,6 @@ export class TallerTecnicosComponent implements OnInit {
   private readonly api = inject(TallerApiService);
 
   tecnicos: TecnicoPortalDto[] = [];
-  especialidades: EspecialidadDto[] = [];
   search = '';
   estado: EstadoTecnico | '' = '';
   loading = true;
@@ -40,7 +37,6 @@ export class TallerTecnicosComponent implements OnInit {
     telefono: '',
     password: '',
     documento: '',
-    especialidad_id: null,
     disponibilidad: '',
     estado: 'ACTIVO',
   };
@@ -49,7 +45,6 @@ export class TallerTecnicosComponent implements OnInit {
   editEmail = '';
   editTelefono = '';
   editDocumento = '';
-  editEsp: number | null = null;
   editDisp = '';
   editEstado: EstadoTecnico = 'ACTIVO';
 
@@ -61,10 +56,9 @@ export class TallerTecnicosComponent implements OnInit {
 
   reload(): void {
     this.loading = true;
-    forkJoin({ tecnicos: this.api.listTecnicos(), esp: this.api.listEspecialidades() }).subscribe({
-      next: ({ tecnicos, esp }) => {
+    this.api.listTecnicos().subscribe({
+      next: (tecnicos) => {
         this.tecnicos = tecnicos;
-        this.especialidades = esp;
         this.loading = false;
         this.error = null;
       },
@@ -84,8 +78,7 @@ export class TallerTecnicosComponent implements OnInit {
         (t) =>
           `${t.nombres} ${t.apellidos}`.toLowerCase().includes(q) ||
           t.email.toLowerCase().includes(q) ||
-          t.telefono.includes(q) ||
-          (t.especialidad_nombre && t.especialidad_nombre.toLowerCase().includes(q)),
+          t.telefono.includes(q),
       );
     }
     return rows;
@@ -110,7 +103,6 @@ export class TallerTecnicosComponent implements OnInit {
       telefono: '',
       password: '',
       documento: '',
-      especialidad_id: this.especialidades[0]?.id ?? null,
       disponibilidad: '',
       estado: 'ACTIVO',
     };
@@ -142,7 +134,6 @@ export class TallerTecnicosComponent implements OnInit {
     this.editEmail = t.email;
     this.editTelefono = t.telefono;
     this.editDocumento = t.documento ?? '';
-    this.editEsp = t.especialidad_id;
     this.editDisp = t.disponibilidad ?? '';
     this.editEstado = t.estado;
     this.modalEdit = true;
@@ -155,7 +146,6 @@ export class TallerTecnicosComponent implements OnInit {
       email: this.editEmail,
       telefono: this.editTelefono,
       documento: this.editDocumento || null,
-      especialidad_id: this.editEsp,
       disponibilidad: this.editDisp || null,
       estado: this.editEstado,
     };

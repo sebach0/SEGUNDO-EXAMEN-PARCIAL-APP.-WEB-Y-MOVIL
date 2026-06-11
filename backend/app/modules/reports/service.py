@@ -61,9 +61,9 @@ def _base_incident_query(filters: KpiFilters, *, estado=None):
             ),
             _epoch_diff_minutes(llegada, SolicitudEmergencia.asignado_en).label("min_llegada"),
         )
-        .join(Cliente, SolicitudEmergencia.cliente_id == Cliente.id)
-        .join(Usuario, Cliente.usuario_id == Usuario.id)
-        .join(Vehiculo, SolicitudEmergencia.vehiculo_id == Vehiculo.id)
+        .join(Cliente, SolicitudEmergencia.cliente_id == Cliente.id, isouter=True)
+        .join(Usuario, Cliente.usuario_id == Usuario.id, isouter=True)
+        .join(Vehiculo, SolicitudEmergencia.vehiculo_id == Vehiculo.id, isouter=True)
         .join(Taller, SolicitudEmergencia.taller_id == Taller.id, isouter=True)
         .join(Zona, SolicitudEmergencia.zona_id == Zona.id, isouter=True),
         filters,

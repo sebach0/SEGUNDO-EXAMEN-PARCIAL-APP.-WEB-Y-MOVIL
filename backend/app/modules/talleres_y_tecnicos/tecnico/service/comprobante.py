@@ -76,16 +76,20 @@ async def get_comprobante(
     )
     pago = res_pago.scalar_one_or_none()
 
-    # Monto a cobrar: suma de ítems si existen (evita usar monto_total desactualizado)
+    # Monto a cobrar: monto del servicio (presupuesto_bob) + ítems de cotización
     monto_a_cobrar: Decimal | None = None
     if cot is not None:
         if cot.items:
-            monto_a_cobrar = _quantize(sum(
+            items_sum = _quantize(sum(
                 Decimal(str(i.cantidad)) * Decimal(str(i.precio_unitario))
                 for i in cot.items
             ))
         else:
-            monto_a_cobrar = _quantize(cot.monto_total)
+            items_sum = _quantize(cot.monto_total)
+        if sol.presupuesto_bob is not None:
+            monto_a_cobrar = _quantize(items_sum + sol.presupuesto_bob)
+        else:
+            monto_a_cobrar = items_sum
     elif sol.presupuesto_bob is not None:
         monto_a_cobrar = _quantize(sol.presupuesto_bob)
 
@@ -177,12 +181,16 @@ async def registrar_cobro_efectivo(
     cotizacion_id: int | None = None
     if cot is not None:
         if cot.items:
-            monto = _quantize(sum(
+            items_sum = _quantize(sum(
                 Decimal(str(i.cantidad)) * Decimal(str(i.precio_unitario))
                 for i in cot.items
             ))
         else:
-            monto = _quantize(cot.monto_total)
+            items_sum = _quantize(cot.monto_total)
+        if sol.presupuesto_bob is not None and sol.presupuesto_bob > 0:
+            monto = _quantize(items_sum + sol.presupuesto_bob)
+        else:
+            monto = items_sum
         cotizacion_id = cot.id
     elif sol.presupuesto_bob is not None and sol.presupuesto_bob > 0:
         monto = _quantize(sol.presupuesto_bob)

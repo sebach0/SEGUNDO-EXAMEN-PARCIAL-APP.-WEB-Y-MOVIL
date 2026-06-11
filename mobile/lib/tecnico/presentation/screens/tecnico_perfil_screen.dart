@@ -59,7 +59,6 @@ class TecnicoPerfilScreen extends ConsumerWidget {
         _FieldBlock(label: 'Nombre', value: perfil?.nombreCompleto ?? '—'),
         _FieldBlock(label: 'Correo', value: perfil?.email ?? '—'),
         _FieldBlock(label: 'Teléfono', value: perfil?.telefono ?? '—'),
-        _FieldBlock(label: 'Especialidad', value: perfil?.especialidadNombre ?? '—'),
         _FieldBlock(label: 'Taller asociado', value: perfil?.tallerNombre ?? '—'),
         _FieldBlock(label: 'Estado', value: perfil?.estadoEtiqueta ?? '—'),
         _FieldBlock(

@@ -195,6 +195,13 @@ class _ComprobanteBody extends StatelessWidget {
           title: 'Detalle del costo',
           children: [
             if (c.cotizacionId != null) ...[
+              if (c.presupuestoBob != null) ...[
+                _InfoRow(
+                  label: 'Monto del servicio',
+                  value: 'Bs. ${c.presupuestoBob!.toStringAsFixed(2)}',
+                ),
+                const SizedBox(height: 4),
+              ],
               if (c.cotizacionDescripcionDanio != null)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
@@ -243,7 +250,7 @@ class _ComprobanteBody extends StatelessWidget {
               ],
             ] else if (c.presupuestoBob != null) ...[
               _InfoRow(
-                label: 'Presupuesto registrado',
+                label: 'Monto del servicio',
                 value: 'Bs. ${c.presupuestoBob!.toStringAsFixed(2)}',
               ),
             ] else ...[
